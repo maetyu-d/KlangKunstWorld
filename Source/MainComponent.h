@@ -2,12 +2,13 @@
 
 #include <JuceHeader.h>
 
-class MainComponent final : public juce::Component,
+class MainComponent final : public juce::AudioAppComponent,
                             public juce::KeyListener,
                             public juce::Timer
 {
 public:
     MainComponent();
+    ~MainComponent() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -15,12 +16,16 @@ public:
     void mouseMove(const juce::MouseEvent& event) override;
     void mouseExit(const juce::MouseEvent& event) override;
     void mouseUp(const juce::MouseEvent& event) override;
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
 
     bool keyPressed(const juce::KeyPress& key, juce::Component*) override;
     bool keyPressed(const juce::KeyPress& key) override;
     void timerCallback() override;
 
 private:
+public:
     static constexpr int gridWidth = 128;
     static constexpr int gridDepth = 128;
     static constexpr int gridHeight = 48;
@@ -33,6 +38,34 @@ private:
         FourIslandsFourFloors
     };
 
+    enum class SynthEngine
+    {
+        digitalV4,
+        fmGlass,
+        velvetNoise,
+        chipPulse,
+        guitarPluck
+    };
+
+    enum class ScaleType
+    {
+        chromatic,
+        major,
+        minor,
+        dorian,
+        pentatonic
+    };
+
+    enum class DrumMode
+    {
+        reactiveBreakbeat,
+        rezStraight,
+        tightPulse,
+        forwardStep,
+        railLine
+    };
+
+private:
     struct Camera
     {
         int rotation = 0;
@@ -65,6 +98,73 @@ private:
         bool active = false;
     };
 
+    struct Snake
+    {
+        std::vector<juce::Point<int>> body;
+        juce::Point<int> direction { 1, 0 };
+        juce::Colour colour;
+    };
+
+    struct ReflectorDisc
+    {
+        juce::Point<int> cell;
+        juce::Point<int> direction { 1, 0 };
+    };
+
+    struct PendingNoteOff
+    {
+        int note = 60;
+        float secondsRemaining = 0.2f;
+    };
+
+    class WaveVoice final : public juce::SynthesiserVoice
+    {
+    public:
+        explicit WaveVoice(SynthEngine& engineRef) : engine(engineRef) {}
+
+        bool canPlaySound(juce::SynthesiserSound* s) override;
+        void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int) override;
+        void stopNote(float velocity, bool allowTailOff) override;
+        void pitchWheelMoved(int) override {}
+        void controllerMoved(int, int) override {}
+        void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
+
+    private:
+        SynthEngine& engine;
+        juce::ADSR adsr;
+        juce::ADSR::Parameters adsrParams;
+        float level = 0.0f;
+        double currentAngle = 0.0;
+        double angleDelta = 0.0;
+        double modAngle = 0.0;
+        double modDelta = 0.0;
+        double subAngle = 0.0;
+        double subDelta = 0.0;
+        float noteAgeSeconds = 0.0f;
+        uint32_t noiseSeed = 0u;
+        float sampleHoldValue = 0.0f;
+        int sampleHoldCounter = 0;
+        int sampleHoldPeriod = 1;
+        float lpState = 0.0f;
+        float hpState = 0.0f;
+        bool percussionMode = false;
+        int percussionType = 0;
+        float noiseLP = 0.0f;
+        float noiseHP = 0.0f;
+        float lastNoise = 0.0f;
+        int chipSfxType = 0;
+        std::vector<float> ksDelay;
+        int ksIndex = 0;
+        float ksLast = 0.0f;
+    };
+
+    class WaveSound final : public juce::SynthesiserSound
+    {
+    public:
+        bool appliesToNote(int) override { return true; }
+        bool appliesToChannel(int) override { return true; }
+    };
+
     void randomiseVoxels();
     bool hasVoxel(int x, int y, int z) const;
     void setVoxel(int x, int y, int z, bool filled);
@@ -85,9 +185,18 @@ private:
     bool updateCursorFromPosition(juce::Point<float> position, juce::Rectangle<float> area);
     void resetEditCursor();
     void moveEditCursor(int dx, int dy, int dz);
+    int midiNoteForHeight(int z) const;
+    void triggerPerformanceNotesAtCell(juce::Point<int> cell);
+    void addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples);
     juce::Colour displayColourForVoxel(int x, int y, int z, juce::Colour base) const;
     float hoverLiftForSlab(const SlabSelection& slab) const;
     juce::String labelForSlab(const SlabSelection& slab) const;
+    juce::Rectangle<int> performanceRegionBounds() const;
+    juce::Rectangle<float> performanceBoardBounds(juce::Rectangle<float> area) const;
+    std::optional<juce::Point<int>> performanceCellAtPosition(juce::Point<float> position, juce::Rectangle<float> area) const;
+    void setPerformanceSnakeCount(int count);
+    void stepPerformanceSnakes();
+    void drawPerformanceView(juce::Graphics& g, juce::Rectangle<float> area);
     void drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area);
     void drawHud(juce::Graphics& g, juce::Rectangle<float> area);
     void drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area);
@@ -100,6 +209,14 @@ private:
     int gridLineStep() const;
     juce::Colour colourForHeight(int z) const;
     juce::String noteNameForHeight(int z) const;
+    std::vector<int> currentScaleSteps() const;
+    int quantizeMidiToScale(int midi) const;
+    int quantizeMidiToCurrentScaleStrict(int midi) const;
+    bool quantizeWorldToCurrentScale();
+    juce::String keyName() const;
+    juce::String scaleName() const;
+    juce::String synthName() const;
+    juce::String drumModeName() const;
 
     Camera camera;
     float targetZoom = 1.0f;
@@ -110,6 +227,29 @@ private:
     SlabSelection hoveredSlab;
     SlabSelection isolatedSlab;
     EditCursor editCursor;
+    bool performanceMode = false;
+    int performanceRegionMode = 2;
+    std::vector<Snake> performanceSnakes;
+    std::vector<ReflectorDisc> performanceDiscs;
+    std::optional<juce::Point<int>> performanceHoverCell;
+    juce::Point<int> performanceSelectedDirection { 1, 0 };
+    int performanceTick = 0;
+    SynthEngine synthEngine = SynthEngine::digitalV4;
+    DrumMode drumMode = DrumMode::reactiveBreakbeat;
+    ScaleType scale = ScaleType::minor;
+    int keyRoot = 0;
+    bool quantizeToScale = true;
+    juce::Synthesiser synth;
+    juce::Synthesiser beatSynth;
+    juce::CriticalSection synthLock;
+    std::vector<PendingNoteOff> pendingNoteOffs;
+    std::vector<PendingNoteOff> pendingBeatNoteOffs;
+    double currentSampleRate = 44100.0;
+    double bpm = 168.0;
+    double beatStepAccumulator = 0.0;
+    int beatStepIndex = 0;
+    int beatBarIndex = 0;
+    float performanceBeatEnergy = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

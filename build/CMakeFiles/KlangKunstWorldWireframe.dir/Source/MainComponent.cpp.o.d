@@ -2,6 +2,7 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o: \
   /Users/md/Downloads/KlangKunstWorld/Source/MainComponent.cpp \
   /Users/md/Downloads/KlangKunstWorld/Source/MainComponent.h \
   /Users/md/Downloads/KlangKunstWorld/build/KlangKunstWorldWireframe_artefacts/JuceLibraryCode/JuceHeader.h \
+  /Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.h \
   /Users/md/JUCE/modules/juce_core/juce_core.h \
   /Users/md/JUCE/modules/juce_core/system/juce_TargetPlatform.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
@@ -910,6 +911,65 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o: \
   /Users/md/JUCE/modules/juce_core/detail/juce_CallbackListenerList.h \
   /Users/md/JUCE/modules/juce_core/detail/juce_LruCache.h \
   /Users/md/JUCE/modules/juce_core/detail/juce_IncrementRef.h \
+  /Users/md/JUCE/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h \
+  /Users/md/JUCE/modules/juce_audio_basics/buffers/juce_FloatVectorOperations.h \
+  /Users/md/JUCE/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h \
+  /Users/md/JUCE/modules/juce_audio_basics/buffers/juce_AudioChannelSet.h \
+  /Users/md/JUCE/modules/juce_audio_basics/buffers/juce_AudioProcessLoadMeasurer.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_Decibels.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_IIRFilter.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_GenericInterpolator.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_Interpolators.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_SmoothedValue.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_Reverb.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_ADSR.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiMessage.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiBuffer.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiMessageSequence.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiFile.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiKeyboardState.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiRPN.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/juce_MidiDataConcatenator.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPEValue.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPENote.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPEZoneLayout.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPEInstrument.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPEMessages.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPESynthesiserBase.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPESynthesiserVoice.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPESynthesiser.h \
+  /Users/md/JUCE/modules/juce_audio_basics/mpe/juce_MPEUtils.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_AudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_PositionableAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_BufferingAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_ChannelRemappingAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_IIRFilterAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_MemoryAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_MixerAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_ResamplingAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_ReverbAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/sources/juce_ToneGeneratorAudioSource.h \
+  /Users/md/JUCE/modules/juce_audio_basics/synthesisers/juce_Synthesiser.h \
+  /Users/md/JUCE/modules/juce_audio_basics/audio_play_head/juce_AudioPlayHead.h \
+  /Users/md/JUCE/modules/juce_audio_basics/utilities/juce_AudioWorkgroup.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPBytesOnGroup.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPDeviceInfo.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMP.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPProtocols.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPUtils.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPacket.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPSysEx7.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPView.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPIterator.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPackets.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPFactory.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPConversion.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPMidi1ToBytestreamTranslator.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPMidi1ToMidi2DefaultTranslator.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPConverters.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPDispatcher.h \
+  /Users/md/JUCE/modules/juce_audio_basics/midi/ump/juce_UMPStringUtils.h \
+  /Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.h \
   /Users/md/JUCE/modules/juce_events/juce_events.h \
   /Users/md/JUCE/modules/juce_events/messages/juce_MessageManager.h \
   /Users/md/JUCE/modules/juce_events/messages/juce_Message.h \
@@ -980,6 +1040,47 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o: \
   /Users/md/JUCE/modules/juce_graphics/effects/juce_DropShadowEffect.h \
   /Users/md/JUCE/modules/juce_graphics/effects/juce_GlowEffect.h \
   /Users/md/JUCE/modules/juce_graphics/detail/juce_Unicode.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPEndpointId.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPStaticDeviceInfo.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPBlock.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPEndpoint.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPDisconnectionListener.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPInput.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPOutput.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPLegacyVirtualInput.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPLegacyVirtualOutput.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPVirtualEndpoint.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPSession.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/ump/juce_UMPEndpoints.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h \
+  /Users/md/JUCE/modules/juce_audio_devices/midi_io/juce_MidiMessageCollector.h \
+  /Users/md/JUCE/modules/juce_audio_devices/audio_io/juce_AudioIODevice.h \
+  /Users/md/JUCE/modules/juce_audio_devices/audio_io/juce_AudioIODeviceType.h \
+  /Users/md/JUCE/modules/juce_audio_devices/audio_io/juce_SystemAudioVolume.h \
+  /Users/md/JUCE/modules/juce_audio_devices/sources/juce_AudioSourcePlayer.h \
+  /Users/md/JUCE/modules/juce_audio_devices/sources/juce_AudioTransportSource.h \
+  /Users/md/JUCE/modules/juce_audio_devices/audio_io/juce_AudioDeviceManager.h \
+  /Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormatReader.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormatWriterOptions.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormatWriter.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_MemoryMappedAudioFormatReader.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormatManager.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioFormatReaderSource.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_AudioSubsectionReader.h \
+  /Users/md/JUCE/modules/juce_audio_formats/format/juce_BufferingAudioFormatReader.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_AiffAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_CoreAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_FlacAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_LAMEEncoderAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_MP3AudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_OggVorbisAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_WavAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/codecs/juce_WindowsMediaAudioFormat.h \
+  /Users/md/JUCE/modules/juce_audio_formats/sampler/juce_Sampler.h \
+  /Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.h \
   /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.h \
   /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.h \
   /Users/md/JUCE/modules/juce_data_structures/undomanager/juce_UndoableAction.h \
@@ -1146,6 +1247,39 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o: \
   /Users/md/JUCE/modules/juce_gui_basics/layout/juce_GridItem.h \
   /Users/md/JUCE/modules/juce_gui_basics/layout/juce_Grid.h \
   /Users/md/JUCE/modules/juce_gui_basics/native/juce_ScopedDPIAwarenessDisabler.h \
+  /Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format/juce_PluginFormatDefs.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessorListener.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AAXClientExtensions.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_VST2ClientExtensions.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_VST3Interface.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_VST3ClientExtensions.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_ARACommon.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_ExtensionsVisitor.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessorParameter.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_HostedAudioProcessorParameter.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessorParameterGroup.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_PluginDescription.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioPluginInstance.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessorGraph.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format/juce_AudioPluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AudioProcessorParameterWithID.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_RangedAudioParameter.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AudioParameterFloat.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AudioParameterInt.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AudioParameterBool.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/juce_AudioParameterChoice.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/ARA/juce_ARADebug.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/utilities/ARA/juce_ARA_utils.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_AudioUnitPluginFormatHeadless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_LADSPAPluginFormatHeadless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_LV2PluginFormatHeadless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_VST3PluginFormatHeadless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_VSTPluginFormatHeadless.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format_types/juce_ARAHosting.h \
+  /Users/md/JUCE/modules/juce_audio_processors_headless/format/juce_AudioPluginFormatManager.h \
   /Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.h \
   /Users/md/JUCE/modules/juce_gui_extra/documents/juce_FileBasedDocument.h \
   /Users/md/JUCE/modules/juce_gui_extra/code_editor/juce_CodeDocument.h \
@@ -1175,4 +1309,33 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o: \
   /Users/md/JUCE/modules/juce_gui_extra/misc/juce_AnimatedAppComponent.h \
   /Users/md/JUCE/modules/juce_gui_extra/detail/juce_WebControlRelayEvents.h \
   /Users/md/JUCE/modules/juce_gui_extra/misc/juce_WebControlRelays.h \
-  /Users/md/JUCE/modules/juce_gui_extra/misc/juce_WebControlParameterIndexReceiver.h
+  /Users/md/JUCE/modules/juce_gui_extra/misc/juce_WebControlParameterIndexReceiver.h \
+  /Users/md/JUCE/modules/juce_audio_processors/processors/juce_AudioProcessorEditorHostContext.h \
+  /Users/md/JUCE/modules/juce_audio_processors/processors/juce_AudioProcessorEditor.h \
+  /Users/md/JUCE/modules/juce_audio_processors/processors/juce_GenericAudioProcessorEditor.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format/juce_AudioPluginFormatManagerHelpers.h \
+  /Users/md/JUCE/modules/juce_audio_processors/scanning/juce_KnownPluginList.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format_types/juce_AudioUnitPluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format_types/juce_LADSPAPluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format_types/juce_LV2PluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format_types/juce_VST3PluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors/format_types/juce_VSTPluginFormat.h \
+  /Users/md/JUCE/modules/juce_audio_processors/scanning/juce_PluginDirectoryScanner.h \
+  /Users/md/JUCE/modules/juce_audio_processors/scanning/juce_PluginListComponent.h \
+  /Users/md/JUCE/modules/juce_audio_processors/utilities/juce_ParameterAttachments.h \
+  /Users/md/JUCE/modules/juce_audio_processors/utilities/juce_AudioProcessorValueTreeState.h \
+  /Users/md/JUCE/modules/juce_audio_processors/utilities/juce_PluginHostType.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioDeviceSelectorComponent.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioThumbnailBase.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioThumbnail.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioThumbnailCache.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioVisualiserComponent.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_KeyboardComponentBase.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_MidiKeyboardComponent.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_MPEKeyboardComponent.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_AudioAppComponent.h \
+  /Users/md/JUCE/modules/juce_audio_utils/gui/juce_BluetoothMidiDevicePairingDialogue.h \
+  /Users/md/JUCE/modules/juce_audio_utils/players/juce_SoundPlayer.h \
+  /Users/md/JUCE/modules/juce_audio_utils/players/juce_AudioProcessorPlayer.h \
+  /Users/md/JUCE/modules/juce_audio_utils/audio_cd/juce_AudioCDBurner.h \
+  /Users/md/JUCE/modules/juce_audio_utils/audio_cd/juce_AudioCDReader.h

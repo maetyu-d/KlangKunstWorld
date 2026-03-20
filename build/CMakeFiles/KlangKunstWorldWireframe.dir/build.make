@@ -112,10 +112,24 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/Downloads/KlangKunstWorld/Source/MainComponent.cpp -o CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.s
 
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o: /Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o -c /Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s
+
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: /Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o -c /Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp
 
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i: cmake_force
@@ -129,7 +143,7 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_cor
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o: /Users/md/JUCE/modules/juce_core/juce_core.mm
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o -c /Users/md/JUCE/modules/juce_core/juce_core.mm
 
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.i: cmake_force
@@ -140,10 +154,24 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_cor
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_core/juce_core.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.s
 
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o: /Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o -c /Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s
+
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o: /Users/md/JUCE/modules/juce_events/juce_events.mm
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o -c /Users/md/JUCE/modules/juce_events/juce_events.mm
 
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.i: cmake_force
@@ -154,75 +182,47 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_e
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_events/juce_events.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.s
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o: /Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o -c /Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o: /Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o -c /Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o: /Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o -c /Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i
 
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o -c /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o -c /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i
-
-CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s
 
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
 CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o: /Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm
@@ -238,37 +238,165 @@ CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juc
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.s
 
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o -c /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building C object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o -c /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_graphics/juce_graphics.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o -c /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o -c /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o -c /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/flags.make
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o: /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o: CMakeFiles/KlangKunstWorldWireframe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o -MF CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o.d -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o -c /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm > CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i
+
+CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm -o CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s
+
 # Object files for target KlangKunstWorldWireframe
 KlangKunstWorldWireframe_OBJECTS = \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Source/Main.cpp.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o" \
-"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o" \
 "CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o" \
-"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o"
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o" \
+"CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o"
 
 # External object files for target KlangKunstWorldWireframe
 KlangKunstWorldWireframe_EXTERNAL_OBJECTS =
 
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Source/Main.cpp.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_core/juce_core.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_events/juce_events.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_graphics/juce_graphics.mm.o
-KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_data_structures/juce_data_structures.mm.o
-KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/build.make
 KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX executable KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents/MacOS/KlangKunstWorldWireframe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/KlangKunstWorldWireframe.dir/link.txt --verbose=$(VERBOSE)
 	/opt/homebrew/bin/cmake -E copy /Users/md/Downloads/KlangKunstWorld/build/KlangKunstWorldWireframe_artefacts/JuceLibraryCode/KlangKunstWorldWireframe/PkgInfo /Users/md/Downloads/KlangKunstWorld/build/KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app/Contents
 

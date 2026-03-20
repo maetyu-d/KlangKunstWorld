@@ -28,6 +28,10 @@ target_compile_definitions(KlangKunstWorldWireframe
 
 target_link_libraries(KlangKunstWorldWireframe
     PRIVATE
+        juce::juce_audio_basics
+        juce::juce_audio_devices
+        juce::juce_audio_formats
+        juce::juce_audio_utils
         juce::juce_core
         juce::juce_events
         juce::juce_graphics

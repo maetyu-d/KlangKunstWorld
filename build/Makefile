@@ -223,6 +223,198 @@ Source/MainComponent.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Source/MainComponent.cpp.s
 .PHONY : Source/MainComponent.cpp.s
 
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.o: Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o
+
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.i: Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.i
+
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.s: Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.s
+
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.o: Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o
+
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.i: Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.i
+
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.s: Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.s
+
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.o: Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o
+
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.i: Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.i
+
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.s: Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.s
+
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.o: Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o
+
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.i: Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.i
+
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.s: Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.s
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.o: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.i: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.i
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.s: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.s
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.o: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.i: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.s: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.o: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.i: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
+
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.s: Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
+.PHONY : Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
+
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.o: Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.o
+
+# target to build an object file
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o
+
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.i: Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.i
+
+# target to preprocess a source file
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.i
+
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.s: Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.s
+
+# target to generate assembly for a file
+Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s
+.PHONY : Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.s
+
 Users/md/JUCE/modules/juce_core/juce_core.o: Users/md/JUCE/modules/juce_core/juce_core.mm.o
 .PHONY : Users/md/JUCE/modules/juce_core/juce_core.o
 
@@ -458,6 +650,30 @@ help:
 	@echo "... Source/MainComponent.o"
 	@echo "... Source/MainComponent.i"
 	@echo "... Source/MainComponent.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_basics/juce_audio_basics.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_devices/juce_audio_devices.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_formats/juce_audio_formats.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors/juce_audio_processors.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.s"
+	@echo "... Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.o"
+	@echo "... Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.i"
+	@echo "... Users/md/JUCE/modules/juce_audio_utils/juce_audio_utils.s"
 	@echo "... Users/md/JUCE/modules/juce_core/juce_core.o"
 	@echo "... Users/md/JUCE/modules/juce_core/juce_core.i"
 	@echo "... Users/md/JUCE/modules/juce_core/juce_core.s"

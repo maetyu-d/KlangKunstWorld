@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <optional>
 
 namespace
 {
@@ -13,6 +14,440 @@ constexpr int boardInset = 26;
 constexpr int islandGapSize = 20;
 constexpr int floorBandHeight = 12;
 constexpr int floorBandGap = 12;
+const std::array<juce::Point<int>, 4> snakeDirections {{
+    { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
+}};
+const std::array<juce::Colour, 8> snakeColours {{
+    juce::Colour::fromRGB(255, 92, 92),
+    juce::Colour::fromRGB(255, 178, 66),
+    juce::Colour::fromRGB(246, 227, 81),
+    juce::Colour::fromRGB(94, 210, 116),
+    juce::Colour::fromRGB(78, 221, 220),
+    juce::Colour::fromRGB(115, 139, 245),
+    juce::Colour::fromRGB(181, 98, 237),
+    juce::Colour::fromRGB(242, 96, 198)
+}};
+
+juce::String scaleToString(MainComponent::ScaleType scale)
+{
+    switch (scale)
+    {
+        case MainComponent::ScaleType::chromatic: return "Chromatic";
+        case MainComponent::ScaleType::major: return "Major";
+        case MainComponent::ScaleType::minor: return "Minor";
+        case MainComponent::ScaleType::dorian: return "Dorian";
+        case MainComponent::ScaleType::pentatonic: return "Pentatonic";
+    }
+
+    return "Minor";
+}
+
+juce::String synthToString(MainComponent::SynthEngine synth)
+{
+    switch (synth)
+    {
+        case MainComponent::SynthEngine::digitalV4: return "Nova Drift";
+        case MainComponent::SynthEngine::fmGlass: return "Prism FM";
+        case MainComponent::SynthEngine::velvetNoise: return "Mallet Bloom";
+        case MainComponent::SynthEngine::chipPulse: return "Arcade Pulse";
+        case MainComponent::SynthEngine::guitarPluck: return "Guitar Pluck";
+    }
+
+    return "Nova Drift";
+}
+
+juce::String drumModeToString(MainComponent::DrumMode mode)
+{
+    switch (mode)
+    {
+        case MainComponent::DrumMode::reactiveBreakbeat: return "Reactive 909";
+        case MainComponent::DrumMode::rezStraight: return "909 Rez Straight";
+        case MainComponent::DrumMode::tightPulse: return "909 Tight Pulse";
+        case MainComponent::DrumMode::forwardStep: return "909 Forward Step";
+        case MainComponent::DrumMode::railLine: return "909 Rail Line";
+    }
+
+    return "Reactive 909";
+}
+}
+
+bool MainComponent::WaveVoice::canPlaySound(juce::SynthesiserSound* s)
+{
+    return dynamic_cast<WaveSound*>(s) != nullptr;
+}
+
+void MainComponent::WaveVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int)
+{
+    const auto sampleRate = getSampleRate();
+    level = velocity;
+    noteAgeSeconds = 0.0f;
+    noiseSeed = static_cast<uint32_t>(0x9E3779B9u ^ (static_cast<uint32_t>(midiNoteNumber) * 2654435761u));
+    sampleHoldValue = 0.0f;
+    sampleHoldCounter = 0;
+    sampleHoldPeriod = 1;
+    lpState = 0.0f;
+    hpState = 0.0f;
+    percussionMode = midiNoteNumber >= 120;
+    percussionType = juce::jlimit(0, 3, midiNoteNumber - 120);
+    noiseLP = 0.0f;
+    noiseHP = 0.0f;
+    lastNoise = 0.0f;
+    chipSfxType = percussionMode ? 0 : (midiNoteNumber % 4);
+
+    const auto cyclesPerSecond = juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber);
+    const auto cyclesPerSample = cyclesPerSecond / juce::jmax(1.0, sampleRate);
+    angleDelta = cyclesPerSample * juce::MathConstants<double>::twoPi;
+    currentAngle = 0.0;
+    modAngle = 0.0;
+    subAngle = 0.0;
+
+    if (engine == SynthEngine::fmGlass)
+        modDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::twoPi;
+    else if (engine == SynthEngine::digitalV4)
+        modDelta = cyclesPerSample * 0.613 * juce::MathConstants<double>::twoPi;
+    else if (engine == SynthEngine::chipPulse)
+        modDelta = cyclesPerSample * 4.0 * juce::MathConstants<double>::twoPi;
+    else if (engine == SynthEngine::guitarPluck)
+        modDelta = cyclesPerSample * 2.01 * juce::MathConstants<double>::twoPi;
+    else
+        modDelta = cyclesPerSample * 1.997 * juce::MathConstants<double>::twoPi;
+
+    subDelta = cyclesPerSample * 0.5 * juce::MathConstants<double>::twoPi;
+
+    if (percussionMode)
+    {
+        double drumHz = 120.0;
+        if (percussionType == 0) drumHz = 52.0;
+        else if (percussionType == 1) drumHz = 182.0;
+        else if (percussionType == 2) drumHz = 420.0;
+        else drumHz = 260.0;
+
+        const double drumCyclesPerSample = drumHz / juce::jmax(1.0, sampleRate);
+        angleDelta = drumCyclesPerSample * juce::MathConstants<double>::twoPi;
+        modDelta = drumCyclesPerSample * 2.1 * juce::MathConstants<double>::twoPi;
+        subDelta = drumCyclesPerSample * 0.5 * juce::MathConstants<double>::twoPi;
+    }
+
+    ksDelay.clear();
+    ksIndex = 0;
+    ksLast = 0.0f;
+    if (engine == SynthEngine::guitarPluck)
+    {
+        const double hz = juce::jmax(30.0, cyclesPerSecond);
+        const int ksLen = juce::jlimit(16, 4096, static_cast<int>(std::round(sampleRate / hz)));
+        ksDelay.resize(static_cast<size_t>(ksLen), 0.0f);
+        for (int i = 0; i < ksLen; ++i)
+        {
+            noiseSeed = noiseSeed * 1664525u + 1013904223u;
+            const float n = static_cast<float>((noiseSeed >> 9) & 0x7FFFFFu) / 4194303.5f * 2.0f - 1.0f;
+            ksDelay[static_cast<size_t>(i)] = n * (0.70f * velocity);
+        }
+    }
+
+    if (percussionMode)
+    {
+        adsrParams.attack = 0.0005f;
+        adsrParams.decay = percussionType == 2 ? 0.035f : percussionType == 0 ? 0.14f : 0.09f;
+        adsrParams.sustain = 0.0f;
+        adsrParams.release = percussionType == 2 ? 0.01f : 0.03f;
+    }
+    else if (engine == SynthEngine::digitalV4)
+    {
+        adsrParams.attack = 0.006f;
+        adsrParams.decay = 0.24f;
+        adsrParams.sustain = 0.38f;
+        adsrParams.release = 0.30f;
+    }
+    else if (engine == SynthEngine::velvetNoise)
+    {
+        adsrParams.attack = 0.0004f;
+        adsrParams.decay = 0.13f;
+        adsrParams.sustain = 0.0f;
+        adsrParams.release = 0.025f;
+    }
+    else if (engine == SynthEngine::chipPulse)
+    {
+        adsrParams.attack = 0.0001f;
+        adsrParams.decay = 0.075f;
+        adsrParams.sustain = 0.10f;
+        adsrParams.release = 0.045f;
+    }
+    else if (engine == SynthEngine::guitarPluck)
+    {
+        adsrParams.attack = 0.0004f;
+        adsrParams.decay = 0.17f;
+        adsrParams.sustain = 0.12f;
+        adsrParams.release = 0.14f;
+    }
+    else
+    {
+        adsrParams.attack = 0.003f;
+        adsrParams.decay = 0.18f;
+        adsrParams.sustain = 0.20f;
+        adsrParams.release = 0.10f;
+    }
+
+    adsr.setParameters(adsrParams);
+    adsr.noteOn();
+}
+
+void MainComponent::WaveVoice::stopNote(float, bool allowTailOff)
+{
+    if (allowTailOff)
+        adsr.noteOff();
+    else
+        clearCurrentNote();
+}
+
+void MainComponent::WaveVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
+{
+    if (! isVoiceActive())
+        return;
+
+    const auto sr = static_cast<float>(juce::jmax(1.0, getSampleRate()));
+    for (int s = 0; s < numSamples; ++s)
+    {
+        const auto env = adsr.getNextSample();
+        const auto transient = std::exp(-noteAgeSeconds * 24.0f);
+
+        noiseSeed = noiseSeed * 1664525u + 1013904223u;
+        const auto white = static_cast<float>((noiseSeed >> 9) & 0x7FFFFFu) / 4194303.5f * 2.0f - 1.0f;
+
+        if (percussionMode)
+        {
+            float voicedPerc = 0.0f;
+            switch (percussionType)
+            {
+                case 0:
+                {
+                    const float pitchDrop = 1.0f + 4.4f * std::exp(-noteAgeSeconds * 48.0f);
+                    const float body = static_cast<float>(std::sin(currentAngle * pitchDrop));
+                    const float bodyEnv = std::exp(-noteAgeSeconds * 11.5f);
+                    const float clickEnv = std::exp(-noteAgeSeconds * 165.0f);
+                    const float clickTone = static_cast<float>(std::sin(currentAngle * 10.0));
+                    voicedPerc = 0.95f * body * bodyEnv + 0.19f * clickTone * clickEnv + 0.08f * white * clickEnv;
+                    break;
+                }
+                case 1:
+                {
+                    noiseLP += 0.15f * (white - noiseLP);
+                    noiseHP = white - noiseLP;
+                    const float snapEnv = std::exp(-noteAgeSeconds * 47.0f);
+                    const float toneEnv = std::exp(-noteAgeSeconds * 20.0f);
+                    const float tone1 = static_cast<float>(std::sin(currentAngle * 1.86));
+                    const float tone2 = static_cast<float>(std::sin(currentAngle * 2.71));
+                    const float preSnap = white - lastNoise;
+                    voicedPerc = 0.42f * tone1 * toneEnv
+                               + 0.18f * tone2 * toneEnv
+                               + (0.62f * noiseHP + 0.18f * preSnap) * snapEnv;
+                    break;
+                }
+                case 2:
+                {
+                    noiseLP += 0.24f * (white - noiseLP);
+                    noiseHP = white - noiseLP;
+                    const float hat = std::exp(-noteAgeSeconds * 92.0f);
+                    const auto metallic = std::copysign(1.0f, white * 0.78f + noiseHP * 0.22f);
+                    voicedPerc = (0.56f * metallic + 0.30f * noiseHP) * hat;
+                    break;
+                }
+                case 3:
+                default:
+                {
+                    const auto diff = white - lastNoise;
+                    lastNoise = white;
+                    const auto clickEnv = static_cast<float>(std::exp(-noteAgeSeconds * 96.0f));
+                    const auto gate = (sampleHoldCounter <= 0 ? 1.0f : 0.0f);
+                    if (sampleHoldCounter <= 0)
+                        sampleHoldCounter = 2 + static_cast<int>(noiseSeed & 3u);
+                    --sampleHoldCounter;
+                    voicedPerc = (0.74f * diff + 0.16f * white) * clickEnv * gate * 1.6f;
+                    break;
+                }
+            }
+
+            voicedPerc = std::tanh(voicedPerc * 1.75f) * 0.69f;
+            const float sample = voicedPerc * level * env * 0.80f;
+            for (int c = 0; c < outputBuffer.getNumChannels(); ++c)
+                outputBuffer.addSample(c, startSample + s, sample);
+
+            currentAngle += angleDelta;
+            modAngle += modDelta;
+            subAngle += subDelta;
+            if (currentAngle >= juce::MathConstants<double>::twoPi) currentAngle -= juce::MathConstants<double>::twoPi;
+            if (modAngle >= juce::MathConstants<double>::twoPi) modAngle -= juce::MathConstants<double>::twoPi;
+            if (subAngle >= juce::MathConstants<double>::twoPi) subAngle -= juce::MathConstants<double>::twoPi;
+            noteAgeSeconds += 1.0f / sr;
+            continue;
+        }
+        const auto sub = static_cast<float>(std::sin(subAngle));
+        const auto click = white * transient * 0.18f;
+
+        float voiced = 0.0f;
+        if (engine == SynthEngine::digitalV4)
+        {
+            const auto vibrato = 0.009 * std::sin(modAngle * 0.14);
+            const auto oscA = std::sin(currentAngle + vibrato);
+            const auto oscB = std::sin(currentAngle * 2.0 + 0.12 * std::sin(modAngle * 0.10));
+            const auto oscC = std::sin(currentAngle * 3.0 + 0.06 * std::sin(modAngle * 0.06));
+            const auto subWarm = std::sin(subAngle + 0.05 * std::sin(modAngle * 0.05));
+            const auto raw = static_cast<float>(0.67 * oscA + 0.14 * oscB + 0.06 * oscC + 0.16 * subWarm + click * 0.002f);
+
+            const auto cutoff = 180.0f + 1020.0f * env + 130.0f * static_cast<float>(0.5 + 0.5 * std::sin(modAngle * 0.03));
+            const auto alpha = std::exp(-juce::MathConstants<float>::twoPi * cutoff / sr);
+            lpState = alpha * lpState + (1.0f - alpha) * raw;
+            const auto hp = raw - lpState;
+            hpState = 0.996f * hpState + 0.004f * hp;
+
+            voiced = static_cast<float>(std::tanh((0.97f * lpState + 0.005f * hpState + 0.06f * subWarm) * 0.90f) * 0.66f);
+        }
+        else if (engine == SynthEngine::fmGlass)
+        {
+            const float idxMain = 0.72f * std::exp(-noteAgeSeconds * 3.6f) + 0.13f;
+            const float idxAir = 0.21f * std::exp(-noteAgeSeconds * 6.8f);
+            const auto slowDrift = 0.025f * std::sin(modAngle * 0.11);
+            const auto mod1 = std::sin(modAngle + slowDrift);
+            const auto mod2 = std::sin(modAngle * 0.75 + 0.6 * std::sin(modAngle * 0.09));
+
+            const auto carrier = std::sin(currentAngle + idxMain * mod1 + idxAir * mod2);
+            const auto harmonic2 = std::sin(currentAngle * 2.0 + idxMain * 0.22f * mod1);
+            const auto harmonic3 = std::sin(currentAngle * 3.0 + idxMain * 0.10f * mod2);
+            const auto glass = std::sin(currentAngle * 4.0 + modAngle * 0.07);
+            const auto raw = static_cast<float>(0.81 * carrier
+                                              + 0.11 * harmonic2
+                                              + 0.05 * harmonic3
+                                              + 0.03 * glass
+                                              + click * 0.012f);
+
+            const auto cutoff = 520.0f + 2350.0f * env + 240.0f * static_cast<float>(0.5 + 0.5 * std::sin(modAngle * 0.02));
+            const auto alpha = std::exp(-juce::MathConstants<float>::twoPi * cutoff / sr);
+            lpState = alpha * lpState + (1.0f - alpha) * raw;
+            const auto hp = raw - lpState;
+            hpState = 0.993f * hpState + 0.007f * hp;
+            voiced = static_cast<float>(std::tanh((0.95f * lpState + 0.04f * hpState) * 0.96f) * 0.67f);
+        }
+        else if (engine == SynthEngine::chipPulse)
+        {
+            const float phaseA = static_cast<float>(currentAngle / juce::MathConstants<double>::twoPi);
+            const float phaseB = static_cast<float>((currentAngle * 2.0) / juce::MathConstants<double>::twoPi);
+            const float pA = phaseA - std::floor(phaseA);
+            const float pB = phaseB - std::floor(phaseB);
+            static constexpr float dutySet[4] = { 0.125f, 0.25f, 0.5f, 0.75f };
+
+            float raw = 0.0f;
+            switch (chipSfxType)
+            {
+                case 0:
+                {
+                    const float chirpUp = 1.0f + 0.55f * (1.0f - std::exp(-noteAgeSeconds * 120.0f));
+                    const float coinPhase = static_cast<float>((currentAngle * chirpUp) / juce::MathConstants<double>::twoPi);
+                    const float pc = coinPhase - std::floor(coinPhase);
+                    const float pulse = (pc < 0.125f) ? 1.0f : -1.0f;
+                    raw = 0.88f * pulse + 0.12f * click;
+                    break;
+                }
+                case 1:
+                {
+                    const float chirpDown = 1.0f + 0.42f * std::exp(-noteAgeSeconds * 20.0f);
+                    const float jumpPhase = static_cast<float>((currentAngle * chirpDown) / juce::MathConstants<double>::twoPi);
+                    const float pj = jumpPhase - std::floor(jumpPhase);
+                    const float pulse = (pj < 0.25f) ? 1.0f : -1.0f;
+                    const float body = 2.0f * std::abs(2.0f * pj - 1.0f) - 1.0f;
+                    raw = 0.72f * pulse + 0.20f * body + 0.08f * click;
+                    break;
+                }
+                case 2:
+                {
+                    const float sweep = 1.0f + 1.05f * std::exp(-noteAgeSeconds * 16.0f);
+                    const float laserPhase = static_cast<float>((currentAngle * sweep) / juce::MathConstants<double>::twoPi);
+                    const float pl = laserPhase - std::floor(laserPhase);
+                    const float pulse = (pl < dutySet[static_cast<size_t>((noiseSeed >> 7) & 3u)]) ? 1.0f : -1.0f;
+                    const float ring = static_cast<float>(std::sin(modAngle * 0.42));
+                    raw = 0.76f * pulse + 0.14f * ring + 0.14f * white * std::exp(-noteAgeSeconds * 45.0f);
+                    break;
+                }
+                case 3:
+                default:
+                {
+                    const float pulseA = (pA < 0.5f) ? 1.0f : -1.0f;
+                    const float pulseB = (pB < 0.125f) ? 1.0f : -1.0f;
+                    raw = 0.70f * pulseA + 0.22f * pulseB + 0.10f * click + 0.07f * white * std::exp(-noteAgeSeconds * 95.0f);
+                    break;
+                }
+            }
+
+            const float stepped = std::round(raw * 7.0f) * (1.0f / 7.0f);
+            hpState = 0.975f * hpState + 0.025f * (stepped - lpState);
+            lpState = stepped;
+            voiced = static_cast<float>(std::tanh((0.84f * stepped + 0.18f * hpState) * 0.96f) * 0.72f);
+        }
+        else if (engine == SynthEngine::guitarPluck)
+        {
+            if (ksDelay.empty())
+            {
+                voiced = 0.0f;
+            }
+            else
+            {
+                const int n = static_cast<int>(ksDelay.size());
+                const int nextIdx = (ksIndex + 1) % n;
+                const float y0 = ksDelay[static_cast<size_t>(ksIndex)];
+                const float y1 = ksDelay[static_cast<size_t>(nextIdx)];
+                const float avg = 0.5f * (y0 + y1);
+                const float damping = 0.9925f - 0.012f * static_cast<float>(0.5 + 0.5 * std::sin(modAngle * 0.04));
+                const float pickBurst = (white - noiseLP) * std::exp(-noteAgeSeconds * 62.0f) * 0.040f;
+                noiseLP += 0.25f * (white - noiseLP);
+                const float write = avg * damping + pickBurst;
+
+                ksDelay[static_cast<size_t>(ksIndex)] = write;
+                ksIndex = nextIdx;
+
+                const float body = 0.82f * y0 + 0.12f * sub + 0.08f * click;
+                lpState += 0.14f * (body - lpState);
+                hpState += 0.010f * ((body - lpState) - hpState);
+                voiced = static_cast<float>(std::tanh((0.92f * lpState + 0.05f * hpState + 0.08f * ksLast) * 1.12f) * 0.72f);
+                ksLast = y0;
+            }
+        }
+        else
+        {
+            const float toneEnv = std::exp(-noteAgeSeconds * 9.5f);
+            const float metalEnv = std::exp(-noteAgeSeconds * 17.0f);
+            const float strikeEnv = std::exp(-noteAgeSeconds * 95.0f);
+
+            noiseLP += 0.36f * (white - noiseLP);
+            const float strike = (0.72f * white + 0.28f * (white - noiseLP)) * strikeEnv * 0.20f;
+
+            const auto fundamental = std::sin(currentAngle);
+            const auto r2 = std::sin(currentAngle * 3.99 + 0.12 * std::sin(modAngle * 0.3));
+            const auto r3 = std::sin(currentAngle * 6.83 + 0.08 * std::sin(modAngle * 0.43));
+            const auto r4 = std::sin(currentAngle * 9.77 + 0.05 * std::sin(modAngle * 0.57));
+
+            const auto body = static_cast<float>(0.74 * fundamental * toneEnv
+                                               + 0.17 * r2 * metalEnv
+                                               + 0.07 * r3 * metalEnv
+                                               + 0.04 * r4 * metalEnv
+                                               + 0.06 * sub * toneEnv);
+
+            lpState += 0.18f * ((body + strike) - lpState);
+            voiced = std::tanh((0.82f * lpState + 0.18f * body + strike) * 1.34f) * 0.72f;
+        }
+
+        const float sample = voiced * level * env;
+        for (int c = 0; c < outputBuffer.getNumChannels(); ++c)
+            outputBuffer.addSample(c, startSample + s, sample);
+
+        currentAngle += angleDelta;
+        modAngle += modDelta;
+        subAngle += subDelta;
+        if (currentAngle >= juce::MathConstants<double>::twoPi) currentAngle -= juce::MathConstants<double>::twoPi;
+        if (modAngle >= juce::MathConstants<double>::twoPi) modAngle -= juce::MathConstants<double>::twoPi;
+        if (subAngle >= juce::MathConstants<double>::twoPi) subAngle -= juce::MathConstants<double>::twoPi;
+        noteAgeSeconds += 1.0f / sr;
+    }
+
+    if (! adsr.isActive())
+        clearCurrentNote();
 }
 
 MainComponent::MainComponent()
@@ -23,12 +458,24 @@ MainComponent::MainComponent()
     camera.heightScale = 1.0f;
     camera.panX = 0.0f;
     camera.panY = 0.0f;
+    for (int i = 0; i < 10; ++i)
+        synth.addVoice(new WaveVoice(synthEngine));
+    synth.addSound(new WaveSound());
+    for (int i = 0; i < 6; ++i)
+        beatSynth.addVoice(new WaveVoice(synthEngine));
+    beatSynth.addSound(new WaveSound());
     randomiseVoxels();
     setOpaque(true);
     setSize(1500, 980);
     setWantsKeyboardFocus(true);
     addKeyListener(this);
+    setAudioChannels(0, 2);
     startTimerHz(60);
+}
+
+MainComponent::~MainComponent()
+{
+    shutdownAudio();
 }
 
 void MainComponent::paint(juce::Graphics& g)
@@ -48,6 +495,9 @@ void MainComponent::resized()
 
 void MainComponent::mouseWheelMove(const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
 {
+    if (isolatedSlab.isValid() && performanceMode)
+        return;
+
     const float delta = wheel.deltaY != 0.0f ? wheel.deltaY : wheel.deltaX;
     if (delta == 0.0f)
         return;
@@ -62,6 +512,19 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
 {
     if (isolatedSlab.isValid())
     {
+        if (performanceMode)
+        {
+            auto bounds = getLocalBounds().toFloat();
+            bounds.removeFromTop(78.0f);
+            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
+            if (nextCell != performanceHoverCell)
+            {
+                performanceHoverCell = nextCell;
+                repaint();
+            }
+            return;
+        }
+
         auto bounds = getLocalBounds().toFloat();
         bounds.removeFromTop(78.0f);
         if (updateCursorFromPosition(event.position, bounds.reduced(12.0f)))
@@ -91,6 +554,12 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
 
 void MainComponent::mouseExit(const juce::MouseEvent&)
 {
+    if (performanceHoverCell.has_value())
+    {
+        performanceHoverCell.reset();
+        repaint();
+    }
+
     if (hoveredSlab.isValid())
     {
         hoveredSlab = {};
@@ -110,6 +579,13 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
 
     if (isolatedSlab.isValid())
     {
+        if (performanceMode)
+        {
+            performanceHoverCell = performanceCellAtPosition(event.position, gridArea);
+            repaint();
+            return;
+        }
+
         if (editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         {
             const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
@@ -136,8 +612,180 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         isolatedSlab = slab;
         hoveredSlab = slab;
         resetEditCursor();
+        performanceMode = false;
+        performanceRegionMode = 2;
+        performanceSnakes.clear();
+        performanceDiscs.clear();
+        performanceHoverCell.reset();
+        performanceSelectedDirection = { 1, 0 };
+        performanceTick = 0;
+        performanceBeatEnergy = 0.0f;
         repaint();
     }
+}
+
+void MainComponent::prepareToPlay(int, double sampleRate)
+{
+    const juce::ScopedLock sl(synthLock);
+    currentSampleRate = sampleRate;
+    synth.setCurrentPlaybackSampleRate(sampleRate);
+    beatSynth.setCurrentPlaybackSampleRate(sampleRate);
+}
+
+void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    bufferToFill.clearActiveBufferRegion();
+
+    const juce::ScopedLock sl(synthLock);
+    juce::MidiBuffer midi;
+    juce::MidiBuffer beatMidi;
+    const float blockSeconds = static_cast<float>(bufferToFill.numSamples / juce::jmax(1.0, currentSampleRate));
+    const double stepSeconds = 60.0 / bpm / 4.0;
+
+    double localTime = 0.0;
+    while (localTime < blockSeconds)
+    {
+        const double remainingToStep = stepSeconds - beatStepAccumulator;
+        if (localTime + remainingToStep > blockSeconds)
+        {
+            beatStepAccumulator += blockSeconds - localTime;
+            break;
+        }
+
+        localTime += remainingToStep;
+        beatStepAccumulator = 0.0;
+        const int step = beatStepIndex % 16;
+        const int sampleOffset = juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1),
+                                              static_cast<int>(std::round(localTime * currentSampleRate)));
+
+        if (performanceMode)
+        {
+            const int phrase = beatBarIndex % 4;
+            const float density = juce::jlimit(0.0f, 1.0f,
+                                               performanceBeatEnergy
+                                                 + 0.04f * static_cast<float>(performanceSnakes.size())
+                                                 + 0.02f * static_cast<float>(performanceDiscs.size()));
+            if (drumMode == DrumMode::reactiveBreakbeat)
+            {
+                const bool dense = density > 0.45f;
+                const bool frantic = density > 0.72f;
+                const bool kick = step == 0
+                               || step == 10
+                               || (step == 7 && phrase >= 1)
+                               || (step == 13 && phrase == 3)
+                               || (step == 3 && phrase == 2)
+                               || (dense && (step == 6 || step == 14))
+                               || (frantic && (step == 2 || step == 11));
+                const bool snare = step == 4 || step == 12;
+                const bool ghostSnare = (step == 3 && phrase != 0)
+                                     || (step == 11 && phrase >= 2)
+                                     || (step == 15 && phrase == 3)
+                                     || (dense && step == 6)
+                                     || (frantic && (step == 9 || step == 14));
+                const bool hat = step != 4 && step != 12;
+                const bool openHat = step == 6 || step == 14 || (dense && step == 11);
+                const bool glitch = (step == 9 && phrase >= 2) || (step == 15 && phrase == 1) || (frantic && (step == 5 || step == 13));
+
+                if (kick) addBeatEvent(beatMidi, 120, step == 0 ? 0.96f : 0.72f, sampleOffset, bufferToFill.numSamples);
+                if (snare) addBeatEvent(beatMidi, 121, 0.78f + 0.08f * static_cast<float>(phrase == 3), sampleOffset, bufferToFill.numSamples);
+                if (ghostSnare) addBeatEvent(beatMidi, 121, 0.28f + 0.08f * static_cast<float>(phrase), sampleOffset + bufferToFill.numSamples / 32, bufferToFill.numSamples);
+                if (hat) addBeatEvent(beatMidi, 122, (step % 2 == 0) ? 0.42f : 0.24f, sampleOffset, bufferToFill.numSamples);
+                if (openHat) addBeatEvent(beatMidi, 122, 0.30f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                if ((step == 5 || step == 13) && (phrase >= 1 || dense))
+                {
+                    addBeatEvent(beatMidi, 122, 0.22f, sampleOffset + bufferToFill.numSamples / 48, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.19f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                }
+                if (dense && (step == 7 || step == 15))
+                {
+                    addBeatEvent(beatMidi, 122, 0.16f, sampleOffset + bufferToFill.numSamples / 64, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.15f, sampleOffset + bufferToFill.numSamples / 40, bufferToFill.numSamples);
+                    if (frantic)
+                        addBeatEvent(beatMidi, 122, 0.14f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                }
+                if (glitch) addBeatEvent(beatMidi, 123, 0.34f + 0.1f * static_cast<float>(phrase), sampleOffset, bufferToFill.numSamples);
+            }
+            else
+            {
+                auto hit = [this, &beatMidi, sampleOffset, &bufferToFill] (int midiNote, float velocity)
+                {
+                    addBeatEvent(beatMidi, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.90f), sampleOffset, bufferToFill.numSamples);
+                };
+
+                switch (drumMode)
+                {
+                    case DrumMode::rezStraight:
+                        if ((step % 4) == 0) hit(120, 0.82f);
+                        if (step == 4 || step == 12) hit(121, 0.60f);
+                        if ((step % 2) == 1) hit(122, 0.18f + ((step % 4) == 3 ? 0.05f : 0.0f));
+                        break;
+
+                    case DrumMode::tightPulse:
+                        if (step == 0 || step == 8 || step == 12) hit(120, 0.78f);
+                        if (step == 4 || step == 12) hit(121, 0.58f);
+                        if ((step % 2) == 1) hit(122, 0.17f);
+                        if (step == 15) hit(123, 0.18f);
+                        break;
+
+                    case DrumMode::forwardStep:
+                        if (step == 0 || step == 8 || step == 14) hit(120, 0.76f);
+                        if (step == 4 || step == 12) hit(121, 0.56f);
+                        if ((step % 2) == 1) hit(122, 0.16f + ((step == 11 || step == 15) ? 0.05f : 0.0f));
+                        break;
+
+                    case DrumMode::railLine:
+                        if ((step % 4) == 0) hit(120, 0.72f);
+                        if (step == 4 || step == 12) hit(121, 0.52f);
+                        if ((step % 2) == 1) hit(122, 0.15f);
+                        if (step == 8 || step == 15) hit(123, 0.16f);
+                        break;
+
+                    case DrumMode::reactiveBreakbeat:
+                    default:
+                        break;
+                }
+            }
+        }
+
+        ++beatStepIndex;
+        if (beatStepIndex % 16 == 0)
+            ++beatBarIndex;
+    }
+
+    for (auto it = pendingNoteOffs.begin(); it != pendingNoteOffs.end();)
+    {
+        if (it->secondsRemaining <= blockSeconds)
+        {
+            midi.addEvent(juce::MidiMessage::noteOff(1, it->note), juce::jmax(0, bufferToFill.numSamples - 1));
+            it = pendingNoteOffs.erase(it);
+        }
+        else
+        {
+            it->secondsRemaining -= blockSeconds;
+            ++it;
+        }
+    }
+
+    for (auto it = pendingBeatNoteOffs.begin(); it != pendingBeatNoteOffs.end();)
+    {
+        if (it->secondsRemaining <= blockSeconds)
+        {
+            beatMidi.addEvent(juce::MidiMessage::noteOff(1, it->note), juce::jmax(0, bufferToFill.numSamples - 1));
+            it = pendingBeatNoteOffs.erase(it);
+        }
+        else
+        {
+            it->secondsRemaining -= blockSeconds;
+            ++it;
+        }
+    }
+
+    synth.renderNextBlock(*bufferToFill.buffer, midi, bufferToFill.startSample, bufferToFill.numSamples);
+    beatSynth.renderNextBlock(*bufferToFill.buffer, beatMidi, bufferToFill.startSample, bufferToFill.numSamples);
+}
+
+void MainComponent::releaseResources()
+{
 }
 
 bool MainComponent::keyPressed(const juce::KeyPress& key, juce::Component*)
@@ -149,14 +797,95 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 {
     if (isolatedSlab.isValid())
     {
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; repaint(); return true; }
+        if (key == juce::KeyPress::returnKey)
+        {
+            performanceMode = ! performanceMode;
+            if (performanceMode && performanceSnakes.empty())
+                setPerformanceSnakeCount(1);
+            repaint();
+            return true;
+        }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceHoverCell.reset(); repaint(); return true; }
+
+        if (performanceMode)
+        {
+            if (key == juce::KeyPress('t'))
+            {
+                synthEngine = static_cast<SynthEngine>((static_cast<int>(synthEngine) + 1) % 5);
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('b'))
+            {
+                drumMode = static_cast<DrumMode>((static_cast<int>(drumMode) + 1) % 5);
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('k'))
+            {
+                keyRoot = (keyRoot + 1) % 12;
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('l'))
+            {
+                scale = static_cast<ScaleType>((static_cast<int>(scale) + 1) % 5);
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress::leftKey) { performanceSelectedDirection = { -1, 0 }; repaint(); return true; }
+            if (key == juce::KeyPress::rightKey) { performanceSelectedDirection = { 1, 0 }; repaint(); return true; }
+            if (key == juce::KeyPress::upKey) { performanceSelectedDirection = { 0, -1 }; repaint(); return true; }
+            if (key == juce::KeyPress::downKey) { performanceSelectedDirection = { 0, 1 }; repaint(); return true; }
+            if (key == juce::KeyPress('y'))
+            {
+                if (performanceHoverCell.has_value())
+                {
+                    const auto cell = *performanceHoverCell;
+                    auto existing = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                                 [cell] (const ReflectorDisc& disc) { return disc.cell == cell; });
+                    if (existing != performanceDiscs.end())
+                    {
+                        auto it = std::find(snakeDirections.begin(), snakeDirections.end(), existing->direction);
+                        size_t index = it == snakeDirections.end() ? 0u : static_cast<size_t>(std::distance(snakeDirections.begin(), it));
+                        index = (index + 1u) % snakeDirections.size();
+                        existing->direction = snakeDirections[index];
+                        performanceSelectedDirection = existing->direction;
+                    }
+                    else
+                    {
+                        performanceDiscs.push_back({ cell, performanceSelectedDirection });
+                    }
+                    repaint();
+                }
+                return true;
+            }
+            if (key == juce::KeyPress('z'))
+            {
+                performanceRegionMode = (performanceRegionMode + 1) % 3;
+                setPerformanceSnakeCount(static_cast<int>(performanceSnakes.size()));
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('0')) { setPerformanceSnakeCount(0); repaint(); return true; }
+            if (key == juce::KeyPress('1')) { setPerformanceSnakeCount(1); repaint(); return true; }
+            if (key == juce::KeyPress('2')) { setPerformanceSnakeCount(2); repaint(); return true; }
+            if (key == juce::KeyPress('3')) { setPerformanceSnakeCount(3); repaint(); return true; }
+            if (key == juce::KeyPress('4')) { setPerformanceSnakeCount(4); repaint(); return true; }
+            if (key == juce::KeyPress('5')) { setPerformanceSnakeCount(5); repaint(); return true; }
+            if (key == juce::KeyPress('6')) { setPerformanceSnakeCount(6); repaint(); return true; }
+            if (key == juce::KeyPress('7')) { setPerformanceSnakeCount(7); repaint(); return true; }
+            if (key == juce::KeyPress('8')) { setPerformanceSnakeCount(8); repaint(); return true; }
+            return true;
+        }
+
         if (key == juce::KeyPress::leftKey) { moveEditCursor(-1, 0, 0); repaint(); return true; }
         if (key == juce::KeyPress::rightKey) { moveEditCursor(1, 0, 0); repaint(); return true; }
         if (key == juce::KeyPress::upKey) { moveEditCursor(0, -1, 0); repaint(); return true; }
         if (key == juce::KeyPress::downKey) { moveEditCursor(0, 1, 0); repaint(); return true; }
         if (key == juce::KeyPress::pageUpKey || key == juce::KeyPress(']')) { moveEditCursor(0, 0, 1); repaint(); return true; }
         if (key == juce::KeyPress::pageDownKey || key == juce::KeyPress('[')) { moveEditCursor(0, 0, -1); repaint(); return true; }
-        if (key == juce::KeyPress::returnKey || key == juce::KeyPress('p'))
+        if (key == juce::KeyPress('p'))
         {
             if (editCursor.active)
                 setVoxel(editCursor.x, editCursor.y, editCursor.z, true);
@@ -172,6 +901,36 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         }
     }
 
+    if (key == juce::KeyPress('t'))
+    {
+        synthEngine = static_cast<SynthEngine>((static_cast<int>(synthEngine) + 1) % 5);
+        repaint();
+        return true;
+    }
+    if (key == juce::KeyPress('b'))
+    {
+        drumMode = static_cast<DrumMode>((static_cast<int>(drumMode) + 1) % 5);
+        repaint();
+        return true;
+    }
+    if (key == juce::KeyPress('k'))
+    {
+        keyRoot = (keyRoot + 1) % 12;
+        repaint();
+        return true;
+    }
+    if (key == juce::KeyPress('l'))
+    {
+        scale = static_cast<ScaleType>((static_cast<int>(scale) + 1) % 5);
+        repaint();
+        return true;
+    }
+    if (key == juce::KeyPress('u'))
+    {
+        if (quantizeWorldToCurrentScale())
+            repaint();
+        return true;
+    }
     if (key == juce::KeyPress('g')) { splitIntoFourIslands(); repaint(); return true; }
     if (key == juce::KeyPress('q')) { rotateCamera(-1); return true; }
     if (key == juce::KeyPress('e')) { rotateCamera(1); return true; }
@@ -188,14 +947,35 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 void MainComponent::timerCallback()
 {
     const float delta = targetZoom - camera.zoom;
-    if (std::abs(delta) < 0.001f)
+    bool needsRepaint = false;
+
+    if (std::abs(delta) >= 0.001f)
+    {
+        camera.zoom += delta * 0.28f;
+        needsRepaint = true;
+    }
+    else
     {
         camera.zoom = targetZoom;
-        return;
     }
 
-    camera.zoom += delta * 0.28f;
-    repaint();
+    if (performanceMode && ! performanceSnakes.empty())
+    {
+        ++performanceTick;
+        performanceBeatEnergy *= 0.986f;
+        if (performanceTick % 8 == 0)
+        {
+            stepPerformanceSnakes();
+            needsRepaint = true;
+        }
+    }
+    else
+    {
+        performanceBeatEnergy *= 0.97f;
+    }
+
+    if (needsRepaint)
+        repaint();
 }
 
 void MainComponent::randomiseVoxels()
@@ -205,6 +985,16 @@ void MainComponent::randomiseVoxels()
     hoveredSlab = {};
     isolatedSlab = {};
     editCursor = {};
+    performanceMode = false;
+    performanceRegionMode = 2;
+    performanceSnakes.clear();
+    performanceDiscs.clear();
+    performanceHoverCell.reset();
+    performanceTick = 0;
+    beatStepAccumulator = 0.0;
+    beatStepIndex = 0;
+    beatBarIndex = 0;
+    performanceBeatEnergy = 0.0f;
     voxelCount = 0;
     filledVoxels.clear();
     filledVoxels.reserve(static_cast<size_t>(gridWidth * gridDepth * gridHeight * voxelFillRatio * 1.3f));
@@ -240,6 +1030,16 @@ void MainComponent::splitIntoFourIslands()
     hoveredSlab = {};
     isolatedSlab = {};
     editCursor = {};
+    performanceMode = false;
+    performanceRegionMode = 2;
+    performanceSnakes.clear();
+    performanceDiscs.clear();
+    performanceHoverCell.reset();
+    performanceTick = 0;
+    beatStepAccumulator = 0.0;
+    beatStepIndex = 0;
+    beatBarIndex = 0;
+    performanceBeatEnergy = 0.0f;
 }
 
 bool MainComponent::hasVoxel(int x, int y, int z) const
@@ -544,6 +1344,154 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
     editCursor.active = true;
 }
 
+int MainComponent::midiNoteForHeight(int z) const
+{
+    const int midi = juce::jlimit(24, 108, 59 + z);
+    return juce::jlimit(24, 108, quantizeMidiToScale(midi));
+}
+
+std::vector<int> MainComponent::currentScaleSteps() const
+{
+    switch (scale)
+    {
+        case ScaleType::chromatic: return { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        case ScaleType::major: return { 0, 2, 4, 5, 7, 9, 11 };
+        case ScaleType::minor: return { 0, 2, 3, 5, 7, 8, 10 };
+        case ScaleType::dorian: return { 0, 2, 3, 5, 7, 9, 10 };
+        case ScaleType::pentatonic: return { 0, 2, 4, 7, 9 };
+    }
+
+    return { 0, 2, 3, 5, 7, 8, 10 };
+}
+
+int MainComponent::quantizeMidiToScale(int midi) const
+{
+    if (! quantizeToScale)
+        return midi;
+
+    const auto steps = currentScaleSteps();
+    int bestNote = midi;
+    int bestDistance = 128;
+
+    for (int n = midi - 12; n <= midi + 12; ++n)
+    {
+        const int pc = (n % 12 + 12) % 12;
+        const int rel = (pc - keyRoot + 12) % 12;
+        if (std::find(steps.begin(), steps.end(), rel) != steps.end())
+        {
+            const int d = std::abs(n - midi);
+            if (d < bestDistance)
+            {
+                bestDistance = d;
+                bestNote = n;
+            }
+        }
+    }
+
+    return bestNote;
+}
+
+int MainComponent::quantizeMidiToCurrentScaleStrict(int midi) const
+{
+    const auto steps = currentScaleSteps();
+    int bestNote = midi;
+    int bestDistance = 128;
+
+    for (int n = midi - 12; n <= midi + 12; ++n)
+    {
+        const int pc = (n % 12 + 12) % 12;
+        const int rel = (pc - keyRoot + 12) % 12;
+        if (std::find(steps.begin(), steps.end(), rel) != steps.end())
+        {
+            const int d = std::abs(n - midi);
+            if (d < bestDistance)
+            {
+                bestDistance = d;
+                bestNote = n;
+            }
+        }
+    }
+
+    return bestNote;
+}
+
+bool MainComponent::quantizeWorldToCurrentScale()
+{
+    bool changed = false;
+    std::vector<uint8_t> newVoxels(voxels.size(), 0u);
+
+    for (const auto& voxel : filledVoxels)
+    {
+        const int quantizedZ = voxel.z == 0
+                                 ? 0
+                                 : juce::jlimit(1, gridHeight - 1,
+                                                (quantizeMidiToCurrentScaleStrict(juce::jlimit(24, 108, 59 + static_cast<int>(voxel.z))) - 60) + 1);
+        const auto newIndex = voxelIndex(voxel.x, voxel.y, quantizedZ);
+        newVoxels[newIndex] = 1u;
+        changed = changed || (quantizedZ != voxel.z);
+    }
+
+    if (! changed)
+        return false;
+
+    voxels = std::move(newVoxels);
+    filledVoxels.clear();
+    voxelCount = 0;
+    for (int z = 0; z < gridHeight; ++z)
+        for (int y = 0; y < gridDepth; ++y)
+            for (int x = 0; x < gridWidth; ++x)
+                if (voxels[voxelIndex(x, y, z)] != 0u)
+                {
+                    filledVoxels.push_back(FilledVoxel { static_cast<uint16_t>(x), static_cast<uint16_t>(y), static_cast<uint8_t>(z) });
+                    ++voxelCount;
+                }
+
+    return true;
+}
+
+void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    const int zStart = isolatedSlab.floor * floorBandHeight;
+    const int zEnd = zStart + floorBandHeight;
+    const juce::ScopedLock sl(synthLock);
+
+    int triggered = 0;
+    for (int z = zStart; z < zEnd; ++z)
+    {
+        if (! hasVoxel(cell.x, cell.y, z))
+            continue;
+
+        const int midiNote = midiNoteForHeight(z);
+        const float velocity = juce::jlimit(0.15f, 0.92f, 0.34f + 0.04f * static_cast<float>(z - zStart));
+        synth.noteOn(1, midiNote, velocity);
+        pendingNoteOffs.push_back({ midiNote, 0.16f });
+        ++triggered;
+    }
+
+    if (triggered == 0)
+    {
+        const int fallback = midiNoteForHeight(zStart + ((cell.x + cell.y) % floorBandHeight));
+        synth.noteOn(1, fallback, 0.18f);
+        pendingNoteOffs.push_back({ fallback, 0.08f });
+        performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.03f);
+        return;
+    }
+
+    performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.08f + 0.03f * static_cast<float>(triggered - 1));
+}
+
+void MainComponent::addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples)
+{
+    const int onOffset = juce::jlimit(0, juce::jmax(0, blockSamples - 1), sampleOffset);
+    buffer.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity)), onOffset);
+
+    const float noteLengthSeconds = midiNote == 120 ? 0.12f : midiNote == 121 ? 0.09f : midiNote == 122 ? 0.03f : 0.05f;
+    pendingBeatNoteOffs.push_back({ midiNote, noteLengthSeconds });
+}
+
 juce::Colour MainComponent::displayColourForVoxel(int x, int y, int z, juce::Colour base) const
 {
     if (! isolatedSlab.isValid() && ! hoveredSlab.isValid())
@@ -576,6 +1524,195 @@ juce::String MainComponent::labelForSlab(const SlabSelection& slab) const
 
     return juce::String(quadrantNames[static_cast<size_t>(juce::jlimit(0, 3, slab.quadrant))])
          + " Floor " + juce::String(slab.floor + 1);
+}
+
+juce::Rectangle<int> MainComponent::performanceRegionBounds() const
+{
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+
+    if (performanceRegionMode == 0)
+    {
+        const int insetX = width / 4;
+        const int insetY = height / 4;
+        return { x0 + insetX, y0 + insetY, juce::jmax(1, width / 2), juce::jmax(1, height / 2) };
+    }
+
+    if (performanceRegionMode == 1)
+    {
+        const int insetX = width / 8;
+        const int insetY = height / 8;
+        return { x0 + insetX, y0 + insetY, juce::jmax(1, width - insetX * 2), juce::jmax(1, height - insetY * 2) };
+    }
+
+    return { x0, y0, width, height };
+}
+
+juce::Rectangle<float> MainComponent::performanceBoardBounds(juce::Rectangle<float> area) const
+{
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const auto available = area.reduced(36.0f);
+    const float tileSize = juce::jmax(6.0f,
+                                      juce::jmin(available.getWidth() / static_cast<float>(slabWidth),
+                                                 available.getHeight() / static_cast<float>(slabHeight)));
+    return juce::Rectangle<float>(tileSize * static_cast<float>(slabWidth),
+                                  tileSize * static_cast<float>(slabHeight))
+        .withCentre(area.getCentre());
+}
+
+std::optional<juce::Point<int>> MainComponent::performanceCellAtPosition(juce::Point<float> position, juce::Rectangle<float> area) const
+{
+    if (! isolatedSlab.isValid())
+        return std::nullopt;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const auto board = performanceBoardBounds(area);
+    if (! board.contains(position))
+        return std::nullopt;
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+    const int localX = juce::jlimit(0, slabWidth - 1, static_cast<int>((position.x - board.getX()) / tileSize));
+    const int localY = juce::jlimit(0, slabHeight - 1, static_cast<int>((position.y - board.getY()) / tileSize));
+    return juce::Point<int>(x0 + localX, y0 + localY);
+}
+
+void MainComponent::setPerformanceSnakeCount(int count)
+{
+    performanceSnakes.clear();
+    performanceTick = 0;
+
+    if (! isolatedSlab.isValid())
+        return;
+
+    const auto bounds = performanceRegionBounds();
+    if (bounds.isEmpty())
+        return;
+
+    juce::Random rng;
+    count = juce::jlimit(0, 8, count);
+    for (int i = 0; i < count; ++i)
+    {
+        Snake snake;
+        snake.colour = snakeColours[static_cast<size_t>(i % static_cast<int>(snakeColours.size()))];
+        snake.direction = snakeDirections[static_cast<size_t>(rng.nextInt(static_cast<int>(snakeDirections.size())))];
+
+        const auto start = juce::Point<int>(bounds.getX() + rng.nextInt(bounds.getWidth()),
+                                            bounds.getY() + rng.nextInt(bounds.getHeight()));
+        snake.body.push_back(start);
+
+        auto tail = start;
+        for (int segment = 1; segment < 5; ++segment)
+        {
+            tail.x = juce::jlimit(bounds.getX(), bounds.getRight() - 1, tail.x - snake.direction.x);
+            tail.y = juce::jlimit(bounds.getY(), bounds.getBottom() - 1, tail.y - snake.direction.y);
+            snake.body.push_back(tail);
+        }
+
+        performanceSnakes.push_back(std::move(snake));
+    }
+}
+
+void MainComponent::stepPerformanceSnakes()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    const auto bounds = performanceRegionBounds();
+
+    auto inside = [&] (juce::Point<int> p)
+    {
+        return bounds.contains(p);
+    };
+
+    auto occupiedByAnySnake = [&] (juce::Point<int> cell, int movingSnakeIndex)
+    {
+        for (int i = 0; i < static_cast<int>(performanceSnakes.size()); ++i)
+        {
+            const auto& other = performanceSnakes[static_cast<size_t>(i)];
+            for (size_t segment = 0; segment < other.body.size(); ++segment)
+            {
+                // Let a snake move into its own trailing tail cell since that segment advances away this tick.
+                if (i == movingSnakeIndex && segment == other.body.size() - 1)
+                    continue;
+
+                if (other.body[segment] == cell)
+                    return true;
+            }
+        }
+
+        return false;
+    };
+
+    for (int snakeIndex = 0; snakeIndex < static_cast<int>(performanceSnakes.size()); ++snakeIndex)
+    {
+        auto& snake = performanceSnakes[static_cast<size_t>(snakeIndex)];
+        if (snake.body.empty())
+            continue;
+
+        auto chooseDirection = [&] ()
+        {
+            std::vector<juce::Point<int>> options;
+            for (const auto& dir : snakeDirections)
+            {
+                if (dir.x == -snake.direction.x && dir.y == -snake.direction.y)
+                    continue;
+
+                const auto candidate = snake.body.front() + dir;
+                if (! inside(candidate) || occupiedByAnySnake(candidate, snakeIndex))
+                    continue;
+
+                options.push_back(dir);
+            }
+
+            if (options.empty())
+            {
+                for (const auto& dir : snakeDirections)
+                {
+                    const auto candidate = snake.body.front() + dir;
+                    if (inside(candidate) && ! occupiedByAnySnake(candidate, snakeIndex))
+                        options.push_back(dir);
+                }
+            }
+
+            if (! options.empty())
+            {
+                // Deterministic fallback order: keep movement stable instead of wandering randomly.
+                snake.direction = options.front();
+            }
+        };
+
+        auto forward = snake.body.front() + snake.direction;
+        if (! inside(forward) || occupiedByAnySnake(forward, snakeIndex))
+            chooseDirection();
+
+        auto nextHead = snake.body.front() + snake.direction;
+        if (! inside(nextHead) || occupiedByAnySnake(nextHead, snakeIndex))
+            continue;
+
+        if (const auto disc = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                           [nextHead] (const ReflectorDisc& reflector) { return reflector.cell == nextHead; });
+            disc != performanceDiscs.end())
+        {
+            snake.direction = disc->direction;
+            performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.1f);
+        }
+
+        snake.body.insert(snake.body.begin(), nextHead);
+        if (snake.body.size() > 7)
+            snake.body.pop_back();
+        triggerPerformanceNotesAtCell(nextHead);
+    }
 }
 
 juce::Point<float> MainComponent::projectCellCorner(int x, int y, int z, int cellX, int cellY, juce::Rectangle<float> area) const
@@ -674,8 +1811,195 @@ juce::Point<float> MainComponent::projectPoint(int x, int y, int z, juce::Rectan
              offset.y + (rotated.x + rotated.y) * tileHeight * 0.5f - z * verticalStep };
 }
 
+void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const auto activeRegion = performanceRegionBounds();
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const auto board = performanceBoardBounds(area);
+    const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+
+    g.setColour(juce::Colour::fromRGBA(7, 12, 30, 235));
+    g.fillRoundedRectangle(board.expanded(22.0f), 20.0f);
+    g.setColour(juce::Colour::fromRGBA(32, 54, 130, 80));
+    g.fillEllipse(board.expanded(54.0f, 48.0f));
+
+    const int zStart = isolatedSlab.floor * floorBandHeight;
+    const int zEnd = zStart + floorBandHeight;
+
+    for (int localY = 0; localY < slabHeight; ++localY)
+    {
+        for (int localX = 0; localX < slabWidth; ++localX)
+        {
+            const int worldX = x0 + localX;
+            const int worldY = y0 + localY;
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(localX) * tileSize,
+                                               board.getY() + static_cast<float>(localY) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            const bool activeCell = activeRegion.contains(worldX, worldY);
+
+            g.setColour(activeCell ? juce::Colour::fromRGBA(10, 18, 42, 255)
+                                   : juce::Colour::fromRGBA(18, 22, 34, 220));
+            g.fillRect(cell);
+
+            std::vector<int> notes;
+            for (int z = zStart; z < zEnd; ++z)
+                if (hasVoxel(worldX, worldY, z))
+                    notes.push_back(z);
+
+            if (! notes.empty())
+            {
+                const float sliceHeight = cell.getHeight() / static_cast<float>(notes.size());
+                for (size_t i = 0; i < notes.size(); ++i)
+                {
+                    auto slice = juce::Rectangle<float>(cell.getX() + 1.0f,
+                                                        cell.getBottom() - sliceHeight * static_cast<float>(i + 1) + 1.0f,
+                                                        cell.getWidth() - 2.0f,
+                                                        sliceHeight - 2.0f);
+                    auto colour = colourForHeight(notes[i]).interpolatedWith(juce::Colours::white, 0.08f);
+                    if (! activeCell)
+                        colour = colour.interpolatedWith(juce::Colour::greyLevel(colour.getPerceivedBrightness()), 0.78f)
+                                       .withMultipliedAlpha(0.4f);
+                    g.setColour(colour);
+                    g.fillRect(slice);
+                }
+            }
+
+            g.setColour(activeCell ? juce::Colour::fromRGBA(74, 102, 190, 52)
+                                   : juce::Colour::fromRGBA(90, 90, 104, 32));
+            g.drawRect(cell, 1.0f);
+        }
+    }
+
+    const auto regionLocal = juce::Rectangle<float>(board.getX() + static_cast<float>(activeRegion.getX() - x0) * tileSize,
+                                                    board.getY() + static_cast<float>(activeRegion.getY() - y0) * tileSize,
+                                                    static_cast<float>(activeRegion.getWidth()) * tileSize,
+                                                    static_cast<float>(activeRegion.getHeight()) * tileSize);
+    g.setColour(juce::Colour::fromRGBA(114, 226, 255, 160));
+    g.drawRoundedRectangle(regionLocal.expanded(2.0f), 8.0f, 2.0f);
+
+    for (const auto& snake : performanceSnakes)
+    {
+        if (snake.body.empty())
+            continue;
+
+        juce::Path spine;
+        std::vector<juce::Point<float>> centres;
+        centres.reserve(snake.body.size());
+
+        for (const auto& segment : snake.body)
+        {
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(segment.x - x0) * tileSize,
+                                               board.getY() + static_cast<float>(segment.y - y0) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            centres.push_back(cell.getCentre());
+        }
+
+        if (! centres.empty())
+        {
+            spine.startNewSubPath(centres.front());
+            for (size_t i = 1; i < centres.size(); ++i)
+                spine.lineTo(centres[i]);
+
+            g.setColour(snake.colour.withAlpha(0.18f));
+            g.strokePath(spine, juce::PathStrokeType(tileSize * 0.34f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+            g.setColour(snake.colour.withAlpha(0.78f));
+            g.strokePath(spine, juce::PathStrokeType(tileSize * 0.16f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+
+        for (size_t i = 0; i < snake.body.size(); ++i)
+        {
+            const auto segment = snake.body[i];
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(segment.x - x0) * tileSize,
+                                               board.getY() + static_cast<float>(segment.y - y0) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            auto orb = cell.reduced(i == 0 ? tileSize * 0.18f : tileSize * 0.24f);
+            auto segmentColour = snake.colour;
+            if (i > 0)
+                segmentColour = segmentColour.darker(static_cast<float>(i) * 0.05f);
+
+            g.setColour(segmentColour.withAlpha(i == 0 ? 0.22f : 0.12f));
+            g.fillEllipse(orb.expanded(tileSize * 0.12f));
+            g.setColour(segmentColour.withAlpha(i == 0 ? 0.98f : 0.84f));
+            g.fillEllipse(orb);
+            g.setColour(juce::Colours::white.withAlpha(i == 0 ? 0.78f : 0.26f));
+            g.drawEllipse(orb, i == 0 ? 1.8f : 1.0f);
+
+            if (i == 0)
+            {
+                const auto centre = orb.getCentre();
+                const juce::Point<float> dir(static_cast<float>(snake.direction.x), static_cast<float>(snake.direction.y));
+                const juce::Point<float> perp(-dir.y, dir.x);
+                const auto eyeOffset = perp * (orb.getWidth() * 0.14f);
+                const auto eyeForward = dir * (orb.getWidth() * 0.12f);
+                const float eyeSize = juce::jmax(2.0f, orb.getWidth() * 0.10f);
+
+                g.setColour(juce::Colour::fromRGBA(6, 10, 24, 220));
+                g.fillEllipse(juce::Rectangle<float>(eyeSize, eyeSize).withCentre(centre + eyeForward + eyeOffset));
+                g.fillEllipse(juce::Rectangle<float>(eyeSize, eyeSize).withCentre(centre + eyeForward - eyeOffset));
+            }
+        }
+    }
+
+    for (const auto& disc : performanceDiscs)
+    {
+        auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(disc.cell.x - x0) * tileSize,
+                                           board.getY() + static_cast<float>(disc.cell.y - y0) * tileSize,
+                                           tileSize,
+                                           tileSize).reduced(tileSize * 0.16f);
+        const auto centre = cell.getCentre();
+        const float radius = cell.getWidth() * 0.36f;
+
+        g.setColour(juce::Colour::fromRGBA(16, 26, 58, 230));
+        g.fillEllipse(cell);
+        g.setColour(juce::Colour::fromRGBA(140, 232, 255, 220));
+        g.drawEllipse(cell, 1.6f);
+
+        juce::Path arrow;
+        const juce::Point<float> dir(static_cast<float>(disc.direction.x), static_cast<float>(disc.direction.y));
+        const auto tip = centre + dir * radius;
+        const auto base = centre - dir * (radius * 0.45f);
+        const juce::Point<float> perp(-dir.y, dir.x);
+        arrow.startNewSubPath(base + perp * (radius * 0.24f));
+        arrow.lineTo(tip);
+        arrow.lineTo(base - perp * (radius * 0.24f));
+        arrow.closeSubPath();
+        g.fillPath(arrow);
+    }
+
+    if (performanceHoverCell.has_value())
+    {
+        auto hover = juce::Rectangle<float>(board.getX() + static_cast<float>(performanceHoverCell->x - x0) * tileSize,
+                                            board.getY() + static_cast<float>(performanceHoverCell->y - y0) * tileSize,
+                                            tileSize,
+                                            tileSize).reduced(tileSize * 0.08f);
+        g.setColour(juce::Colour::fromRGBA(110, 240, 255, 70));
+        g.fillRoundedRectangle(hover, 6.0f);
+        g.setColour(juce::Colour::fromRGBA(160, 248, 255, 220));
+        g.drawRoundedRectangle(hover, 6.0f, 2.0f);
+    }
+
+    g.setColour(juce::Colour::fromRGBA(126, 224, 255, 180));
+    g.drawRoundedRectangle(board.expanded(4.0f), 10.0f, 2.0f);
+}
+
 void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area)
 {
+    if (isolatedSlab.isValid() && performanceMode)
+    {
+        drawPerformanceView(g, area);
+        return;
+    }
+
     const int minXCoord = boardInset;
     const int minYCoord = boardInset;
     const int maxXCoord = gridWidth - boardInset;
@@ -1216,8 +2540,10 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.setColour(juce::Colours::white);
     g.setFont(juce::FontOptions(17.0f));
     const auto modeText = isolatedSlab.isValid()
-                            ? "ISOLATED EDIT | WASD Pan | Wheel Zoom | Mouse snap | Click place | Right-click remove | Arrows move | [ ] height | Esc back"
-                            : "BUILD MODE | WASD Pan | Wheel Zoom | Q/E Rotate | -/= Height | G View | R Randomise";
+                            ? (performanceMode
+                                ? "PERFORMANCE VIEW | Enter edit | Z arena | Arrows disc dir | Y disc | 0-8 snakes | T synth | B drums | K key | L scale | Esc back"
+                                : "ISOLATED EDIT | Enter performance | WASD Pan | Wheel Zoom | Mouse snap | Click place | Right-click remove | Arrows move | [ ] height | T synth | B drums | K key | L scale | U quantize | Esc back")
+                            : "BUILD MODE | WASD Pan | Wheel Zoom | Q/E Rotate | -/= Height | G View | R Randomise | T synth | B drums | K key | L scale | U quantize";
     g.drawText(modeText,
                area.removeFromTop(24.0f).reduced(10.0f, 0.0f).toNearestInt(),
                juce::Justification::centredLeft);
@@ -1226,15 +2552,34 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     juce::String detailText = "Random voxel field 128x128x48   z=0 no note   z=1 "
                             + noteNameForHeight(1)
                             + " chromatic upward   Filled " + juce::String(voxelCount)
-                            + "   Note-colour mapping active";
+                            + "   Synth " + synthName()
+                            + "   Drums " + drumModeName()
+                            + "   Key " + keyName()
+                            + " " + scaleName();
 
-    if (isolatedSlab.isValid() && editCursor.active)
+    if (isolatedSlab.isValid() && performanceMode)
+    {
+        const auto regionName = performanceRegionMode == 0 ? "Centre 50%"
+                              : performanceRegionMode == 1 ? "Centre 75%"
+                              : "Full";
+        detailText = "Performance " + labelForSlab(isolatedSlab)
+                   + "   Region " + juce::String(regionName)
+                   + "   Snakes " + juce::String(static_cast<int>(performanceSnakes.size()))
+                    + "   Discs " + juce::String(static_cast<int>(performanceDiscs.size()))
+                   + "   Synth " + synthName()
+                   + "   Drums " + drumModeName()
+                   + "   Key " + keyName()
+                   + " " + scaleName();
+    }
+    else if (isolatedSlab.isValid() && editCursor.active)
     {
         detailText = "Editing " + labelForSlab(isolatedSlab)
                    + "   Cursor x" + juce::String(editCursor.x)
                    + " y" + juce::String(editCursor.y)
                    + " z" + juce::String(editCursor.z)
-                   + "   Note " + noteNameForHeight(editCursor.z);
+                   + "   Note " + noteNameForHeight(editCursor.z)
+                   + "   Key " + keyName()
+                   + " " + scaleName();
     }
 
     g.drawFittedText(detailText,
@@ -1330,5 +2675,30 @@ juce::String MainComponent::noteNameForHeight(int z) const
         "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
     };
 
-    return names[static_cast<size_t>((z - 1) % 12)];
+    const int midi = midiNoteForHeight(z);
+    return names[static_cast<size_t>((midi % 12 + 12) % 12)];
+}
+
+juce::String MainComponent::keyName() const
+{
+    static constexpr std::array<const char*, 12> names {
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+    };
+
+    return names[static_cast<size_t>(keyRoot % 12)];
+}
+
+juce::String MainComponent::scaleName() const
+{
+    return scaleToString(scale);
+}
+
+juce::String MainComponent::synthName() const
+{
+    return synthToString(synthEngine);
+}
+
+juce::String MainComponent::drumModeName() const
+{
+    return drumModeToString(drumMode);
 }
