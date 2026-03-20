@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+ae58e7af0327bf78dc895092d635af13 KlangKunstWorldWireframe_artefacts/JuceLibraryCode/JuceHeader.h
+1640c48e535bcf5ad44dc1ece02b8299 KlangKunstWorldWireframe_artefacts/JuceLibraryCode/KlangKunstWorldWireframe/PkgInfo
