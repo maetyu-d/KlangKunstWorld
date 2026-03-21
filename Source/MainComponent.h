@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <atomic>
 
 class MainComponent final : public juce::AudioAppComponent,
                             public juce::KeyListener,
@@ -65,6 +66,12 @@ public:
         railLine
     };
 
+    enum class SnakeTriggerMode
+    {
+        headOnly,
+        wholeBody
+    };
+
 private:
     struct Camera
     {
@@ -109,6 +116,14 @@ private:
     {
         juce::Point<int> cell;
         juce::Point<int> direction { 1, 0 };
+    };
+
+    struct PerformanceFlash
+    {
+        juce::Point<int> cell;
+        juce::Colour colour;
+        float intensity = 1.0f;
+        bool discFlash = false;
     };
 
     struct PendingNoteOff
@@ -197,6 +212,7 @@ private:
     void setPerformanceSnakeCount(int count);
     void stepPerformanceSnakes();
     void drawPerformanceView(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<float> area);
     void drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area);
     void drawHud(juce::Graphics& g, juce::Rectangle<float> area);
     void drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area);
@@ -217,6 +233,7 @@ private:
     juce::String scaleName() const;
     juce::String synthName() const;
     juce::String drumModeName() const;
+    juce::String snakeTriggerModeName() const;
 
     Camera camera;
     float targetZoom = 1.0f;
@@ -231,11 +248,13 @@ private:
     int performanceRegionMode = 2;
     std::vector<Snake> performanceSnakes;
     std::vector<ReflectorDisc> performanceDiscs;
+    std::vector<PerformanceFlash> performanceFlashes;
     std::optional<juce::Point<int>> performanceHoverCell;
     juce::Point<int> performanceSelectedDirection { 1, 0 };
     int performanceTick = 0;
     SynthEngine synthEngine = SynthEngine::digitalV4;
     DrumMode drumMode = DrumMode::reactiveBreakbeat;
+    SnakeTriggerMode snakeTriggerMode = SnakeTriggerMode::headOnly;
     ScaleType scale = ScaleType::minor;
     int keyRoot = 0;
     bool quantizeToScale = true;
@@ -249,6 +268,11 @@ private:
     double beatStepAccumulator = 0.0;
     int beatStepIndex = 0;
     int beatBarIndex = 0;
+    std::atomic<int> visualStepCounter { 0 };
+    std::atomic<int> visualBarCounter { 0 };
+    float visualBeatPulse = 0.0f;
+    float visualBarPulse = 0.0f;
+    float visualBarSweep = 0.0f;
     float performanceBeatEnergy = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

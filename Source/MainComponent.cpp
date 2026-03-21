@@ -69,6 +69,17 @@ juce::String drumModeToString(MainComponent::DrumMode mode)
 
     return "Reactive 909";
 }
+
+juce::String snakeTriggerModeToString(MainComponent::SnakeTriggerMode mode)
+{
+    switch (mode)
+    {
+        case MainComponent::SnakeTriggerMode::headOnly: return "Head Only";
+        case MainComponent::SnakeTriggerMode::wholeBody: return "Whole Body";
+    }
+
+    return "Head Only";
+}
 }
 
 bool MainComponent::WaveVoice::canPlaySound(juce::SynthesiserSound* s)
@@ -481,10 +492,20 @@ MainComponent::~MainComponent()
 void MainComponent::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
-    auto hudArea = bounds.removeFromTop(78.0f);
-    auto gridArea = bounds.reduced(12.0f);
 
     drawBackdrop(g, bounds);
+
+    if (isolatedSlab.isValid() && performanceMode)
+    {
+        auto content = bounds.reduced(18.0f);
+        auto sidebar = content.removeFromLeft(288.0f);
+        drawPerformanceSidebar(g, sidebar);
+        drawWireframeGrid(g, content.reduced(10.0f, 0.0f));
+        return;
+    }
+
+    auto hudArea = bounds.removeFromTop(112.0f);
+    auto gridArea = bounds.reduced(18.0f);
     drawWireframeGrid(g, gridArea);
     drawHud(g, hudArea);
 }
@@ -515,8 +536,9 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
         if (performanceMode)
         {
             auto bounds = getLocalBounds().toFloat();
-            bounds.removeFromTop(78.0f);
-            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
+            auto content = bounds.reduced(18.0f);
+            content.removeFromLeft(288.0f);
+            const auto nextCell = performanceCellAtPosition(event.position, content.reduced(10.0f, 0.0f));
             if (nextCell != performanceHoverCell)
             {
                 performanceHoverCell = nextCell;
@@ -526,7 +548,7 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
         }
 
         auto bounds = getLocalBounds().toFloat();
-        bounds.removeFromTop(78.0f);
+        bounds.removeFromTop(112.0f);
         if (updateCursorFromPosition(event.position, bounds.reduced(12.0f)))
             repaint();
         return;
@@ -543,7 +565,7 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
     }
 
     auto bounds = getLocalBounds().toFloat();
-    bounds.removeFromTop(78.0f);
+    bounds.removeFromTop(112.0f);
     const auto slab = slabAtPosition(event.position, bounds.reduced(12.0f));
     if (slab.quadrant != hoveredSlab.quadrant || slab.floor != hoveredSlab.floor)
     {
@@ -573,8 +595,18 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         return;
 
     auto bounds = getLocalBounds().toFloat();
-    bounds.removeFromTop(78.0f);
-    const auto gridArea = bounds.reduced(12.0f);
+    juce::Rectangle<float> gridArea;
+    if (isolatedSlab.isValid() && performanceMode)
+    {
+        auto content = bounds.reduced(18.0f);
+        content.removeFromLeft(288.0f);
+        gridArea = content.reduced(10.0f, 0.0f);
+    }
+    else
+    {
+        bounds.removeFromTop(112.0f);
+        gridArea = bounds.reduced(12.0f);
+    }
     const auto slab = slabAtPosition(event.position, gridArea);
 
     if (isolatedSlab.isValid())
@@ -616,6 +648,7 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         performanceRegionMode = 2;
         performanceSnakes.clear();
         performanceDiscs.clear();
+        performanceFlashes.clear();
         performanceHoverCell.reset();
         performanceSelectedDirection = { 1, 0 };
         performanceTick = 0;
@@ -748,8 +781,12 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         }
 
         ++beatStepIndex;
+        visualStepCounter.store(beatStepIndex, std::memory_order_relaxed);
         if (beatStepIndex % 16 == 0)
+        {
             ++beatBarIndex;
+            visualBarCounter.store(beatBarIndex, std::memory_order_relaxed);
+        }
     }
 
     for (auto it = pendingNoteOffs.begin(); it != pendingNoteOffs.end();)
@@ -805,7 +842,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             repaint();
             return true;
         }
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceHoverCell.reset(); repaint(); return true; }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); repaint(); return true; }
 
         if (performanceMode)
         {
@@ -833,6 +870,16 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 repaint();
                 return true;
             }
+            if (key == juce::KeyPress('h'))
+            {
+                snakeTriggerMode = snakeTriggerMode == SnakeTriggerMode::headOnly
+                                     ? SnakeTriggerMode::wholeBody
+                                     : SnakeTriggerMode::headOnly;
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress(',')) { bpm = juce::jlimit(60.0, 220.0, bpm - 2.0); repaint(); return true; }
+            if (key == juce::KeyPress('.')) { bpm = juce::jlimit(60.0, 220.0, bpm + 2.0); repaint(); return true; }
             if (key == juce::KeyPress::leftKey) { performanceSelectedDirection = { -1, 0 }; repaint(); return true; }
             if (key == juce::KeyPress::rightKey) { performanceSelectedDirection = { 1, 0 }; repaint(); return true; }
             if (key == juce::KeyPress::upKey) { performanceSelectedDirection = { 0, -1 }; repaint(); return true; }
@@ -856,6 +903,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                     {
                         performanceDiscs.push_back({ cell, performanceSelectedDirection });
                     }
+                    performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(255, 208, 112, 255), 1.0f, true });
                     repaint();
                 }
                 return true;
@@ -948,6 +996,8 @@ void MainComponent::timerCallback()
 {
     const float delta = targetZoom - camera.zoom;
     bool needsRepaint = false;
+    static int lastVisualStepCounter = 0;
+    static int lastVisualBarCounter = 0;
 
     if (std::abs(delta) >= 0.001f)
     {
@@ -958,6 +1008,37 @@ void MainComponent::timerCallback()
     {
         camera.zoom = targetZoom;
     }
+
+    visualBeatPulse *= 0.88f;
+    visualBarPulse *= 0.93f;
+    for (auto it = performanceFlashes.begin(); it != performanceFlashes.end();)
+    {
+        it->intensity *= it->discFlash ? 0.86f : 0.80f;
+        if (it->intensity < 0.05f)
+            it = performanceFlashes.erase(it);
+        else
+        {
+            ++it;
+            needsRepaint = true;
+        }
+    }
+    const auto currentVisualStepCounter = visualStepCounter.load(std::memory_order_relaxed);
+    const auto currentVisualBarCounter = visualBarCounter.load(std::memory_order_relaxed);
+    if (currentVisualStepCounter != lastVisualStepCounter)
+    {
+        visualBeatPulse = 1.0f;
+        lastVisualStepCounter = currentVisualStepCounter;
+        needsRepaint = true;
+    }
+    if (currentVisualBarCounter != lastVisualBarCounter)
+    {
+        visualBarPulse = 1.0f;
+        lastVisualBarCounter = currentVisualBarCounter;
+        needsRepaint = true;
+    }
+
+    const float barsPerSecond = static_cast<float>(bpm / 60.0 / 4.0);
+    visualBarSweep = std::fmod(visualBarSweep + barsPerSecond / 60.0f, 1.0f);
 
     if (performanceMode && ! performanceSnakes.empty())
     {
@@ -980,7 +1061,6 @@ void MainComponent::timerCallback()
 
 void MainComponent::randomiseVoxels()
 {
-    juce::Random rng;
     layoutMode = LayoutMode::OneBoard;
     hoveredSlab = {};
     isolatedSlab = {};
@@ -989,37 +1069,296 @@ void MainComponent::randomiseVoxels()
     performanceRegionMode = 2;
     performanceSnakes.clear();
     performanceDiscs.clear();
+    performanceFlashes.clear();
     performanceHoverCell.reset();
     performanceTick = 0;
     beatStepAccumulator = 0.0;
     beatStepIndex = 0;
     beatBarIndex = 0;
+    visualStepCounter.store(0, std::memory_order_relaxed);
+    visualBarCounter.store(0, std::memory_order_relaxed);
+    visualBeatPulse = 0.0f;
+    visualBarPulse = 0.0f;
+    visualBarSweep = 0.0f;
     performanceBeatEnergy = 0.0f;
     voxelCount = 0;
     filledVoxels.clear();
-    filledVoxels.reserve(static_cast<size_t>(gridWidth * gridDepth * gridHeight * voxelFillRatio * 1.3f));
     std::fill(voxels.begin(), voxels.end(), 0u);
+    filledVoxels.reserve(32000);
+
+    static constexpr std::array<int, 7> scaleSteps { 0, 2, 3, 5, 7, 8, 10 };
+    static constexpr std::array<std::array<int, 16>, 8> motifMelodies {{
+        std::array<int, 16> { 0, 0, 2, 0, 3, 2, 4, 2, 5, 4, 3, 2, 0, 2, 4, 5 },
+        std::array<int, 16> { 0, 2, 4, 5, 4, 2, 0, 2, 4, 7, 5, 4, 2, 0, 2, 4 },
+        std::array<int, 16> { 0, 3, 5, 3, 7, 5, 3, 2, 0, 2, 3, 5, 7, 5, 3, 2 },
+        std::array<int, 16> { 0, 4, 2, 5, 3, 7, 5, 4, 2, 0, 2, 4, 6, 4, 2, 1 },
+        std::array<int, 16> { 0, 1, 3, 1, 5, 3, 6, 5, 3, 1, 0, 1, 3, 5, 6, 3 },
+        std::array<int, 16> { 0, 2, 0, 4, 2, 5, 4, 7, 5, 4, 2, 0, 2, 4, 5, 7 },
+        std::array<int, 16> { 0, 5, 4, 2, 0, 2, 3, 5, 7, 5, 3, 2, 0, 3, 5, 7 },
+        std::array<int, 16> { 0, 2, 4, 2, 6, 4, 7, 6, 4, 2, 0, 2, 4, 6, 7, 9 }
+    }};
+    static constexpr std::array<std::array<int, 16>, 8> motifLanes {{
+        std::array<int, 16> { 0, 0, 1, 0, 2, 1, 2, 1, 3, 2, 2, 1, 0, 1, 2, 3 },
+        std::array<int, 16> { 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 3, 2, 1, 0, 1, 2 },
+        std::array<int, 16> { 3, 2, 1, 2, 0, 1, 2, 3, 2, 1, 0, 1, 2, 1, 0, 1 },
+        std::array<int, 16> { 1, 2, 1, 3, 2, 0, 1, 2, 3, 2, 1, 0, 1, 2, 1, 3 },
+        std::array<int, 16> { 0, 2, 0, 2, 1, 3, 1, 3, 2, 0, 2, 0, 3, 1, 3, 1 },
+        std::array<int, 16> { 3, 3, 2, 2, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 1 },
+        std::array<int, 16> { 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2 },
+        std::array<int, 16> { 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1 }
+    }};
+    static constexpr std::array<std::array<int, 16>, 8> motifDurations {{
+        std::array<int, 16> { 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2 },
+        std::array<int, 16> { 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2 },
+        std::array<int, 16> { 2, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2 },
+        std::array<int, 16> { 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1 },
+        std::array<int, 16> { 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2 },
+        std::array<int, 16> { 1, 1, 1, 2, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2 },
+        std::array<int, 16> { 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1 },
+        std::array<int, 16> { 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 2 }
+    }};
+    static constexpr std::array<int, 16> slabDensityProfile {
+        5, 9, 3, 11,
+        7, 4, 10, 6,
+        12, 2, 8, 5,
+        9, 4, 11, 7
+    };
+
+    auto stamp = [this] (int x, int y, int z)
+    {
+        if (x < 0 || x >= gridWidth || y < 0 || y >= gridDepth || z < 0 || z >= gridHeight)
+            return;
+        voxels[voxelIndex(x, y, z)] = 1u;
+    };
+
+    auto stampRect = [&] (int x, int y, int w, int h, int z)
+    {
+        for (int yy = 0; yy < h; ++yy)
+            for (int xx = 0; xx < w; ++xx)
+                stamp(x + xx, y + yy, z);
+    };
+
+    for (int floor = 0; floor < 4; ++floor)
+    {
+        for (int quadrant = 0; quadrant < 4; ++quadrant)
+        {
+            int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+            quadrantBounds(quadrant, x0, y0, x1, y1);
+
+            const int slabIndex = floor * 4 + quadrant;
+            const int motifIndex = slabIndex % static_cast<int>(motifMelodies.size());
+            const int innerX0 = x0 + 4;
+            const int innerY0 = y0 + 4;
+            const int innerX1 = x1 - 4;
+            const int innerY1 = y1 - 4;
+            const int innerWidth = juce::jmax(8, innerX1 - innerX0);
+            const int innerHeight = juce::jmax(8, innerY1 - innerY0);
+            const int zBase = floor * floorBandHeight;
+            const int root = (quadrant * 2 + floor * 3) % 7;
+            const int density = slabDensityProfile[static_cast<size_t>(slabIndex % static_cast<int>(slabDensityProfile.size()))];
+            const bool denseSlab = density >= 9;
+            const bool sparseSlab = density <= 4;
+            const bool pulseSlab = (slabIndex % 3) == 0;
+            const bool stairSlab = (slabIndex % 3) == 1;
+            const bool braidSlab = (slabIndex % 3) == 2;
+
+            std::array<int, 4> laneY {
+                innerY0 + innerHeight / 8,
+                innerY0 + innerHeight * 3 / 8,
+                innerY0 + innerHeight * 5 / 8,
+                innerY0 + innerHeight * 7 / 8
+            };
+
+            for (int step = 0; step < 16; ++step)
+            {
+                const int x = innerX0 + (step * innerWidth) / 16;
+                const int lane = motifLanes[static_cast<size_t>(motifIndex)][static_cast<size_t>(step)] % 4;
+                const int y = laneY[static_cast<size_t>(lane)];
+                const int duration = juce::jlimit(1, 5,
+                                                  motifDurations[static_cast<size_t>(motifIndex)][static_cast<size_t>(step)]
+                                                    + (denseSlab ? 2 : sparseSlab ? 0 : 1));
+                const int degree = (root + motifMelodies[static_cast<size_t>(motifIndex)][static_cast<size_t>(step)]) % static_cast<int>(scaleSteps.size());
+                const int leadLocalZ = 1 + ((scaleSteps[static_cast<size_t>(degree)] + floor + quadrant) % (floorBandHeight - 1));
+
+                for (int dx = 0; dx < duration; ++dx)
+                {
+                    stamp(x + dx, y, zBase + leadLocalZ);
+                    if (! sparseSlab && ((step + dx + slabIndex) % (denseSlab ? 2 : 3)) == 0)
+                        stamp(x + dx, y, zBase + juce::jlimit(0, floorBandHeight - 1, leadLocalZ + 1));
+                    if (denseSlab && ((step + dx) % 2) == 0)
+                        stamp(x + dx, laneY[static_cast<size_t>((lane + 1) % 4)], zBase + juce::jlimit(0, floorBandHeight - 1, leadLocalZ + 2));
+                }
+
+                if (! sparseSlab && (step % 2) == ((quadrant + floor) % 2))
+                {
+                    const int harmonyA = zBase + ((leadLocalZ + 3) % floorBandHeight);
+                    const int harmonyB = zBase + ((leadLocalZ + 7) % floorBandHeight);
+                    stamp(x, y, harmonyA);
+                    stamp(x + juce::jmin(1, duration - 1), y, harmonyB);
+                    if (denseSlab || (step % 4) == 0)
+                        stamp(x + juce::jmin(2, duration - 1), y, zBase + ((leadLocalZ + 10) % floorBandHeight));
+                }
+
+                if (denseSlab || (step % 4) == 0 || (step % 4) == 2)
+                {
+                    const int bassLane = laneY[static_cast<size_t>((lane + 3) % 4)];
+                    const int bassLocalZ = juce::jlimit(0, floorBandHeight - 1, 1 + ((root + step / 2) % 4));
+                    stamp(x, bassLane, zBase + bassLocalZ);
+                    stamp(x + 1, bassLane, zBase + bassLocalZ);
+                    if (! sparseSlab)
+                        stamp(x + 2, bassLane, zBase + bassLocalZ);
+                    if (denseSlab)
+                        stamp(x + 3, bassLane, zBase + bassLocalZ);
+                }
+
+                if ((step + slabIndex) % (sparseSlab ? 5 : 3) == 0)
+                {
+                    const int accentY = laneY[static_cast<size_t>((lane + 1) % 4)];
+                    const int accentLocalZ = juce::jlimit(0, floorBandHeight - 1, leadLocalZ + 1);
+                    stamp(x, accentY, zBase + accentLocalZ);
+                    if (! sparseSlab)
+                        stamp(x + 1, accentY, zBase + juce::jlimit(0, floorBandHeight - 1, accentLocalZ + 2));
+                }
+
+                if (! sparseSlab && (step % 2) == 1)
+                {
+                    const int counterLane = laneY[static_cast<size_t>((lane + 2) % 4)];
+                    const int counterLocalZ = juce::jlimit(0, floorBandHeight - 1, 2 + ((leadLocalZ + 5) % 7));
+                    stamp(x, counterLane, zBase + counterLocalZ);
+                    if (denseSlab || (step % 4) == 3)
+                        stamp(x + 1, counterLane, zBase + counterLocalZ);
+                }
+
+                if (denseSlab || (step % 4) != 3)
+                {
+                    const int fillLaneA = laneY[static_cast<size_t>((lane + 1) % 4)];
+                    const int fillLaneB = laneY[static_cast<size_t>((lane + 2) % 4)];
+                    if (! sparseSlab)
+                        stamp(x, fillLaneA, zBase + juce::jlimit(0, floorBandHeight - 1, (leadLocalZ + 2) % floorBandHeight));
+                    if (denseSlab || ((step + slabIndex) % 3) == 0)
+                        stamp(x, fillLaneB, zBase + juce::jlimit(0, floorBandHeight - 1, (leadLocalZ + 5) % floorBandHeight));
+                }
+
+                if (pulseSlab && (step % 2) == 0)
+                {
+                    for (int laneIndex = 0; laneIndex < 4; ++laneIndex)
+                        stamp(x, laneY[static_cast<size_t>(laneIndex)], zBase + ((laneIndex + step / 2) % 4));
+                }
+
+                if (stairSlab)
+                {
+                    const int stairLane = step % 4;
+                    stamp(x, laneY[static_cast<size_t>(stairLane)], zBase + juce::jlimit(0, floorBandHeight - 1, 1 + (step % 10)));
+                    if (denseSlab)
+                        stamp(x + 1, laneY[static_cast<size_t>((stairLane + 1) % 4)], zBase + juce::jlimit(0, floorBandHeight - 1, 2 + (step % 8)));
+                }
+
+                if (braidSlab && ! sparseSlab)
+                {
+                    const int braidLaneA = step % 4;
+                    const int braidLaneB = 3 - braidLaneA;
+                    stamp(x, laneY[static_cast<size_t>(braidLaneA)], zBase + juce::jlimit(0, floorBandHeight - 1, 3 + ((step + quadrant) % 7)));
+                    stamp(x, laneY[static_cast<size_t>(braidLaneB)], zBase + juce::jlimit(0, floorBandHeight - 1, 5 + ((step + floor) % 5)));
+                }
+            }
+
+            for (int lane = 0; lane < 4; ++lane)
+            {
+                const int y = laneY[static_cast<size_t>(lane)];
+                for (int x = innerX0; x < innerX1; x += (sparseSlab ? 3 : 2))
+                {
+                    if (((x + lane + slabIndex) % (denseSlab ? 4 : 5)) <= (denseSlab ? 2 : 1))
+                    {
+                        stamp(x, y, zBase + ((lane + slabIndex) % 3));
+                        if (! sparseSlab && ((x + slabIndex) % 4) == 0)
+                            stamp(x, y, zBase + 3 + ((lane + floor) % 3));
+                    }
+                }
+            }
+
+            for (int x = innerX0; x < innerX1; ++x)
+            {
+                const int phase = (x - innerX0 + slabIndex) % (denseSlab ? 5 : 7);
+                for (int lane = 0; lane < 4; ++lane)
+                {
+                    const int y = laneY[static_cast<size_t>(lane)];
+                    if (phase == lane || (! sparseSlab && phase == ((lane + 2) % (denseSlab ? 5 : 7))))
+                    {
+                        const int bedZ = zBase + 1 + ((root + lane * 2 + phase) % 5);
+                        stamp(x, y, bedZ);
+                    }
+
+                    if (! sparseSlab && ((x + lane + slabIndex) % (denseSlab ? 5 : 7)) <= (denseSlab ? 3 : 2))
+                    {
+                        const int shimmerZ = zBase + 4 + ((lane + phase + floor) % 5);
+                        stamp(x, y, juce::jlimit(0, gridHeight - 1, shimmerZ));
+                    }
+                }
+            }
+
+            const int motifSpanX = juce::jmax(6, innerWidth / 6);
+            const int motifSpanY = juce::jmax(3, innerHeight / 6);
+            const int centreX = innerX0 + innerWidth / 2;
+            const int centreY = innerY0 + innerHeight / 2;
+
+            if (pulseSlab)
+            {
+                for (int bar = 0; bar < 4; ++bar)
+                {
+                    const int barX = innerX0 + bar * innerWidth / 4 + ((slabIndex + bar) % 3);
+                    const int barZ = zBase + 2 + ((bar * 2 + slabIndex) % 7);
+                    stampRect(barX, innerY0 + 1, denseSlab ? 2 : 1, innerHeight - 2, barZ);
+                    if (denseSlab)
+                        stampRect(barX + 2, innerY0 + innerHeight / 4, 1, innerHeight / 2, zBase + ((barZ - zBase + 3) % floorBandHeight));
+                }
+            }
+            else if (stairSlab)
+            {
+                for (int stair = 0; stair < 8; ++stair)
+                {
+                    const int sx = innerX0 + stair * innerWidth / 8;
+                    const int sy = innerY0 + stair * innerHeight / 10;
+                    const int sz = zBase + 1 + ((stair + slabIndex) % 10);
+                    stampRect(sx, sy, denseSlab ? 3 : 2, denseSlab ? 3 : 2, sz);
+                    if (! sparseSlab)
+                        stampRect(sx, innerY1 - (sy - innerY0) - motifSpanY / 2, 2, 2, zBase + ((sz - zBase + 4) % floorBandHeight));
+                }
+            }
+            else if (braidSlab)
+            {
+                for (int i = 0; i < innerWidth; i += 2)
+                {
+                    const int xa = innerX0 + i;
+                    const int ya = innerY0 + (i * innerHeight) / juce::jmax(1, innerWidth);
+                    const int yb = innerY1 - 1 - (i * innerHeight) / juce::jmax(1, innerWidth);
+                    stampRect(xa, ya, denseSlab ? 2 : 1, denseSlab ? 2 : 1, zBase + 3 + ((i / 2 + slabIndex) % 6));
+                    stampRect(xa, yb, denseSlab ? 2 : 1, denseSlab ? 2 : 1, zBase + 6 + ((i / 2 + floor) % 4));
+                }
+            }
+
+            if (denseSlab)
+            {
+                stampRect(centreX - motifSpanX / 2, centreY - motifSpanY / 2,
+                          motifSpanX, motifSpanY, zBase + 2 + (slabIndex % 6));
+                stampRect(centreX - motifSpanX / 3, centreY - motifSpanY / 3,
+                          juce::jmax(2, motifSpanX / 2), juce::jmax(2, motifSpanY / 2), zBase + 7 + (slabIndex % 3));
+            }
+            else if (! sparseSlab)
+            {
+                stampRect(centreX - motifSpanX / 3, centreY - motifSpanY / 3,
+                          juce::jmax(2, motifSpanX / 2), juce::jmax(2, motifSpanY / 2), zBase + 4 + (slabIndex % 4));
+            }
+        }
+    }
 
     for (int z = 0; z < gridHeight; ++z)
-    {
         for (int y = 0; y < gridDepth; ++y)
-        {
             for (int x = 0; x < gridWidth; ++x)
-            {
-                auto filled = rng.nextFloat() < voxelFillRatio;
-
-                if (! filled && z < 12 && rng.nextFloat() < 0.00875f)
-                    filled = true;
-
-                voxels[voxelIndex(x, y, z)] = filled ? 1u : 0u;
-                if (filled)
+                if (voxels[voxelIndex(x, y, z)] != 0u)
                 {
                     ++voxelCount;
                     filledVoxels.push_back(FilledVoxel { static_cast<uint16_t>(x), static_cast<uint16_t>(y), static_cast<uint8_t>(z) });
                 }
-            }
-        }
-    }
 }
 
 void MainComponent::splitIntoFourIslands()
@@ -1034,11 +1373,17 @@ void MainComponent::splitIntoFourIslands()
     performanceRegionMode = 2;
     performanceSnakes.clear();
     performanceDiscs.clear();
+    performanceFlashes.clear();
     performanceHoverCell.reset();
     performanceTick = 0;
     beatStepAccumulator = 0.0;
     beatStepIndex = 0;
     beatBarIndex = 0;
+    visualStepCounter.store(0, std::memory_order_relaxed);
+    visualBarCounter.store(0, std::memory_order_relaxed);
+    visualBeatPulse = 0.0f;
+    visualBarPulse = 0.0f;
+    visualBarSweep = 0.0f;
     performanceBeatEnergy = 0.0f;
 }
 
@@ -1346,8 +1691,8 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
 
 int MainComponent::midiNoteForHeight(int z) const
 {
-    const int midi = juce::jlimit(24, 108, 59 + z);
-    return juce::jlimit(24, 108, quantizeMidiToScale(midi));
+    const int midi = juce::jlimit(0, 72, 23 + z);
+    return juce::jlimit(0, 84, quantizeMidiToScale(midi));
 }
 
 std::vector<int> MainComponent::currentScaleSteps() const
@@ -1473,14 +1818,11 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
 
     if (triggered == 0)
     {
-        const int fallback = midiNoteForHeight(zStart + ((cell.x + cell.y) % floorBandHeight));
-        synth.noteOn(1, fallback, 0.18f);
-        pendingNoteOffs.push_back({ fallback, 0.08f });
-        performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.03f);
         return;
     }
 
     performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.08f + 0.03f * static_cast<float>(triggered - 1));
+    performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(120, 220, 255, 255), juce::jmin(1.0f, 0.70f + 0.12f * static_cast<float>(triggered - 1)), false });
 }
 
 void MainComponent::addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples)
@@ -1706,12 +2048,22 @@ void MainComponent::stepPerformanceSnakes()
         {
             snake.direction = disc->direction;
             performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.1f);
+            performanceFlashes.push_back({ nextHead, juce::Colour::fromRGBA(255, 196, 96, 255), 1.0f, true });
         }
 
         snake.body.insert(snake.body.begin(), nextHead);
         if (snake.body.size() > 7)
             snake.body.pop_back();
-        triggerPerformanceNotesAtCell(nextHead);
+
+        if (snakeTriggerMode == SnakeTriggerMode::headOnly)
+        {
+            triggerPerformanceNotesAtCell(nextHead);
+        }
+        else
+        {
+            for (const auto& segment : snake.body)
+                triggerPerformanceNotesAtCell(segment);
+        }
     }
 }
 
@@ -1824,11 +2176,26 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
     const int slabHeight = y1 - y0;
     const auto board = performanceBoardBounds(area);
     const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+    const float pulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0034));
+    const float beatPulse = visualBeatPulse;
+    const float barPulse = visualBarPulse;
 
-    g.setColour(juce::Colour::fromRGBA(7, 12, 30, 235));
-    g.fillRoundedRectangle(board.expanded(22.0f), 20.0f);
-    g.setColour(juce::Colour::fromRGBA(32, 54, 130, 80));
-    g.fillEllipse(board.expanded(54.0f, 48.0f));
+    juce::ColourGradient boardGlow(juce::Colour::fromRGBA(42, 102, 212, 120),
+                                   board.getCentreX(), board.getCentreY() - board.getHeight() * 0.15f,
+                                   juce::Colour::fromRGBA(8, 13, 36, 0),
+                                   board.getCentreX(), board.getBottom() + 70.0f,
+                                   true);
+    g.setGradientFill(boardGlow);
+    g.fillEllipse(board.expanded(86.0f, 74.0f));
+    g.setColour(juce::Colour::fromRGBA(120, 220, 255, static_cast<uint8_t>(18 + 20 * pulse)));
+    g.drawEllipse(board.expanded(66.0f, 56.0f), 2.0f + pulse * 1.2f);
+    g.setColour(juce::Colour::fromRGBA(120, 220, 255, static_cast<uint8_t>(10 + 60 * barPulse)));
+    g.drawEllipse(board.expanded(82.0f + 20.0f * barPulse, 68.0f + 18.0f * barPulse), 1.1f + 1.2f * barPulse);
+
+    g.setColour(juce::Colour::fromRGBA(6, 11, 30, 236));
+    g.fillRoundedRectangle(board.expanded(26.0f), 28.0f);
+    g.setColour(juce::Colour::fromRGBA(74, 144, 255, 72));
+    g.drawRoundedRectangle(board.expanded(26.0f), 28.0f, 1.8f);
 
     const int zStart = isolatedSlab.floor * floorBandHeight;
     const int zEnd = zStart + floorBandHeight;
@@ -1845,9 +2212,20 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
                                                tileSize);
             const bool activeCell = activeRegion.contains(worldX, worldY);
 
-            g.setColour(activeCell ? juce::Colour::fromRGBA(10, 18, 42, 255)
-                                   : juce::Colour::fromRGBA(18, 22, 34, 220));
-            g.fillRect(cell);
+            juce::Colour tileBase = activeCell ? juce::Colour::fromRGBA(10, 18, 42, 255)
+                                               : juce::Colour::fromRGBA(20, 24, 36, 226);
+            g.setColour(tileBase);
+            g.fillRoundedRectangle(cell.reduced(0.6f), 3.6f);
+
+            g.setColour(activeCell ? juce::Colour::fromRGBA(255, 255, 255, 14)
+                                   : juce::Colour::fromRGBA(255, 255, 255, 6));
+            g.fillRoundedRectangle(cell.removeFromTop(tileSize * 0.12f).reduced(1.2f, 0.0f), 3.0f);
+            if (activeCell && ((localX + localY) % 5) == 0)
+            {
+                g.setColour(juce::Colour::fromRGBA(120, 220, 255, static_cast<uint8_t>(10 + 18 * pulse)));
+                g.fillEllipse(cell.withSizeKeepingCentre(tileSize * 0.22f, tileSize * 0.22f)
+                                  .translated(tileSize * 0.18f, -tileSize * 0.16f));
+            }
 
             std::vector<int> notes;
             for (int z = zStart; z < zEnd; ++z)
@@ -1868,13 +2246,13 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
                         colour = colour.interpolatedWith(juce::Colour::greyLevel(colour.getPerceivedBrightness()), 0.78f)
                                        .withMultipliedAlpha(0.4f);
                     g.setColour(colour);
-                    g.fillRect(slice);
+                    g.fillRoundedRectangle(slice, 2.4f);
                 }
             }
 
-            g.setColour(activeCell ? juce::Colour::fromRGBA(74, 102, 190, 52)
-                                   : juce::Colour::fromRGBA(90, 90, 104, 32));
-            g.drawRect(cell, 1.0f);
+            g.setColour(activeCell ? juce::Colour::fromRGBA(88, 126, 214, 44)
+                                   : juce::Colour::fromRGBA(90, 90, 104, 24));
+            g.drawRoundedRectangle(cell.reduced(0.6f), 3.6f, 1.0f);
         }
     }
 
@@ -1882,8 +2260,10 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
                                                     board.getY() + static_cast<float>(activeRegion.getY() - y0) * tileSize,
                                                     static_cast<float>(activeRegion.getWidth()) * tileSize,
                                                     static_cast<float>(activeRegion.getHeight()) * tileSize);
-    g.setColour(juce::Colour::fromRGBA(114, 226, 255, 160));
-    g.drawRoundedRectangle(regionLocal.expanded(2.0f), 8.0f, 2.0f);
+    g.setColour(juce::Colour::fromRGBA(85, 210, 255, 34));
+    g.fillRoundedRectangle(regionLocal.expanded(3.0f), 12.0f);
+    g.setColour(juce::Colour::fromRGBA(144, 240, 255, 182));
+    g.drawRoundedRectangle(regionLocal.expanded(2.5f), 12.0f, 2.2f);
 
     for (const auto& snake : performanceSnakes)
     {
@@ -1911,6 +2291,8 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
 
             g.setColour(snake.colour.withAlpha(0.18f));
             g.strokePath(spine, juce::PathStrokeType(tileSize * 0.34f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+            g.setColour(snake.colour.withAlpha(0.10f + 0.08f * pulse));
+            g.strokePath(spine, juce::PathStrokeType(tileSize * 0.52f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
             g.setColour(snake.colour.withAlpha(0.78f));
             g.strokePath(spine, juce::PathStrokeType(tileSize * 0.16f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
         }
@@ -1955,25 +2337,104 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
         auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(disc.cell.x - x0) * tileSize,
                                            board.getY() + static_cast<float>(disc.cell.y - y0) * tileSize,
                                            tileSize,
-                                           tileSize).reduced(tileSize * 0.16f);
+                                           tileSize).reduced(tileSize * 0.10f);
         const auto centre = cell.getCentre();
-        const float radius = cell.getWidth() * 0.36f;
+        const float radius = cell.getWidth() * 0.38f;
+        const bool hovered = performanceHoverCell.has_value() && *performanceHoverCell == disc.cell;
+        const auto glowColour = hovered ? juce::Colour::fromRGBA(255, 250, 180, 170)
+                                        : juce::Colour::fromRGBA(90, 240, 255, 150);
+        const auto ringColour = hovered ? juce::Colour::fromRGBA(255, 248, 210, 250)
+                                        : juce::Colour::fromRGBA(170, 244, 255, 245);
+        const auto coreColour = hovered ? juce::Colour::fromRGBA(34, 44, 86, 250)
+                                        : juce::Colour::fromRGBA(10, 22, 58, 245);
 
-        g.setColour(juce::Colour::fromRGBA(16, 26, 58, 230));
+        g.setColour(glowColour.withAlpha(hovered ? 0.30f : 0.22f));
+        g.fillEllipse(cell.expanded(tileSize * 0.20f));
+        g.setColour(glowColour.withAlpha(0.12f + 0.10f * pulse));
+        g.fillEllipse(cell.expanded(tileSize * 0.34f));
+
+        g.setColour(coreColour);
         g.fillEllipse(cell);
-        g.setColour(juce::Colour::fromRGBA(140, 232, 255, 220));
-        g.drawEllipse(cell, 1.6f);
+
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 64));
+        g.fillEllipse(cell.reduced(tileSize * 0.18f).withTrimmedBottom(tileSize * 0.22f));
+
+        g.setColour(ringColour);
+        g.drawEllipse(cell, hovered ? 3.2f : 2.4f);
+        g.drawEllipse(cell.reduced(tileSize * 0.10f), hovered ? 1.8f : 1.3f);
+
+        const juce::Point<float> dir(static_cast<float>(disc.direction.x), static_cast<float>(disc.direction.y));
+        const juce::Point<float> perp(-dir.y, dir.x);
+        const auto tip = centre + dir * (radius * 1.12f);
+        const auto base = centre - dir * (radius * 0.14f);
+        const auto tailStart = centre - dir * (radius * 0.58f);
+        const auto tailEnd = centre + dir * (radius * 0.40f);
+
+        juce::Path pointerShadow;
+        pointerShadow.startNewSubPath(base + perp * (radius * 0.34f));
+        pointerShadow.lineTo(tip + dir * (radius * 0.10f));
+        pointerShadow.lineTo(base - perp * (radius * 0.34f));
+        pointerShadow.closeSubPath();
+        g.setColour(glowColour.withAlpha(hovered ? 0.28f : 0.20f));
+        g.fillPath(pointerShadow);
+
+        g.setColour(ringColour.withAlpha(0.70f));
+        g.drawLine({ tailStart, tailEnd }, hovered ? 4.2f : 3.4f);
+        g.setColour(juce::Colours::white.withAlpha(0.80f));
+        g.drawLine({ centre - dir * (radius * 0.44f), centre + dir * (radius * 0.26f) }, hovered ? 1.8f : 1.4f);
 
         juce::Path arrow;
-        const juce::Point<float> dir(static_cast<float>(disc.direction.x), static_cast<float>(disc.direction.y));
-        const auto tip = centre + dir * radius;
-        const auto base = centre - dir * (radius * 0.45f);
-        const juce::Point<float> perp(-dir.y, dir.x);
-        arrow.startNewSubPath(base + perp * (radius * 0.24f));
+        arrow.startNewSubPath(base + perp * (radius * 0.28f));
         arrow.lineTo(tip);
-        arrow.lineTo(base - perp * (radius * 0.24f));
+        arrow.lineTo(base - perp * (radius * 0.28f));
         arrow.closeSubPath();
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 238));
         g.fillPath(arrow);
+
+        g.setColour(juce::Colour::fromRGBA(8, 16, 34, 190));
+        g.strokePath(arrow, juce::PathStrokeType(1.2f));
+
+        auto nose = juce::Rectangle<float>(radius * 0.34f, radius * 0.34f)
+                        .withCentre(centre + dir * (radius * 0.62f));
+        g.setColour(hovered ? juce::Colour::fromRGBA(255, 248, 210, 245)
+                            : juce::Colour::fromRGBA(120, 240, 255, 235));
+        g.fillEllipse(nose);
+
+        juce::Path crosshair;
+        crosshair.startNewSubPath(centre.x - radius * 0.34f, centre.y);
+        crosshair.lineTo(centre.x + radius * 0.34f, centre.y);
+        crosshair.startNewSubPath(centre.x, centre.y - radius * 0.34f);
+        crosshair.lineTo(centre.x, centre.y + radius * 0.34f);
+        g.setColour(ringColour.withAlpha(0.55f));
+        g.strokePath(crosshair, juce::PathStrokeType(1.1f));
+    }
+
+    for (const auto& flash : performanceFlashes)
+    {
+        auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(flash.cell.x - x0) * tileSize,
+                                           board.getY() + static_cast<float>(flash.cell.y - y0) * tileSize,
+                                           tileSize,
+                                           tileSize);
+        const float intensity = juce::jlimit(0.0f, 1.0f, flash.intensity);
+        const auto flashColour = flash.colour.withAlpha(0.18f + 0.38f * intensity);
+        g.setColour(flashColour);
+        g.fillEllipse(cell.expanded(tileSize * (flash.discFlash ? 0.55f : 0.42f) * intensity));
+
+        g.setColour(flash.colour.withAlpha(0.42f * intensity));
+        g.drawEllipse(cell.expanded(tileSize * 0.30f * intensity), 1.6f + 2.6f * intensity);
+
+        if (flash.discFlash)
+        {
+            juce::Path star;
+            const auto centre = cell.getCentre();
+            const float radius = tileSize * (0.28f + 0.18f * intensity);
+            star.startNewSubPath(centre.x - radius, centre.y);
+            star.lineTo(centre.x + radius, centre.y);
+            star.startNewSubPath(centre.x, centre.y - radius);
+            star.lineTo(centre.x, centre.y + radius);
+            g.setColour(juce::Colours::white.withAlpha(0.55f * intensity));
+            g.strokePath(star, juce::PathStrokeType(1.1f + 1.3f * intensity));
+        }
     }
 
     if (performanceHoverCell.has_value())
@@ -1982,14 +2443,112 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
                                             board.getY() + static_cast<float>(performanceHoverCell->y - y0) * tileSize,
                                             tileSize,
                                             tileSize).reduced(tileSize * 0.08f);
-        g.setColour(juce::Colour::fromRGBA(110, 240, 255, 70));
+        g.setColour(juce::Colour::fromRGBA(110, 240, 255, 88));
         g.fillRoundedRectangle(hover, 6.0f);
         g.setColour(juce::Colour::fromRGBA(160, 248, 255, 220));
         g.drawRoundedRectangle(hover, 6.0f, 2.0f);
     }
 
-    g.setColour(juce::Colour::fromRGBA(126, 224, 255, 180));
-    g.drawRoundedRectangle(board.expanded(4.0f), 10.0f, 2.0f);
+    g.setColour(juce::Colour::fromRGBA(126, 224, 255, 190));
+    g.drawRoundedRectangle(board.expanded(5.0f), 12.0f, 2.2f);
+    g.setColour(juce::Colour::fromRGBA(190, 244, 255, static_cast<uint8_t>(18 + 74 * beatPulse)));
+    g.drawRoundedRectangle(board.expanded(9.0f + 6.0f * beatPulse), 16.0f, 1.2f + 1.6f * beatPulse);
+}
+
+void MainComponent::drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    auto panel = area.reduced(10.0f);
+    juce::ColourGradient sidebarGradient(juce::Colour::fromRGBA(8, 14, 34, 238),
+                                         panel.getX(), panel.getY(),
+                                         juce::Colour::fromRGBA(16, 28, 66, 224),
+                                         panel.getRight(), panel.getBottom(),
+                                         false);
+    g.setGradientFill(sidebarGradient);
+    g.fillRoundedRectangle(panel, 24.0f);
+    g.setColour(juce::Colour::fromRGBA(124, 220, 255, 92));
+    g.drawRoundedRectangle(panel, 24.0f, 1.4f);
+
+    auto inner = panel.reduced(18.0f, 18.0f);
+
+    auto badge = inner.removeFromTop(34.0f);
+    g.setColour(juce::Colour::fromRGBA(92, 236, 255, 26));
+    g.fillRoundedRectangle(badge, 16.0f);
+    g.setColour(juce::Colour::fromRGBA(124, 236, 255, 150));
+    g.drawRoundedRectangle(badge, 16.0f, 1.2f);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(15.0f));
+    g.drawText("PERFORMANCE MODE", badge.toNearestInt(), juce::Justification::centred);
+
+    inner.removeFromTop(14.0f);
+
+    auto drawCard = [&] (juce::Rectangle<float> bounds, const juce::String& label, const juce::String& value, const juce::String& sub)
+    {
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 15));
+        g.fillRoundedRectangle(bounds, 18.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 24));
+        g.drawRoundedRectangle(bounds, 18.0f, 1.0f);
+
+        auto content = bounds.reduced(14.0f, 12.0f);
+        g.setColour(juce::Colour::fromRGBA(150, 216, 255, 168));
+        g.setFont(juce::FontOptions(11.0f));
+        g.drawText(label, content.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(20.0f));
+        g.drawText(value, content.removeFromTop(24.0f).toNearestInt(), juce::Justification::centredLeft);
+        g.setColour(juce::Colour::fromRGBA(218, 232, 255, 170));
+        g.setFont(juce::FontOptions(12.5f));
+        g.drawFittedText(sub, content.toNearestInt(), juce::Justification::centredLeft, 2);
+    };
+
+    auto card = inner.removeFromTop(82.0f);
+    const auto regionName = performanceRegionMode == 0 ? "Centre 50%"
+                          : performanceRegionMode == 1 ? "Centre 75%"
+                          : "Full";
+    drawCard(card, "REGION", regionName, "Z cycle arena");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    drawCard(card, "TEMPO", juce::String(bpm, 1) + " BPM", ", / . slower faster");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    drawCard(card, "SNAKES", juce::String(static_cast<int>(performanceSnakes.size())), "0-8 set count");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    drawCard(card, "DISCS", juce::String(static_cast<int>(performanceDiscs.size())), "Y place or rotate");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    drawCard(card, "SOUND", synthName(), drumModeName() + " drums");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    drawCard(card, "NOTE TRIG", snakeTriggerModeName(), "H toggle trigger mode");
+    inner.removeFromTop(16.0f);
+
+    auto infoBlock = inner;
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 12));
+    g.fillRoundedRectangle(infoBlock, 18.0f);
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 24));
+    g.drawRoundedRectangle(infoBlock, 18.0f, 1.0f);
+    infoBlock.reduce(14.0f, 12.0f);
+
+    g.setColour(juce::Colour::fromRGBA(150, 216, 255, 168));
+    g.setFont(juce::FontOptions(11.0f));
+    g.drawText("CONTROLS", infoBlock.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(13.0f));
+    const juce::String help =
+        "Enter edit\n"
+        "Arrows choose disc direction\n"
+        "Y place / rotate disc\n"
+        "T synth   B drums\n"
+        "K key   L scale\n"
+        "H head / body notes\n"
+        ", / . tempo\n"
+        "Esc back";
+    g.drawFittedText(help, infoBlock.toNearestInt(), juce::Justification::topLeft, 8);
 }
 
 void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area)
@@ -1999,6 +2558,10 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         drawPerformanceView(g, area);
         return;
     }
+
+    const float juicePulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0018));
+    const float beatPulse = visualBeatPulse;
+    const float barPulse = visualBarPulse;
 
     const int minXCoord = boardInset;
     const int minYCoord = boardInset;
@@ -2070,13 +2633,27 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         addFloorQuad(minXCoord, minYCoord, maxXCoord, maxYCoord);
     }
 
-    juce::ColourGradient floorGlow(juce::Colour::fromRGBA(30, 52, 128, 90), area.getCentreX(), area.getCentreY() + 160.0f,
+    juce::ColourGradient floorGlow(juce::Colour::fromRGBA(34, 78, 188, static_cast<uint8_t>(92 + 32 * juicePulse)),
+                                   area.getCentreX(), area.getCentreY() + 160.0f,
                                    juce::Colour::fromRGBA(13, 18, 49, 0), area.getCentreX(), area.getBottom(), true);
     g.setGradientFill(floorGlow);
     g.fillEllipse(area.getCentreX() - area.getWidth() * 0.43f,
                   area.getCentreY() - 20.0f,
                   area.getWidth() * 0.86f,
                   area.getHeight() * 0.78f);
+
+    g.setColour(juce::Colour::fromRGBA(92, 186, 255, static_cast<uint8_t>(18 + 18 * juicePulse)));
+    g.drawEllipse(area.getCentreX() - area.getWidth() * 0.36f,
+                  area.getCentreY() + 10.0f,
+                  area.getWidth() * 0.72f,
+                  area.getHeight() * 0.54f,
+                  2.0f);
+    g.setColour(juce::Colour::fromRGBA(120, 220, 255, static_cast<uint8_t>(12 + 60 * barPulse)));
+    g.drawEllipse(area.getCentreX() - area.getWidth() * (0.40f + 0.05f * barPulse),
+                  area.getCentreY() - 8.0f - 20.0f * barPulse,
+                  area.getWidth() * (0.80f + 0.10f * barPulse),
+                  area.getHeight() * (0.60f + 0.08f * barPulse),
+                  1.2f + 1.0f * barPulse);
 
     juce::Path shadowPath;
     for (const auto& voxel : filledVoxels)
@@ -2358,8 +2935,16 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
 
         if (showTop)
         {
+            g.setColour(displayColourForVoxel(x, y, z, colour.interpolatedWith(juce::Colours::white, 0.52f).withAlpha(0.10f)));
+            g.fillPath(topFace);
             g.setColour(displayColourForVoxel(x, y, z, colour.interpolatedWith(juce::Colours::white, 0.15f)));
             g.fillPath(topFace);
+            if (((x + y + z) % 9) == 0)
+            {
+                const auto centre = topFace.getBounds().getCentre();
+                g.setColour(juce::Colour::fromRGBA(255, 255, 255, static_cast<uint8_t>(18 + 20 * juicePulse)));
+                g.fillEllipse(juce::Rectangle<float>(3.0f + 2.0f * juicePulse, 3.0f + 2.0f * juicePulse).withCentre(centre));
+            }
         }
         if (showLeft)
         {
@@ -2371,7 +2956,7 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
             g.setColour(displayColourForVoxel(x, y, z, colour.darker(0.28f)));
             g.fillPath(rightFace);
         }
-        g.setColour(juce::Colour::fromRGBA(8, 10, 20, 168));
+        g.setColour(juce::Colour::fromRGBA(8, 10, 20, static_cast<uint8_t>(138 - 36 * beatPulse)));
         g.strokePath(edgePath, juce::PathStrokeType(1.0f));
     }
 
@@ -2416,7 +3001,7 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
             }
             else
             {
-                g.setColour(juce::Colour::fromRGBA(95, 122, 214, 34));
+            g.setColour(juce::Colour::fromRGBA(95, 122, 214, 34));
             }
             g.strokePath(floorGrid, juce::PathStrokeType(1.1f));
             floorGrid.clear();
@@ -2533,63 +3118,227 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         g.setFont(juce::FontOptions(12.5f));
         g.drawFittedText("z " + juce::String(editCursor.z), zLabelBounds.toNearestInt(), juce::Justification::centred, 1);
     }
+
+    if (! isolatedSlab.isValid())
+    {
+        juce::Path radialBurst;
+        const auto centre = area.getCentre();
+        const float burstRadius = juce::jmin(area.getWidth(), area.getHeight()) * (0.18f + 0.08f * barPulse);
+        for (int i = 0; i < 12; ++i)
+        {
+            const float angle = juce::MathConstants<float>::twoPi * static_cast<float>(i) / 12.0f
+                              + visualBarSweep * juce::MathConstants<float>::twoPi;
+            const auto inner = juce::Point<float>(centre.x + std::cos(angle) * burstRadius,
+                                                  centre.y + std::sin(angle) * burstRadius * 0.58f);
+            const auto outer = juce::Point<float>(centre.x + std::cos(angle) * (burstRadius + 90.0f + 70.0f * barPulse),
+                                                  centre.y + std::sin(angle) * (burstRadius + 90.0f + 70.0f * barPulse) * 0.58f);
+            radialBurst.startNewSubPath(inner);
+            radialBurst.lineTo(outer);
+        }
+        g.setColour(juce::Colour::fromRGBA(120, 220, 255, static_cast<uint8_t>(4 + 22 * barPulse)));
+        g.strokePath(radialBurst, juce::PathStrokeType(1.0f));
+    }
 }
 
 void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
 {
+    if (isolatedSlab.isValid() && performanceMode)
+        return;
+
+    auto panel = area.reduced(12.0f, 10.0f);
+    juce::ColourGradient hudGradient(juce::Colour::fromRGBA(9, 15, 38, 230),
+                                     panel.getX(), panel.getY(),
+                                     juce::Colour::fromRGBA(18, 31, 72, 216),
+                                     panel.getRight(), panel.getBottom(),
+                                     false);
+    g.setGradientFill(hudGradient);
+    g.fillRoundedRectangle(panel, 24.0f);
+    g.setColour(juce::Colour::fromRGBA(122, 210, 255, 96));
+    g.drawRoundedRectangle(panel, 24.0f, 1.6f);
+
+    const auto modeLabel = isolatedSlab.isValid() ? (performanceMode ? "PERFORMANCE" : "EDIT VIEW")
+                                                  : "BUILD MODE";
+    if (! isolatedSlab.isValid())
+    {
+        const float juicePulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0024));
+        auto inner = panel.reduced(16.0f, 14.0f);
+        auto topLine = inner.removeFromTop(30.0f);
+        auto badge = topLine.removeFromLeft(132.0f);
+        topLine.removeFromLeft(14.0f);
+
+        g.setColour(juce::Colour::fromRGBA(90, 236, 255, static_cast<uint8_t>(26 + 18 * juicePulse)));
+        g.fillRoundedRectangle(badge, 15.0f);
+        g.setColour(juce::Colour::fromRGBA(126, 240, 255, static_cast<uint8_t>(146 + 48 * juicePulse)));
+        g.drawRoundedRectangle(badge, 15.0f, 1.5f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, static_cast<uint8_t>(12 + 10 * juicePulse)));
+        g.fillRoundedRectangle(badge.removeFromTop(9.0f), 15.0f);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(15.0f));
+        g.drawText(modeLabel, badge.toNearestInt(), juce::Justification::centred);
+
+        g.setFont(juce::FontOptions(16.0f));
+        g.drawText("WASD Pan | Wheel Zoom | Q/E Rotate | -/= Height | G View | R Randomise",
+                   topLine.toNearestInt(),
+                   juce::Justification::centredLeft);
+
+        inner.removeFromTop(10.0f);
+
+        auto infoRow = inner.removeFromTop(26.0f);
+        auto drawChip = [&] (juce::Rectangle<float> bounds, const juce::String& text)
+        {
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 14));
+            g.fillRoundedRectangle(bounds, 12.0f);
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 24));
+            g.drawRoundedRectangle(bounds, 12.0f, 1.0f);
+            g.setColour(juce::Colour::fromRGBA(90, 220, 255, static_cast<uint8_t>(12 + 16 * juicePulse)));
+            g.fillRoundedRectangle(bounds.reduced(1.0f).removeFromBottom(4.0f), 10.0f);
+            g.setColour(juce::Colour::fromRGBA(214, 232, 255, 220));
+            g.setFont(juce::FontOptions(12.5f));
+            g.drawText(text, bounds.reduced(10.0f, 0.0f).toNearestInt(), juce::Justification::centredLeft);
+        };
+
+        const float gap = 8.0f;
+        const float chipW = (infoRow.getWidth() - gap * 3.0f) / 4.0f;
+        drawChip(infoRow.removeFromLeft(chipW), "Filled " + juce::String(voxelCount));
+        infoRow.removeFromLeft(gap);
+        drawChip(infoRow.removeFromLeft(chipW), "Rotation " + juce::String(camera.rotation));
+        infoRow.removeFromLeft(gap);
+        drawChip(infoRow.removeFromLeft(chipW), "Zoom " + juce::String(camera.zoom, 2));
+        infoRow.removeFromLeft(gap);
+        drawChip(infoRow.removeFromLeft(chipW), "z1 " + noteNameForHeight(1));
+        return;
+    }
+
+    auto topRow = panel.reduced(18.0f, 14.0f);
+    auto modePill = topRow.removeFromLeft(158.0f);
+    auto statusRow = topRow.removeFromRight(430.0f);
+
+    g.setColour(juce::Colour::fromRGBA(90, 236, 255, 28));
+    g.fillRoundedRectangle(modePill, 14.0f);
+    g.setColour(juce::Colour::fromRGBA(126, 240, 255, 146));
+    g.drawRoundedRectangle(modePill, 14.0f, 1.4f);
     g.setColour(juce::Colours::white);
-    g.setFont(juce::FontOptions(17.0f));
-    const auto modeText = isolatedSlab.isValid()
-                            ? (performanceMode
-                                ? "PERFORMANCE VIEW | Enter edit | Z arena | Arrows disc dir | Y disc | 0-8 snakes | T synth | B drums | K key | L scale | Esc back"
-                                : "ISOLATED EDIT | Enter performance | WASD Pan | Wheel Zoom | Mouse snap | Click place | Right-click remove | Arrows move | [ ] height | T synth | B drums | K key | L scale | U quantize | Esc back")
-                            : "BUILD MODE | WASD Pan | Wheel Zoom | Q/E Rotate | -/= Height | G View | R Randomise | T synth | B drums | K key | L scale | U quantize";
-    g.drawText(modeText,
-               area.removeFromTop(24.0f).reduced(10.0f, 0.0f).toNearestInt(),
+    g.setFont(juce::FontOptions(15.0f));
+    g.drawText(modeLabel, modePill.toNearestInt(), juce::Justification::centred);
+
+    auto drawStat = [&] (juce::Rectangle<float> bounds, const juce::String& label, const juce::String& value)
+    {
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 16));
+        g.fillRoundedRectangle(bounds, 12.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 28));
+        g.drawRoundedRectangle(bounds, 12.0f, 1.0f);
+        auto inner = bounds.reduced(10.0f, 5.0f);
+        g.setColour(juce::Colour::fromRGBA(152, 216, 255, 170));
+        g.setFont(juce::FontOptions(11.0f));
+        g.drawText(label, inner.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(14.5f));
+        g.drawText(value, inner.toNearestInt(), juce::Justification::centredLeft);
+    };
+
+    const float statGap = 8.0f;
+    const float statWidth = (statusRow.getWidth() - statGap * 3.0f) / 4.0f;
+    drawStat(statusRow.removeFromLeft(statWidth), "SYNTH", synthName());
+    statusRow.removeFromLeft(statGap);
+    drawStat(statusRow.removeFromLeft(statWidth), "DRUMS", drumModeName());
+    statusRow.removeFromLeft(statGap);
+    drawStat(statusRow.removeFromLeft(statWidth), "KEY", keyName());
+    statusRow.removeFromLeft(statGap);
+    drawStat(statusRow.removeFromLeft(statWidth), "SCALE", scaleName());
+
+    auto lower = panel.reduced(18.0f, 14.0f).withTrimmedTop(42.0f);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(16.5f));
+    g.drawText("ISOLATED EDIT | Enter performance | WASD Pan | Wheel Zoom | Mouse snap | Click place | Right-click remove | Arrows move | [ ] height | T synth | B drums | K key | L scale | U quantize | Esc back",
+               lower.removeFromTop(24.0f).toNearestInt(),
                juce::Justification::centredLeft);
 
-    g.setFont(juce::FontOptions(14.0f));
-    juce::String detailText = "Random voxel field 128x128x48   z=0 no note   z=1 "
-                            + noteNameForHeight(1)
-                            + " chromatic upward   Filled " + juce::String(voxelCount)
-                            + "   Synth " + synthName()
-                            + "   Drums " + drumModeName()
-                            + "   Key " + keyName()
-                            + " " + scaleName();
-
-    if (isolatedSlab.isValid() && performanceMode)
-    {
-        const auto regionName = performanceRegionMode == 0 ? "Centre 50%"
-                              : performanceRegionMode == 1 ? "Centre 75%"
-                              : "Full";
-        detailText = "Performance " + labelForSlab(isolatedSlab)
-                   + "   Region " + juce::String(regionName)
-                   + "   Snakes " + juce::String(static_cast<int>(performanceSnakes.size()))
-                    + "   Discs " + juce::String(static_cast<int>(performanceDiscs.size()))
-                   + "   Synth " + synthName()
-                   + "   Drums " + drumModeName()
-                   + "   Key " + keyName()
-                   + " " + scaleName();
-    }
-    else if (isolatedSlab.isValid() && editCursor.active)
-    {
-        detailText = "Editing " + labelForSlab(isolatedSlab)
-                   + "   Cursor x" + juce::String(editCursor.x)
-                   + " y" + juce::String(editCursor.y)
-                   + " z" + juce::String(editCursor.z)
-                   + "   Note " + noteNameForHeight(editCursor.z)
-                   + "   Key " + keyName()
-                   + " " + scaleName();
-    }
-
-    g.drawFittedText(detailText,
-                     area.reduced(10.0f, 0.0f).toNearestInt(),
-                     juce::Justification::centredLeft, 2);
+    juce::String detailText = "Editing " + labelForSlab(isolatedSlab)
+                           + "   Cursor x" + juce::String(editCursor.x)
+                           + " y" + juce::String(editCursor.y)
+                           + " z" + juce::String(editCursor.z)
+                           + "   Note " + noteNameForHeight(editCursor.z)
+                           + "   Key " + keyName()
+                           + " " + scaleName();
+    g.setColour(juce::Colour::fromRGBA(214, 232, 255, 220));
+    g.setFont(juce::FontOptions(13.5f));
+    g.drawFittedText(detailText, lower.toNearestInt(), juce::Justification::centredLeft, 2);
 }
 
-void MainComponent::drawBackdrop(juce::Graphics& g, juce::Rectangle<float>)
+void MainComponent::drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area)
 {
-    g.fillAll(juce::Colour::fromRGB(13, 22, 68));
+    const float pulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0013));
+    const float beatPulse = visualBeatPulse;
+    const float barPulse = visualBarPulse;
+    juce::ColourGradient bg(juce::Colour::fromRGB(4, 8, 24),
+                            area.getCentreX(), area.getY(),
+                            juce::Colour::fromRGB(14, 28, 82),
+                            area.getCentreX(), area.getBottom(),
+                            false);
+    g.setGradientFill(bg);
+    g.fillAll();
+
+    g.setColour(juce::Colour::fromRGBA(62, 128, 255, static_cast<uint8_t>(34 + 18 * pulse)));
+    g.fillEllipse(area.withSizeKeepingCentre(area.getWidth() * 0.82f, area.getHeight() * 0.56f)
+                      .translated(0.0f, area.getHeight() * 0.08f));
+    g.setColour(juce::Colour::fromRGBA(68, 232, 255, static_cast<uint8_t>(22 + 18 * pulse)));
+    g.fillEllipse(area.withSizeKeepingCentre(area.getWidth() * 0.46f, area.getHeight() * 0.30f)
+                      .translated(area.getWidth() * 0.10f, -area.getHeight() * 0.08f));
+
+    juce::Path rings;
+    const auto centre = area.getCentre();
+    for (int i = 0; i < 6; ++i)
+    {
+        const float w = area.getWidth() * (0.20f + i * 0.12f);
+        const float h = area.getHeight() * (0.12f + i * 0.08f);
+        rings.addEllipse(juce::Rectangle<float>(w, h).withCentre({ centre.x, centre.y + area.getHeight() * 0.18f }));
+    }
+    g.setColour(juce::Colour::fromRGBA(120, 180, 255, static_cast<uint8_t>(14 + 10 * pulse)));
+    g.strokePath(rings, juce::PathStrokeType(1.2f));
+
+    juce::Path grid;
+    constexpr int cols = 10;
+    constexpr int rows = 7;
+    for (int i = 0; i <= cols; ++i)
+    {
+        const float x = area.getX() + area.getWidth() * (static_cast<float>(i) / static_cast<float>(cols));
+        grid.startNewSubPath(x, area.getCentreY() - 20.0f);
+        grid.lineTo(centre.x + (x - centre.x) * 0.18f, area.getBottom());
+    }
+    for (int j = 0; j <= rows; ++j)
+    {
+        const float t = static_cast<float>(j) / static_cast<float>(rows);
+        const float y = area.getCentreY() + t * t * area.getHeight() * 0.42f;
+        grid.startNewSubPath(area.getX(), y);
+        grid.lineTo(area.getRight(), y);
+    }
+    g.setColour(juce::Colour::fromRGBA(112, 164, 255, 12));
+    g.strokePath(grid, juce::PathStrokeType(1.0f));
+
+    g.setColour(juce::Colour::fromRGBA(160, 220, 255, static_cast<uint8_t>(8 + 8 * pulse)));
+    g.drawLine(area.getX() + 32.0f, area.getY() + 112.0f, area.getRight() - 32.0f, area.getY() + 112.0f, 1.0f);
+
+    juce::Path beatRings;
+    const auto ringCentre = area.getCentre();
+    for (int i = 0; i < 2; ++i)
+    {
+        const float expand = 1.0f + beatPulse * (0.12f + 0.06f * static_cast<float>(i));
+        const float w = area.getWidth() * (0.34f + 0.16f * static_cast<float>(i)) * expand;
+        const float h = area.getHeight() * (0.16f + 0.08f * static_cast<float>(i)) * expand;
+        beatRings.addEllipse(juce::Rectangle<float>(w, h).withCentre({ ringCentre.x, ringCentre.y + area.getHeight() * 0.18f }));
+    }
+    g.setColour(juce::Colour::fromRGBA(170, 228, 255, static_cast<uint8_t>(8 + 26 * beatPulse + 16 * barPulse)));
+    g.strokePath(beatRings, juce::PathStrokeType(1.0f + 1.2f * beatPulse));
+
+    for (int i = 0; i < 24; ++i)
+    {
+        const float t = static_cast<float>(i) / 24.0f;
+        const float x = area.getX() + area.getWidth() * std::fmod(0.11f * i + 0.02f * pulse, 1.0f);
+        const float y = area.getY() + area.getHeight() * (0.08f + t * 0.72f);
+        const float size = 1.4f + 1.8f * std::fmod(t * 7.0f + pulse, 1.0f);
+        g.setColour(juce::Colour::fromRGBA(190, 230, 255, static_cast<uint8_t>(16 + 22 * std::fmod(t * 9.0f + pulse, 1.0f))));
+        g.fillEllipse(juce::Rectangle<float>(size, size).withCentre({ x, y }));
+    }
 }
 
 void MainComponent::rotateCamera(int direction)
@@ -2701,4 +3450,9 @@ juce::String MainComponent::synthName() const
 juce::String MainComponent::drumModeName() const
 {
     return drumModeToString(drumMode);
+}
+
+juce::String MainComponent::snakeTriggerModeName() const
+{
+    return snakeTriggerModeToString(snakeTriggerMode);
 }
