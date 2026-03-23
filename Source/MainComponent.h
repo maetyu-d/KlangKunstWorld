@@ -72,6 +72,14 @@ public:
         wholeBody
     };
 
+    enum class PerformanceAgentMode
+    {
+        snakes,
+        trains,
+        orbiters,
+        automata
+    };
+
 private:
     struct Camera
     {
@@ -110,12 +118,42 @@ private:
         std::vector<juce::Point<int>> body;
         juce::Point<int> direction { 1, 0 };
         juce::Colour colour;
+        int orbitIndex = 0;
+        bool clockwise = true;
     };
 
     struct ReflectorDisc
     {
         juce::Point<int> cell;
         juce::Point<int> direction { 1, 0 };
+    };
+
+    struct TrackPiece
+    {
+        juce::Point<int> cell;
+        bool horizontal = true;
+    };
+
+    enum class PerformancePlacementMode
+    {
+        selectOnly,
+        placeDisc,
+        placeTrack
+    };
+
+    struct PerformanceSelection
+    {
+        enum class Kind
+        {
+            none,
+            disc,
+            track
+        };
+
+        Kind kind = Kind::none;
+        juce::Point<int> cell;
+
+        bool isValid() const { return kind != Kind::none; }
     };
 
     struct PerformanceFlash
@@ -200,6 +238,7 @@ private:
     bool updateCursorFromPosition(juce::Point<float> position, juce::Rectangle<float> area);
     void resetEditCursor();
     void moveEditCursor(int dx, int dy, int dz);
+    void clearIsolatedSlab();
     int midiNoteForHeight(int z) const;
     void triggerPerformanceNotesAtCell(juce::Point<int> cell);
     void addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples);
@@ -210,7 +249,10 @@ private:
     juce::Rectangle<float> performanceBoardBounds(juce::Rectangle<float> area) const;
     std::optional<juce::Point<int>> performanceCellAtPosition(juce::Point<float> position, juce::Rectangle<float> area) const;
     void setPerformanceSnakeCount(int count);
+    void stepPerformanceAgents();
     void stepPerformanceSnakes();
+    void stepPerformanceOrbiters();
+    void stepPerformanceAutomata();
     void drawPerformanceView(juce::Graphics& g, juce::Rectangle<float> area);
     void drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<float> area);
     void drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area);
@@ -234,6 +276,13 @@ private:
     juce::String synthName() const;
     juce::String drumModeName() const;
     juce::String snakeTriggerModeName() const;
+    juce::String performanceAgentModeName() const;
+    int slabIndex(const SlabSelection& slab) const;
+    void applyPerformancePresetForSlab(const SlabSelection& slab);
+    bool performanceTrackAt(juce::Point<int> cell) const;
+    bool performanceTrackHorizontalAt(juce::Point<int> cell) const;
+    bool performanceOrbitCenterAt(juce::Point<int> cell) const;
+    void resetPerformanceAgents();
 
     Camera camera;
     float targetZoom = 1.0f;
@@ -246,11 +295,21 @@ private:
     EditCursor editCursor;
     bool performanceMode = false;
     int performanceRegionMode = 2;
+    int performanceAgentCount = 1;
+    PerformanceAgentMode performanceAgentMode = PerformanceAgentMode::snakes;
+    std::array<PerformanceAgentMode, 16> slabPerformanceModes {};
+    std::array<double, 16> slabStartingTempos {};
     std::vector<Snake> performanceSnakes;
     std::vector<ReflectorDisc> performanceDiscs;
+    std::vector<TrackPiece> performanceTracks;
+    std::vector<juce::Point<int>> performanceOrbitCenters;
+    std::vector<juce::Point<int>> performanceAutomataCells;
     std::vector<PerformanceFlash> performanceFlashes;
     std::optional<juce::Point<int>> performanceHoverCell;
     juce::Point<int> performanceSelectedDirection { 1, 0 };
+    bool performanceTrackHorizontal = true;
+    PerformancePlacementMode performancePlacementMode = PerformancePlacementMode::selectOnly;
+    PerformanceSelection performanceSelection;
     int performanceTick = 0;
     SynthEngine synthEngine = SynthEngine::digitalV4;
     DrumMode drumMode = DrumMode::reactiveBreakbeat;

@@ -4,6 +4,7 @@
 #include <array>
 #include <limits>
 #include <optional>
+#include <unordered_map>
 
 namespace
 {
@@ -79,6 +80,19 @@ juce::String snakeTriggerModeToString(MainComponent::SnakeTriggerMode mode)
     }
 
     return "Head Only";
+}
+
+juce::String performanceAgentModeToString(MainComponent::PerformanceAgentMode mode)
+{
+    switch (mode)
+    {
+        case MainComponent::PerformanceAgentMode::snakes: return "Snakes";
+        case MainComponent::PerformanceAgentMode::trains: return "Trains";
+        case MainComponent::PerformanceAgentMode::orbiters: return "Orbiters";
+        case MainComponent::PerformanceAgentMode::automata: return "Automata";
+    }
+
+    return "Snakes";
 }
 }
 
@@ -613,7 +627,61 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
     {
         if (performanceMode)
         {
-            performanceHoverCell = performanceCellAtPosition(event.position, gridArea);
+            const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
+            performanceHoverCell = clickedCell;
+
+            if (clickedCell.has_value())
+            {
+                const auto cell = *clickedCell;
+                if (performancePlacementMode == PerformancePlacementMode::placeDisc)
+                {
+                    auto existing = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                                 [cell] (const ReflectorDisc& disc) { return disc.cell == cell; });
+                    if (existing != performanceDiscs.end())
+                        existing->direction = performanceSelectedDirection;
+                    else
+                        performanceDiscs.push_back({ cell, performanceSelectedDirection });
+
+                    performanceSelection = { PerformanceSelection::Kind::disc, cell };
+                    performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(255, 208, 112, 255), 1.0f, true });
+                }
+                else if (performancePlacementMode == PerformancePlacementMode::placeTrack)
+                {
+                    auto existing = std::find_if(performanceTracks.begin(), performanceTracks.end(),
+                                                 [cell] (const TrackPiece& track) { return track.cell == cell; });
+                    if (existing != performanceTracks.end())
+                        existing->horizontal = performanceTrackHorizontal;
+                    else
+                        performanceTracks.push_back({ cell, performanceTrackHorizontal });
+
+                    performanceSelection = { PerformanceSelection::Kind::track, cell };
+                    performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(120, 220, 255, 255), 0.9f, true });
+                }
+                else
+                {
+                    auto disc = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                             [cell] (const ReflectorDisc& item) { return item.cell == cell; });
+                    if (disc != performanceDiscs.end())
+                    {
+                        performanceSelection = { PerformanceSelection::Kind::disc, cell };
+                        performanceSelectedDirection = disc->direction;
+                    }
+                    else
+                    {
+                        auto track = std::find_if(performanceTracks.begin(), performanceTracks.end(),
+                                                  [cell] (const TrackPiece& item) { return item.cell == cell; });
+                        if (track != performanceTracks.end())
+                        {
+                            performanceSelection = { PerformanceSelection::Kind::track, cell };
+                            performanceTrackHorizontal = track->horizontal;
+                        }
+                        else
+                        {
+                            performanceSelection = {};
+                        }
+                    }
+                }
+            }
             repaint();
             return;
         }
@@ -646,13 +714,19 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         resetEditCursor();
         performanceMode = false;
         performanceRegionMode = 2;
-        performanceSnakes.clear();
         performanceDiscs.clear();
+        performanceTracks.clear();
+        performanceOrbitCenters.clear();
+        performanceAutomataCells.clear();
         performanceFlashes.clear();
         performanceHoverCell.reset();
         performanceSelectedDirection = { 1, 0 };
+        performanceTrackHorizontal = true;
+        performancePlacementMode = PerformancePlacementMode::selectOnly;
+        performanceSelection = {};
         performanceTick = 0;
         performanceBeatEnergy = 0.0f;
+        applyPerformancePresetForSlab(slab);
         repaint();
     }
 }
@@ -837,16 +911,16 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         if (key == juce::KeyPress::returnKey)
         {
             performanceMode = ! performanceMode;
-            if (performanceMode && performanceSnakes.empty())
-                setPerformanceSnakeCount(1);
+            if (performanceMode && performanceSnakes.empty() && performanceAutomataCells.empty())
+                setPerformanceSnakeCount(performanceAgentCount);
             repaint();
             return true;
         }
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); repaint(); return true; }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
 
         if (performanceMode)
         {
-            if (key == juce::KeyPress('t'))
+            if (key == juce::KeyPress('m'))
             {
                 synthEngine = static_cast<SynthEngine>((static_cast<int>(synthEngine) + 1) % 5);
                 repaint();
@@ -878,6 +952,13 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 repaint();
                 return true;
             }
+            if (key == juce::KeyPress('n'))
+            {
+                performanceAgentMode = static_cast<PerformanceAgentMode>((static_cast<int>(performanceAgentMode) + 1) % 4);
+                resetPerformanceAgents();
+                repaint();
+                return true;
+            }
             if (key == juce::KeyPress(',')) { bpm = juce::jlimit(60.0, 220.0, bpm - 2.0); repaint(); return true; }
             if (key == juce::KeyPress('.')) { bpm = juce::jlimit(60.0, 220.0, bpm + 2.0); repaint(); return true; }
             if (key == juce::KeyPress::leftKey) { performanceSelectedDirection = { -1, 0 }; repaint(); return true; }
@@ -886,32 +967,74 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             if (key == juce::KeyPress::downKey) { performanceSelectedDirection = { 0, 1 }; repaint(); return true; }
             if (key == juce::KeyPress('y'))
             {
+                if (performancePlacementMode == PerformancePlacementMode::placeDisc)
+                {
+                    auto it = std::find(snakeDirections.begin(), snakeDirections.end(), performanceSelectedDirection);
+                    size_t index = it == snakeDirections.end() ? 0u : static_cast<size_t>(std::distance(snakeDirections.begin(), it));
+                    index = (index + 1u) % snakeDirections.size();
+                    performanceSelectedDirection = snakeDirections[index];
+                }
+                performancePlacementMode = PerformancePlacementMode::placeDisc;
+                performanceSelection = {};
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('t'))
+            {
+                if (performancePlacementMode == PerformancePlacementMode::placeTrack)
+                    performanceTrackHorizontal = ! performanceTrackHorizontal;
+                performancePlacementMode = PerformancePlacementMode::placeTrack;
+                performanceSelection = {};
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress('i'))
+            {
                 if (performanceHoverCell.has_value())
                 {
                     const auto cell = *performanceHoverCell;
-                    auto existing = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
-                                                 [cell] (const ReflectorDisc& disc) { return disc.cell == cell; });
-                    if (existing != performanceDiscs.end())
-                    {
-                        auto it = std::find(snakeDirections.begin(), snakeDirections.end(), existing->direction);
-                        size_t index = it == snakeDirections.end() ? 0u : static_cast<size_t>(std::distance(snakeDirections.begin(), it));
-                        index = (index + 1u) % snakeDirections.size();
-                        existing->direction = snakeDirections[index];
-                        performanceSelectedDirection = existing->direction;
-                    }
+                    auto it = std::find(performanceOrbitCenters.begin(), performanceOrbitCenters.end(), cell);
+                    if (it != performanceOrbitCenters.end())
+                        performanceOrbitCenters.erase(it);
                     else
-                    {
-                        performanceDiscs.push_back({ cell, performanceSelectedDirection });
-                    }
-                    performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(255, 208, 112, 255), 1.0f, true });
+                        performanceOrbitCenters.push_back(cell);
+                    if (performanceAgentMode == PerformanceAgentMode::orbiters)
+                        resetPerformanceAgents();
                     repaint();
                 }
                 return true;
             }
+            if (key == juce::KeyPress('u'))
+            {
+                performancePlacementMode = PerformancePlacementMode::selectOnly;
+                repaint();
+                return true;
+            }
+            if (key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey)
+            {
+                if (performanceSelection.kind == PerformanceSelection::Kind::disc)
+                {
+                    performanceDiscs.erase(std::remove_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                                          [&] (const ReflectorDisc& disc) { return disc.cell == performanceSelection.cell; }),
+                                           performanceDiscs.end());
+                    performanceSelection = {};
+                    repaint();
+                    return true;
+                }
+                if (performanceSelection.kind == PerformanceSelection::Kind::track)
+                {
+                    performanceTracks.erase(std::remove_if(performanceTracks.begin(), performanceTracks.end(),
+                                                           [&] (const TrackPiece& track) { return track.cell == performanceSelection.cell; }),
+                                            performanceTracks.end());
+                    performanceSelection = {};
+                    repaint();
+                    return true;
+                }
+            }
             if (key == juce::KeyPress('z'))
             {
                 performanceRegionMode = (performanceRegionMode + 1) % 3;
-                setPerformanceSnakeCount(static_cast<int>(performanceSnakes.size()));
+                resetPerformanceAgents();
                 repaint();
                 return true;
             }
@@ -937,6 +1060,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         {
             if (editCursor.active)
                 setVoxel(editCursor.x, editCursor.y, editCursor.z, true);
+            repaint();
+            return true;
+        }
+        if (key == juce::KeyPress('c'))
+        {
+            clearIsolatedSlab();
             repaint();
             return true;
         }
@@ -1040,13 +1169,14 @@ void MainComponent::timerCallback()
     const float barsPerSecond = static_cast<float>(bpm / 60.0 / 4.0);
     visualBarSweep = std::fmod(visualBarSweep + barsPerSecond / 60.0f, 1.0f);
 
-    if (performanceMode && ! performanceSnakes.empty())
+    const bool hasPerformanceAgents = ! performanceSnakes.empty() || ! performanceAutomataCells.empty();
+    if (performanceMode && hasPerformanceAgents)
     {
         ++performanceTick;
         performanceBeatEnergy *= 0.986f;
         if (performanceTick % 8 == 0)
         {
-            stepPerformanceSnakes();
+            stepPerformanceAgents();
             needsRepaint = true;
         }
     }
@@ -1067,10 +1197,18 @@ void MainComponent::randomiseVoxels()
     editCursor = {};
     performanceMode = false;
     performanceRegionMode = 2;
+    performanceAgentMode = PerformanceAgentMode::snakes;
+    performanceAgentCount = 1;
     performanceSnakes.clear();
     performanceDiscs.clear();
+    performanceTracks.clear();
+    performanceOrbitCenters.clear();
+    performanceAutomataCells.clear();
     performanceFlashes.clear();
     performanceHoverCell.reset();
+    performancePlacementMode = PerformancePlacementMode::selectOnly;
+    performanceSelection = {};
+    performanceTrackHorizontal = true;
     performanceTick = 0;
     beatStepAccumulator = 0.0;
     beatStepIndex = 0;
@@ -1123,6 +1261,19 @@ void MainComponent::randomiseVoxels()
         12, 2, 8, 5,
         9, 4, 11, 7
     };
+    static constexpr std::array<PerformanceAgentMode, 4> presetModes {
+        PerformanceAgentMode::snakes,
+        PerformanceAgentMode::trains,
+        PerformanceAgentMode::orbiters,
+        PerformanceAgentMode::automata
+    };
+
+    juce::Random presetRng;
+    for (size_t i = 0; i < slabPerformanceModes.size(); ++i)
+    {
+        slabPerformanceModes[i] = presetModes[static_cast<size_t>(presetRng.nextInt(static_cast<int>(presetModes.size())))];
+        slabStartingTempos[i] = 96.0 + static_cast<double>(presetRng.nextInt(75));
+    }
 
     auto stamp = [this] (int x, int y, int z)
     {
@@ -1371,10 +1522,18 @@ void MainComponent::splitIntoFourIslands()
     editCursor = {};
     performanceMode = false;
     performanceRegionMode = 2;
+    performanceAgentMode = PerformanceAgentMode::snakes;
+    performanceAgentCount = 1;
     performanceSnakes.clear();
     performanceDiscs.clear();
+    performanceTracks.clear();
+    performanceOrbitCenters.clear();
+    performanceAutomataCells.clear();
     performanceFlashes.clear();
     performanceHoverCell.reset();
+    performancePlacementMode = PerformancePlacementMode::selectOnly;
+    performanceSelection = {};
+    performanceTrackHorizontal = true;
     performanceTick = 0;
     beatStepAccumulator = 0.0;
     beatStepIndex = 0;
@@ -1689,6 +1848,35 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
     editCursor.active = true;
 }
 
+void MainComponent::clearIsolatedSlab()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const int zMin = isolatedSlab.floor * floorBandHeight;
+    const int zMax = zMin + floorBandHeight;
+
+    for (int z = zMin; z < zMax; ++z)
+        for (int y = y0; y < y1; ++y)
+            for (int x = x0; x < x1; ++x)
+                voxels[voxelIndex(x, y, z)] = 0u;
+
+    filledVoxels.clear();
+    voxelCount = 0;
+    for (int z = 0; z < gridHeight; ++z)
+        for (int y = 0; y < gridDepth; ++y)
+            for (int x = 0; x < gridWidth; ++x)
+                if (voxels[voxelIndex(x, y, z)] != 0u)
+                {
+                    filledVoxels.push_back(FilledVoxel { static_cast<uint16_t>(x), static_cast<uint16_t>(y), static_cast<uint8_t>(z) });
+                    ++voxelCount;
+                }
+
+    resetEditCursor();
+}
+
 int MainComponent::midiNoteForHeight(int z) const
 {
     const int midi = juce::jlimit(0, 72, 23 + z);
@@ -1929,9 +2117,11 @@ std::optional<juce::Point<int>> MainComponent::performanceCellAtPosition(juce::P
     return juce::Point<int>(x0 + localX, y0 + localY);
 }
 
-void MainComponent::setPerformanceSnakeCount(int count)
+void MainComponent::resetPerformanceAgents()
 {
     performanceSnakes.clear();
+    performanceAutomataCells.clear();
+    performanceFlashes.clear();
     performanceTick = 0;
 
     if (! isolatedSlab.isValid())
@@ -1942,26 +2132,83 @@ void MainComponent::setPerformanceSnakeCount(int count)
         return;
 
     juce::Random rng;
-    count = juce::jlimit(0, 8, count);
-    for (int i = 0; i < count; ++i)
+    performanceAgentCount = juce::jlimit(0, 8, performanceAgentCount);
+
+    if (performanceAgentCount == 0)
+        return;
+
+    if (performanceAgentMode == PerformanceAgentMode::automata)
+    {
+        const int seedCount = juce::jmax(6, performanceAgentCount * 10);
+        for (int i = 0; i < seedCount; ++i)
+        {
+            juce::Point<int> cell(bounds.getX() + rng.nextInt(bounds.getWidth()),
+                                  bounds.getY() + rng.nextInt(bounds.getHeight()));
+            if (std::find(performanceAutomataCells.begin(), performanceAutomataCells.end(), cell) == performanceAutomataCells.end())
+                performanceAutomataCells.push_back(cell);
+        }
+        return;
+    }
+
+    if (performanceAgentMode == PerformanceAgentMode::orbiters && performanceOrbitCenters.empty())
+        performanceOrbitCenters.push_back(bounds.getCentre());
+
+    for (int i = 0; i < performanceAgentCount; ++i)
     {
         Snake snake;
         snake.colour = snakeColours[static_cast<size_t>(i % static_cast<int>(snakeColours.size()))];
         snake.direction = snakeDirections[static_cast<size_t>(rng.nextInt(static_cast<int>(snakeDirections.size())))];
+        snake.clockwise = (i % 2) == 0;
 
-        const auto start = juce::Point<int>(bounds.getX() + rng.nextInt(bounds.getWidth()),
-                                            bounds.getY() + rng.nextInt(bounds.getHeight()));
-        snake.body.push_back(start);
-
-        auto tail = start;
-        for (int segment = 1; segment < 5; ++segment)
+        if (performanceAgentMode == PerformanceAgentMode::orbiters)
         {
-            tail.x = juce::jlimit(bounds.getX(), bounds.getRight() - 1, tail.x - snake.direction.x);
-            tail.y = juce::jlimit(bounds.getY(), bounds.getBottom() - 1, tail.y - snake.direction.y);
-            snake.body.push_back(tail);
+            const auto centre = performanceOrbitCenters[static_cast<size_t>(i % static_cast<int>(performanceOrbitCenters.size()))];
+            snake.orbitIndex = i % static_cast<int>(performanceOrbitCenters.size());
+            const int radius = 3 + (i % 4);
+            const auto start = juce::Point<int>(juce::jlimit(bounds.getX(), bounds.getRight() - 1, centre.x + radius),
+                                                juce::jlimit(bounds.getY(), bounds.getBottom() - 1, centre.y));
+            snake.body.push_back(start);
+            snake.direction = snake.clockwise ? juce::Point<int>{ 0, 1 } : juce::Point<int>{ 0, -1 };
+        }
+        else
+        {
+            const auto start = juce::Point<int>(bounds.getX() + rng.nextInt(bounds.getWidth()),
+                                                bounds.getY() + rng.nextInt(bounds.getHeight()));
+            snake.body.push_back(start);
+
+            auto tail = start;
+            for (int segment = 1; segment < 5; ++segment)
+            {
+                tail.x = juce::jlimit(bounds.getX(), bounds.getRight() - 1, tail.x - snake.direction.x);
+                tail.y = juce::jlimit(bounds.getY(), bounds.getBottom() - 1, tail.y - snake.direction.y);
+                snake.body.push_back(tail);
+            }
         }
 
         performanceSnakes.push_back(std::move(snake));
+    }
+}
+
+void MainComponent::setPerformanceSnakeCount(int count)
+{
+    performanceAgentCount = juce::jlimit(0, 8, count);
+    resetPerformanceAgents();
+}
+
+void MainComponent::stepPerformanceAgents()
+{
+    switch (performanceAgentMode)
+    {
+        case PerformanceAgentMode::snakes:
+        case PerformanceAgentMode::trains:
+            stepPerformanceSnakes();
+            break;
+        case PerformanceAgentMode::orbiters:
+            stepPerformanceOrbiters();
+            break;
+        case PerformanceAgentMode::automata:
+            stepPerformanceAutomata();
+            break;
     }
 }
 
@@ -2002,41 +2249,69 @@ void MainComponent::stepPerformanceSnakes()
         if (snake.body.empty())
             continue;
 
-        auto chooseDirection = [&] ()
+        const auto head = snake.body.front();
+        if (performanceAgentMode == PerformanceAgentMode::trains)
         {
-            std::vector<juce::Point<int>> options;
+            std::vector<juce::Point<int>> trackOptions;
             for (const auto& dir : snakeDirections)
             {
-                if (dir.x == -snake.direction.x && dir.y == -snake.direction.y)
-                    continue;
-
-                const auto candidate = snake.body.front() + dir;
+                const auto candidate = head + dir;
                 if (! inside(candidate) || occupiedByAnySnake(candidate, snakeIndex))
                     continue;
-
-                options.push_back(dir);
+                if (performanceTrackAt(candidate))
+                    trackOptions.push_back(dir);
             }
 
-            if (options.empty())
+            if (! trackOptions.empty())
             {
-                for (const auto& dir : snakeDirections)
+                const auto switchDisc = std::find_if(performanceDiscs.begin(), performanceDiscs.end(),
+                                                     [head] (const ReflectorDisc& disc) { return disc.cell == head; });
+                bool switchedByJunction = false;
+
+                if (switchDisc != performanceDiscs.end())
                 {
-                    const auto candidate = snake.body.front() + dir;
-                    if (inside(candidate) && ! occupiedByAnySnake(candidate, snakeIndex))
-                        options.push_back(dir);
+                    auto switchedDirection = std::find(trackOptions.begin(), trackOptions.end(), switchDisc->direction);
+                    if (switchedDirection != trackOptions.end())
+                    {
+                        snake.direction = *switchedDirection;
+                        switchedByJunction = true;
+                        performanceFlashes.push_back({ head, juce::Colour::fromRGBA(255, 208, 112, 255), 0.72f, true });
+                    }
+                }
+
+                if (! switchedByJunction)
+                {
+                    auto preferred = std::find(trackOptions.begin(), trackOptions.end(), snake.direction);
+                    if (preferred != trackOptions.end())
+                        snake.direction = *preferred;
+                    else
+                    {
+                        auto nonReverse = std::find_if(trackOptions.begin(), trackOptions.end(),
+                                                       [&] (const juce::Point<int>& dir)
+                                                       {
+                                                           return dir.x != -snake.direction.x || dir.y != -snake.direction.y;
+                                                       });
+                        snake.direction = nonReverse != trackOptions.end() ? *nonReverse : trackOptions.front();
+                    }
                 }
             }
-
-            if (! options.empty())
-            {
-                // Deterministic fallback order: keep movement stable instead of wandering randomly.
-                snake.direction = options.front();
-            }
-        };
+        }
 
         auto forward = snake.body.front() + snake.direction;
         if (! inside(forward) || occupiedByAnySnake(forward, snakeIndex))
-            chooseDirection();
+        {
+            if (snake.body.size() >= 2)
+            {
+                std::reverse(snake.body.begin(), snake.body.end());
+                const auto newHead = snake.body.front();
+                const auto nextSegment = snake.body[1];
+                snake.direction = { newHead.x - nextSegment.x, newHead.y - nextSegment.y };
+            }
+            else
+            {
+                snake.direction = { -snake.direction.x, -snake.direction.y };
+            }
+        }
 
         auto nextHead = snake.body.front() + snake.direction;
         if (! inside(nextHead) || occupiedByAnySnake(nextHead, snakeIndex))
@@ -2065,6 +2340,114 @@ void MainComponent::stepPerformanceSnakes()
                 triggerPerformanceNotesAtCell(segment);
         }
     }
+}
+
+void MainComponent::stepPerformanceOrbiters()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    const auto bounds = performanceRegionBounds();
+    if (performanceOrbitCenters.empty())
+        performanceOrbitCenters.push_back(bounds.getCentre());
+
+    auto inside = [&] (juce::Point<int> p) { return bounds.contains(p); };
+
+    for (auto& orbiter : performanceSnakes)
+    {
+        if (orbiter.body.empty())
+            continue;
+
+        const auto centre = performanceOrbitCenters[static_cast<size_t>(orbiter.orbitIndex % static_cast<int>(performanceOrbitCenters.size()))];
+        const auto head = orbiter.body.front();
+        const auto delta = head - centre;
+        const int desiredRadius = 3 + (orbiter.orbitIndex % 4);
+        const int distanceSq = delta.x * delta.x + delta.y * delta.y;
+
+        auto axisDir = [] (juce::Point<int> vector)
+        {
+            if (std::abs(vector.x) >= std::abs(vector.y))
+                return juce::Point<int>(vector.x < 0 ? -1 : 1, 0);
+            return juce::Point<int>(0, vector.y < 0 ? -1 : 1);
+        };
+
+        const juce::Point<int> tangent = orbiter.clockwise
+                                           ? juce::Point<int>(delta.y, -delta.x)
+                                           : juce::Point<int>(-delta.y, delta.x);
+        juce::Point<int> direction = axisDir(tangent.x == 0 && tangent.y == 0 ? juce::Point<int>(1, 0) : tangent);
+        if (distanceSq < desiredRadius * desiredRadius)
+            direction = axisDir(delta.x == 0 && delta.y == 0 ? juce::Point<int>(1, 0) : delta);
+        else if (distanceSq > (desiredRadius + 1) * (desiredRadius + 1))
+            direction = axisDir({ -delta.x, -delta.y });
+
+        auto next = head + direction;
+        if (! inside(next))
+        {
+            orbiter.clockwise = ! orbiter.clockwise;
+            const auto altTangent = orbiter.clockwise
+                                      ? juce::Point<int>(delta.y, -delta.x)
+                                      : juce::Point<int>(-delta.y, delta.x);
+            direction = axisDir(altTangent.x == 0 && altTangent.y == 0 ? juce::Point<int>(1, 0) : altTangent);
+            next = head + direction;
+        }
+
+        if (! inside(next))
+            continue;
+
+        orbiter.direction = direction;
+        orbiter.body[0] = next;
+        triggerPerformanceNotesAtCell(next);
+    }
+}
+
+void MainComponent::stepPerformanceAutomata()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    const auto bounds = performanceRegionBounds();
+    if (performanceAutomataCells.empty())
+    {
+        resetPerformanceAgents();
+        if (performanceAutomataCells.empty())
+            return;
+    }
+
+    std::unordered_map<int, int> neighbourCounts;
+    auto keyFor = [] (juce::Point<int> cell) { return (cell.y << 16) ^ cell.x; };
+    auto cellFor = [] (int key) { return juce::Point<int>(key & 0xffff, key >> 16); };
+
+    for (const auto& cell : performanceAutomataCells)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+            for (int dx = -1; dx <= 1; ++dx)
+            {
+                if (dx == 0 && dy == 0)
+                    continue;
+                const juce::Point<int> n { cell.x + dx, cell.y + dy };
+                if (bounds.contains(n))
+                    ++neighbourCounts[keyFor(n)];
+            }
+    }
+
+    std::vector<juce::Point<int>> nextCells;
+    for (const auto& [key, count] : neighbourCounts)
+    {
+        const auto cell = cellFor(key);
+        const bool alive = std::find(performanceAutomataCells.begin(), performanceAutomataCells.end(), cell) != performanceAutomataCells.end();
+        if ((alive && (count == 2 || count == 3)) || (! alive && count == 3))
+            nextCells.push_back(cell);
+    }
+
+    if (nextCells.empty())
+    {
+        resetPerformanceAgents();
+        return;
+    }
+
+    performanceAutomataCells = nextCells;
+    for (const auto& cell : performanceAutomataCells)
+        triggerPerformanceNotesAtCell(cell);
 }
 
 juce::Point<float> MainComponent::projectCellCorner(int x, int y, int z, int cellX, int cellY, juce::Rectangle<float> area) const
@@ -2265,6 +2648,68 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
     g.setColour(juce::Colour::fromRGBA(144, 240, 255, 182));
     g.drawRoundedRectangle(regionLocal.expanded(2.5f), 12.0f, 2.2f);
 
+    for (const auto& track : performanceTracks)
+    {
+        if (! activeRegion.contains(track.cell))
+            continue;
+
+        auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(track.cell.x - x0) * tileSize,
+                                           board.getY() + static_cast<float>(track.cell.y - y0) * tileSize,
+                                           tileSize,
+                                           tileSize).reduced(tileSize * 0.16f);
+        g.setColour(juce::Colour::fromRGBA(80, 230, 255, 110));
+        if (track.horizontal)
+            g.drawLine(cell.getX(), cell.getCentreY(), cell.getRight(), cell.getCentreY(), 3.0f);
+        else
+            g.drawLine(cell.getCentreX(), cell.getY(), cell.getCentreX(), cell.getBottom(), 3.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 56));
+        g.drawRoundedRectangle(cell, 4.0f, 1.0f);
+
+        if (performanceSelection.kind == PerformanceSelection::Kind::track && performanceSelection.cell == track.cell)
+        {
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 180));
+            g.drawRoundedRectangle(cell.expanded(tileSize * 0.12f), 6.0f, 2.2f);
+        }
+    }
+
+    for (const auto& orbitCenter : performanceOrbitCenters)
+    {
+        if (! activeRegion.contains(orbitCenter))
+            continue;
+
+        auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(orbitCenter.x - x0) * tileSize,
+                                           board.getY() + static_cast<float>(orbitCenter.y - y0) * tileSize,
+                                           tileSize,
+                                           tileSize).reduced(tileSize * 0.10f);
+        g.setColour(juce::Colour::fromRGBA(255, 170, 120, 42));
+        g.fillEllipse(cell.expanded(tileSize * 0.18f));
+        g.setColour(juce::Colour::fromRGBA(255, 200, 140, 210));
+        g.drawEllipse(cell, 2.2f);
+        g.drawEllipse(cell.reduced(tileSize * 0.12f), 1.2f);
+        g.drawLine(cell.getCentreX(), cell.getY(), cell.getCentreX(), cell.getBottom(), 1.3f);
+        g.drawLine(cell.getX(), cell.getCentreY(), cell.getRight(), cell.getCentreY(), 1.3f);
+    }
+
+    if (performanceAgentMode == PerformanceAgentMode::automata)
+    {
+        for (const auto& cellPoint : performanceAutomataCells)
+        {
+            if (! activeRegion.contains(cellPoint))
+                continue;
+
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(cellPoint.x - x0) * tileSize,
+                                               board.getY() + static_cast<float>(cellPoint.y - y0) * tileSize,
+                                               tileSize,
+                                               tileSize).reduced(tileSize * 0.18f);
+            g.setColour(juce::Colour::fromRGBA(255, 180, 120, 44));
+            g.fillRoundedRectangle(cell.expanded(tileSize * 0.16f), 4.0f);
+            g.setColour(juce::Colour::fromRGBA(255, 214, 180, 230));
+            g.fillRoundedRectangle(cell, 4.0f);
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 160));
+            g.drawRoundedRectangle(cell, 4.0f, 1.2f);
+        }
+    }
+
     for (const auto& snake : performanceSnakes)
     {
         if (snake.body.empty())
@@ -2407,6 +2852,50 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
         crosshair.lineTo(centre.x, centre.y + radius * 0.34f);
         g.setColour(ringColour.withAlpha(0.55f));
         g.strokePath(crosshair, juce::PathStrokeType(1.1f));
+
+        if (performanceSelection.kind == PerformanceSelection::Kind::disc && performanceSelection.cell == disc.cell)
+        {
+            g.setColour(juce::Colours::white.withAlpha(0.86f));
+            g.drawEllipse(cell.expanded(tileSize * 0.16f), 2.4f);
+        }
+    }
+
+    if (performanceHoverCell.has_value())
+    {
+        auto previewCell = juce::Rectangle<float>(board.getX() + static_cast<float>(performanceHoverCell->x - x0) * tileSize,
+                                                  board.getY() + static_cast<float>(performanceHoverCell->y - y0) * tileSize,
+                                                  tileSize,
+                                                  tileSize).reduced(tileSize * 0.14f);
+        if (performancePlacementMode == PerformancePlacementMode::placeDisc)
+        {
+            const auto centre = previewCell.getCentre();
+            const float radius = previewCell.getWidth() * 0.34f;
+            const juce::Point<float> dir(static_cast<float>(performanceSelectedDirection.x), static_cast<float>(performanceSelectedDirection.y));
+            const juce::Point<float> perp(-dir.y, dir.x);
+            juce::Path arrow;
+            const auto tip = centre + dir * (radius * 1.12f);
+            const auto base = centre - dir * (radius * 0.14f);
+            arrow.startNewSubPath(base + perp * (radius * 0.28f));
+            arrow.lineTo(tip);
+            arrow.lineTo(base - perp * (radius * 0.28f));
+            arrow.closeSubPath();
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 42));
+            g.fillEllipse(previewCell.expanded(tileSize * 0.24f));
+            g.setColour(juce::Colour::fromRGBA(255, 236, 200, 210));
+            g.fillPath(arrow);
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 180));
+            g.drawEllipse(previewCell, 1.8f);
+        }
+        else if (performancePlacementMode == PerformancePlacementMode::placeTrack)
+        {
+            g.setColour(juce::Colour::fromRGBA(120, 220, 255, 84));
+            g.fillRoundedRectangle(previewCell, 4.0f);
+            g.setColour(juce::Colour::fromRGBA(220, 246, 255, 220));
+            if (performanceTrackHorizontal)
+                g.drawLine(previewCell.getX(), previewCell.getCentreY(), previewCell.getRight(), previewCell.getCentreY(), 3.2f);
+            else
+                g.drawLine(previewCell.getCentreX(), previewCell.getY(), previewCell.getCentreX(), previewCell.getBottom(), 3.2f);
+        }
     }
 
     for (const auto& flash : performanceFlashes)
@@ -2512,11 +3001,25 @@ void MainComponent::drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<fl
     inner.removeFromTop(10.0f);
 
     card = inner.removeFromTop(82.0f);
-    drawCard(card, "SNAKES", juce::String(static_cast<int>(performanceSnakes.size())), "0-8 set count");
+    const auto activeAgentCount = performanceAgentMode == PerformanceAgentMode::automata
+                                    ? static_cast<int>(performanceAutomataCells.size())
+                                    : static_cast<int>(performanceSnakes.size());
+    drawCard(card, "AGENTS", performanceAgentModeName(), juce::String(activeAgentCount) + " active | 0-8 count");
     inner.removeFromTop(10.0f);
 
     card = inner.removeFromTop(82.0f);
-    drawCard(card, "DISCS", juce::String(static_cast<int>(performanceDiscs.size())), "Y place or rotate");
+    drawCard(card, "TOOLS", juce::String(static_cast<int>(performanceDiscs.size())) + " discs",
+             juce::String(static_cast<int>(performanceTracks.size())) + " tracks | "
+             + juce::String(static_cast<int>(performanceOrbitCenters.size())) + " centres");
+    inner.removeFromTop(10.0f);
+
+    card = inner.removeFromTop(82.0f);
+    const auto placementModeName = performancePlacementMode == PerformancePlacementMode::placeDisc ? "Disc"
+                                 : performancePlacementMode == PerformancePlacementMode::placeTrack ? (performanceTrackHorizontal ? "Track H" : "Track V")
+                                 : "Select";
+    drawCard(card, "TOOL", placementModeName,
+             performanceSelection.isValid() ? "Selected cell " + juce::String(performanceSelection.cell.x) + "," + juce::String(performanceSelection.cell.y)
+                                            : "No selection");
     inner.removeFromTop(10.0f);
 
     card = inner.removeFromTop(82.0f);
@@ -2541,9 +3044,16 @@ void MainComponent::drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<fl
     g.setFont(juce::FontOptions(13.0f));
     const juce::String help =
         "Enter edit\n"
-        "Arrows choose disc direction\n"
-        "Y place / rotate disc\n"
-        "T synth   B drums\n"
+        "Arrows set disc direction\n"
+        "Y select / rotate disc tool\n"
+        "T select / rotate track tool\n"
+        "U select-only mode\n"
+        "Click place or select\n"
+        "Backspace delete selected\n"
+        "Discs switch train junctions\n"
+        "I toggle orbit centre\n"
+        "N cycle agent mode\n"
+        "M synth   B drums\n"
         "K key   L scale\n"
         "H head / body notes\n"
         ", / . tempo\n"
@@ -3161,57 +3671,77 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     if (! isolatedSlab.isValid())
     {
         const float juicePulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0024));
-        auto inner = panel.reduced(16.0f, 14.0f);
-        auto topLine = inner.removeFromTop(30.0f);
-        auto badge = topLine.removeFromLeft(132.0f);
-        topLine.removeFromLeft(14.0f);
+        auto inner = panel.reduced(18.0f, 14.0f);
+        auto topRow = inner.removeFromTop(34.0f);
+        auto badge = topRow.removeFromLeft(152.0f);
+        topRow.removeFromLeft(12.0f);
 
-        g.setColour(juce::Colour::fromRGBA(90, 236, 255, static_cast<uint8_t>(26 + 18 * juicePulse)));
-        g.fillRoundedRectangle(badge, 15.0f);
-        g.setColour(juce::Colour::fromRGBA(126, 240, 255, static_cast<uint8_t>(146 + 48 * juicePulse)));
-        g.drawRoundedRectangle(badge, 15.0f, 1.5f);
-        g.setColour(juce::Colour::fromRGBA(255, 255, 255, static_cast<uint8_t>(12 + 10 * juicePulse)));
-        g.fillRoundedRectangle(badge.removeFromTop(9.0f), 15.0f);
+        auto controlsCapsule = topRow.withTrimmedLeft(0.0f);
+        g.setColour(juce::Colour::fromRGBA(8, 16, 38, 214));
+        g.fillRoundedRectangle(controlsCapsule, 17.0f);
+        g.setColour(juce::Colour::fromRGBA(110, 212, 255, 64));
+        g.drawRoundedRectangle(controlsCapsule, 17.0f, 1.2f);
+
+        g.setColour(juce::Colour::fromRGBA(72, 228, 255, static_cast<uint8_t>(28 + 18 * juicePulse)));
+        g.fillRoundedRectangle(badge, 17.0f);
+        g.setColour(juce::Colour::fromRGBA(140, 242, 255, static_cast<uint8_t>(154 + 40 * juicePulse)));
+        g.drawRoundedRectangle(badge, 17.0f, 1.6f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, static_cast<uint8_t>(10 + 12 * juicePulse)));
+        g.fillRoundedRectangle(badge.withHeight(11.0f), 17.0f);
         g.setColour(juce::Colours::white);
-        g.setFont(juce::FontOptions(15.0f));
+        g.setFont(juce::FontOptions(15.5f));
         g.drawText(modeLabel, badge.toNearestInt(), juce::Justification::centred);
 
-        g.setFont(juce::FontOptions(16.0f));
-        g.drawText("WASD Pan | Wheel Zoom | Q/E Rotate | -/= Height | G View | R Randomise",
-                   topLine.toNearestInt(),
-                   juce::Justification::centredLeft);
+        g.setColour(juce::Colour::fromRGBA(226, 236, 255, 238));
+        g.setFont(juce::FontOptions(15.5f));
+        g.drawFittedText("WASD Pan   Wheel Zoom   Q/E Rotate   -/= Height   G View   R Randomise",
+                         controlsCapsule.reduced(16.0f, 0.0f).toNearestInt(),
+                         juce::Justification::centredLeft,
+                         1);
 
-        inner.removeFromTop(10.0f);
+        inner.removeFromTop(12.0f);
 
-        auto infoRow = inner.removeFromTop(26.0f);
-        auto drawChip = [&] (juce::Rectangle<float> bounds, const juce::String& text)
+        auto infoRow = inner.removeFromTop(32.0f);
+        auto drawChip = [&] (juce::Rectangle<float> bounds, const juce::String& label, const juce::String& value)
         {
-            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 14));
-            g.fillRoundedRectangle(bounds, 12.0f);
-            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 24));
-            g.drawRoundedRectangle(bounds, 12.0f, 1.0f);
-            g.setColour(juce::Colour::fromRGBA(90, 220, 255, static_cast<uint8_t>(12 + 16 * juicePulse)));
-            g.fillRoundedRectangle(bounds.reduced(1.0f).removeFromBottom(4.0f), 10.0f);
-            g.setColour(juce::Colour::fromRGBA(214, 232, 255, 220));
-            g.setFont(juce::FontOptions(12.5f));
-            g.drawText(text, bounds.reduced(10.0f, 0.0f).toNearestInt(), juce::Justification::centredLeft);
+            g.setColour(juce::Colour::fromRGBA(11, 20, 46, 208));
+            g.fillRoundedRectangle(bounds, 13.0f);
+            g.setColour(juce::Colour::fromRGBA(96, 184, 255, 46));
+            g.drawRoundedRectangle(bounds, 13.0f, 1.0f);
+
+            auto textArea = bounds.reduced(12.0f, 0.0f);
+            auto labelArea = textArea.removeFromLeft(72.0f);
+            g.setColour(juce::Colour::fromRGBA(132, 196, 255, 166));
+            g.setFont(juce::FontOptions(12.0f));
+            g.drawText(label, labelArea.toNearestInt(), juce::Justification::centredLeft);
+
+            g.setColour(juce::Colours::white);
+            g.setFont(juce::FontOptions(13.5f));
+            g.drawText(value, textArea.toNearestInt(), juce::Justification::centredLeft);
+
+            g.setColour(juce::Colour::fromRGBA(84, 226, 255, static_cast<uint8_t>(18 + 18 * juicePulse)));
+            g.fillRoundedRectangle(bounds.withTrimmedTop(bounds.getHeight() - 3.0f).reduced(1.0f, 0.0f), 6.0f);
         };
 
-        const float gap = 8.0f;
+        const float gap = 10.0f;
         const float chipW = (infoRow.getWidth() - gap * 3.0f) / 4.0f;
-        drawChip(infoRow.removeFromLeft(chipW), "Filled " + juce::String(voxelCount));
+        drawChip(infoRow.removeFromLeft(chipW), "Filled", juce::String(voxelCount));
         infoRow.removeFromLeft(gap);
-        drawChip(infoRow.removeFromLeft(chipW), "Rotation " + juce::String(camera.rotation));
+        drawChip(infoRow.removeFromLeft(chipW), "Rotation", juce::String(camera.rotation));
         infoRow.removeFromLeft(gap);
-        drawChip(infoRow.removeFromLeft(chipW), "Zoom " + juce::String(camera.zoom, 2));
+        drawChip(infoRow.removeFromLeft(chipW), "Zoom", juce::String(camera.zoom, 2));
         infoRow.removeFromLeft(gap);
-        drawChip(infoRow.removeFromLeft(chipW), "z1 " + noteNameForHeight(1));
+        drawChip(infoRow.removeFromLeft(chipW), "z1", noteNameForHeight(1));
         return;
     }
 
-    auto topRow = panel.reduced(18.0f, 14.0f);
-    auto modePill = topRow.removeFromLeft(158.0f);
-    auto statusRow = topRow.removeFromRight(430.0f);
+    auto inner = panel.reduced(18.0f, 14.0f);
+    auto topRow = inner.removeFromTop(36.0f);
+    auto modePill = topRow.removeFromLeft(152.0f);
+    topRow.removeFromLeft(12.0f);
+    auto slabChip = topRow.removeFromLeft(168.0f);
+    topRow.removeFromLeft(12.0f);
+    auto detailChip = topRow;
 
     g.setColour(juce::Colour::fromRGBA(90, 236, 255, 28));
     g.fillRoundedRectangle(modePill, 14.0f);
@@ -3221,48 +3751,77 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.setFont(juce::FontOptions(15.0f));
     g.drawText(modeLabel, modePill.toNearestInt(), juce::Justification::centred);
 
+    g.setColour(juce::Colour::fromRGBA(12, 22, 52, 210));
+    g.fillRoundedRectangle(slabChip, 14.0f);
+    g.setColour(juce::Colour::fromRGBA(104, 190, 255, 64));
+    g.drawRoundedRectangle(slabChip, 14.0f, 1.0f);
+    g.setColour(juce::Colour::fromRGBA(198, 228, 255, 222));
+    g.setFont(juce::FontOptions(13.5f));
+    g.drawText(labelForSlab(isolatedSlab), slabChip.reduced(14.0f, 0.0f).toNearestInt(), juce::Justification::centredLeft);
+
     auto drawStat = [&] (juce::Rectangle<float> bounds, const juce::String& label, const juce::String& value)
     {
-        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 16));
-        g.fillRoundedRectangle(bounds, 12.0f);
-        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 28));
-        g.drawRoundedRectangle(bounds, 12.0f, 1.0f);
-        auto inner = bounds.reduced(10.0f, 5.0f);
+        g.setColour(juce::Colour::fromRGBA(12, 22, 52, 210));
+        g.fillRoundedRectangle(bounds, 13.0f);
+        g.setColour(juce::Colour::fromRGBA(102, 182, 255, 46));
+        g.drawRoundedRectangle(bounds, 13.0f, 1.0f);
+        auto statInner = bounds.reduced(10.0f, 5.0f);
         g.setColour(juce::Colour::fromRGBA(152, 216, 255, 170));
         g.setFont(juce::FontOptions(11.0f));
-        g.drawText(label, inner.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
+        g.drawText(label, statInner.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
         g.setColour(juce::Colours::white);
         g.setFont(juce::FontOptions(14.5f));
-        g.drawText(value, inner.toNearestInt(), juce::Justification::centredLeft);
+        g.drawText(value, statInner.toNearestInt(), juce::Justification::centredLeft);
     };
 
-    const float statGap = 8.0f;
-    const float statWidth = (statusRow.getWidth() - statGap * 3.0f) / 4.0f;
-    drawStat(statusRow.removeFromLeft(statWidth), "SYNTH", synthName());
-    statusRow.removeFromLeft(statGap);
-    drawStat(statusRow.removeFromLeft(statWidth), "DRUMS", drumModeName());
-    statusRow.removeFromLeft(statGap);
-    drawStat(statusRow.removeFromLeft(statWidth), "KEY", keyName());
-    statusRow.removeFromLeft(statGap);
-    drawStat(statusRow.removeFromLeft(statWidth), "SCALE", scaleName());
-
-    auto lower = panel.reduced(18.0f, 14.0f).withTrimmedTop(42.0f);
+    g.setColour(juce::Colour::fromRGBA(12, 22, 52, 210));
+    g.fillRoundedRectangle(detailChip, 14.0f);
+    g.setColour(juce::Colour::fromRGBA(102, 182, 255, 46));
+    g.drawRoundedRectangle(detailChip, 14.0f, 1.0f);
     g.setColour(juce::Colours::white);
-    g.setFont(juce::FontOptions(16.5f));
-    g.drawText("ISOLATED EDIT | Enter performance | WASD Pan | Wheel Zoom | Mouse snap | Click place | Right-click remove | Arrows move | [ ] height | T synth | B drums | K key | L scale | U quantize | Esc back",
-               lower.removeFromTop(24.0f).toNearestInt(),
-               juce::Justification::centredLeft);
+    g.setFont(juce::FontOptions(14.0f));
+    g.drawFittedText("Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place   Right-click remove   Arrows move   [ ] height   C clear slab   Esc back",
+                     detailChip.reduced(14.0f, 0.0f).toNearestInt(),
+                     juce::Justification::centredLeft,
+                     1);
 
-    juce::String detailText = "Editing " + labelForSlab(isolatedSlab)
-                           + "   Cursor x" + juce::String(editCursor.x)
-                           + " y" + juce::String(editCursor.y)
-                           + " z" + juce::String(editCursor.z)
-                           + "   Note " + noteNameForHeight(editCursor.z)
-                           + "   Key " + keyName()
-                           + " " + scaleName();
-    g.setColour(juce::Colour::fromRGBA(214, 232, 255, 220));
-    g.setFont(juce::FontOptions(13.5f));
-    g.drawFittedText(detailText, lower.toNearestInt(), juce::Justification::centredLeft, 2);
+    inner.removeFromTop(12.0f);
+
+    auto statRow = inner.removeFromTop(56.0f);
+    const float statGap = 10.0f;
+    const float statWidth = (statRow.getWidth() - statGap * 3.0f) / 4.0f;
+    drawStat(statRow.removeFromLeft(statWidth), "SYNTH", synthName());
+    statRow.removeFromLeft(statGap);
+    drawStat(statRow.removeFromLeft(statWidth), "DRUMS", drumModeName());
+    statRow.removeFromLeft(statGap);
+    drawStat(statRow.removeFromLeft(statWidth), "KEY", keyName());
+    statRow.removeFromLeft(statGap);
+    drawStat(statRow.removeFromLeft(statWidth), "SCALE", scaleName());
+
+    inner.removeFromTop(10.0f);
+
+    auto infoRow = inner.removeFromTop(28.0f);
+    auto drawInfoChip = [&] (juce::Rectangle<float> bounds, const juce::String& text)
+    {
+        g.setColour(juce::Colour::fromRGBA(12, 22, 52, 198));
+        g.fillRoundedRectangle(bounds, 12.0f);
+        g.setColour(juce::Colour::fromRGBA(102, 182, 255, 42));
+        g.drawRoundedRectangle(bounds, 12.0f, 1.0f);
+        g.setColour(juce::Colour::fromRGBA(216, 232, 255, 226));
+        g.setFont(juce::FontOptions(12.5f));
+        g.drawText(text, bounds.reduced(12.0f, 0.0f).toNearestInt(), juce::Justification::centredLeft);
+    };
+
+    const float infoGap = 8.0f;
+    const float infoWidth = (infoRow.getWidth() - infoGap * 2.0f) / 3.0f;
+    drawInfoChip(infoRow.removeFromLeft(infoWidth),
+                 "Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(editCursor.z));
+    infoRow.removeFromLeft(infoGap);
+    drawInfoChip(infoRow.removeFromLeft(infoWidth),
+                 "Note  " + noteNameForHeight(editCursor.z));
+    infoRow.removeFromLeft(infoGap);
+    drawInfoChip(infoRow.removeFromLeft(infoWidth),
+                 "M synth   B drums   K key   L scale   U quantize   C clear");
 }
 
 void MainComponent::drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area)
@@ -3455,4 +4014,46 @@ juce::String MainComponent::drumModeName() const
 juce::String MainComponent::snakeTriggerModeName() const
 {
     return snakeTriggerModeToString(snakeTriggerMode);
+}
+
+juce::String MainComponent::performanceAgentModeName() const
+{
+    return performanceAgentModeToString(performanceAgentMode);
+}
+
+int MainComponent::slabIndex(const SlabSelection& slab) const
+{
+    if (! slab.isValid())
+        return 0;
+
+    return juce::jlimit(0, 15, slab.floor * 4 + slab.quadrant);
+}
+
+void MainComponent::applyPerformancePresetForSlab(const SlabSelection& slab)
+{
+    if (! slab.isValid())
+        return;
+
+    const int index = slabIndex(slab);
+    performanceAgentMode = slabPerformanceModes[static_cast<size_t>(index)];
+    bpm = slabStartingTempos[static_cast<size_t>(index)];
+    resetPerformanceAgents();
+}
+
+bool MainComponent::performanceTrackAt(juce::Point<int> cell) const
+{
+    return std::find_if(performanceTracks.begin(), performanceTracks.end(),
+                        [cell] (const TrackPiece& track) { return track.cell == cell; }) != performanceTracks.end();
+}
+
+bool MainComponent::performanceTrackHorizontalAt(juce::Point<int> cell) const
+{
+    const auto it = std::find_if(performanceTracks.begin(), performanceTracks.end(),
+                                 [cell] (const TrackPiece& track) { return track.cell == cell; });
+    return it != performanceTracks.end() ? it->horizontal : true;
+}
+
+bool MainComponent::performanceOrbitCenterAt(juce::Point<int> cell) const
+{
+    return std::find(performanceOrbitCenters.begin(), performanceOrbitCenters.end(), cell) != performanceOrbitCenters.end();
 }
