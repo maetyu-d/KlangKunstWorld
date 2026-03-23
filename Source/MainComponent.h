@@ -80,7 +80,33 @@ public:
         automata
     };
 
+    enum class EditChordType
+    {
+        single,
+        power,
+        majorTriad,
+        minorTriad,
+        sus2,
+        sus4,
+        majorSeventh,
+        minorSeventh
+    };
+
 private:
+    enum class ScreenMode
+    {
+        title,
+        world
+    };
+
+    enum class TitleAction
+    {
+        none,
+        newWorld,
+        saveWorld,
+        loadWorld
+    };
+
     struct Camera
     {
         int rotation = 0;
@@ -230,6 +256,8 @@ private:
     juce::Point<float> projectPoint(int x, int y, int z, juce::Rectangle<float> area) const;
     int quadrantForCell(int x, int y) const;
     void quadrantBounds(int quadrant, int& x0, int& y0, int& x1, int& y1) const;
+    int slabZStart(const SlabSelection& slab) const;
+    int slabZEndExclusive(const SlabSelection& slab) const;
     juce::Path slabPath(const SlabSelection& slab, juce::Rectangle<float> area) const;
     SlabSelection slabAtPosition(juce::Point<float> position, juce::Rectangle<float> area) const;
     bool voxelInSelectedSlab(int x, int y, int z, const SlabSelection& slab) const;
@@ -239,6 +267,16 @@ private:
     void resetEditCursor();
     void moveEditCursor(int dx, int dy, int dz);
     void clearIsolatedSlab();
+    void applyEditPlacement(bool filled);
+    std::vector<int> editChordIntervals() const;
+    juce::String editChordTypeName() const;
+    juce::String pitchClassName(int semitone) const;
+    juce::String currentEditChordName() const;
+    void rebuildFilledVoxelCache();
+    bool saveStateToFile(const juce::File& file);
+    bool loadStateFromFile(const juce::File& file);
+    void showSaveDialog();
+    void showLoadDialog();
     int midiNoteForHeight(int z) const;
     void triggerPerformanceNotesAtCell(juce::Point<int> cell);
     void addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples);
@@ -258,6 +296,12 @@ private:
     void drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area);
     void drawHud(juce::Graphics& g, juce::Rectangle<float> area);
     void drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> area);
+    juce::Rectangle<float> titleCardBounds(juce::Rectangle<float> area) const;
+    juce::Rectangle<float> titleButtonBounds(juce::Rectangle<float> area, int index) const;
+    TitleAction titleActionAt(juce::Point<float> position, juce::Rectangle<float> area) const;
+    juce::String titleActionLabel(TitleAction action) const;
+    void enterWorldFromTitle(bool regenerateWorld);
     void splitIntoFourIslands();
     void rotateCamera(int direction);
     void panCamera(float dx, float dy);
@@ -285,6 +329,8 @@ private:
     void resetPerformanceAgents();
 
     Camera camera;
+    ScreenMode screenMode = ScreenMode::title;
+    TitleAction hoveredTitleAction = TitleAction::none;
     float targetZoom = 1.0f;
     std::vector<uint8_t> voxels;
     std::vector<FilledVoxel> filledVoxels;
@@ -293,6 +339,8 @@ private:
     SlabSelection hoveredSlab;
     SlabSelection isolatedSlab;
     EditCursor editCursor;
+    int editPlacementHeight = 1;
+    EditChordType editChordType = EditChordType::single;
     bool performanceMode = false;
     int performanceRegionMode = 2;
     int performanceAgentCount = 1;
@@ -322,6 +370,7 @@ private:
     juce::CriticalSection synthLock;
     std::vector<PendingNoteOff> pendingNoteOffs;
     std::vector<PendingNoteOff> pendingBeatNoteOffs;
+    std::unique_ptr<juce::FileChooser> activeFileChooser;
     double currentSampleRate = 44100.0;
     double bpm = 168.0;
     double beatStepAccumulator = 0.0;

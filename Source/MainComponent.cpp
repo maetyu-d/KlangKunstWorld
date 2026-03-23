@@ -94,6 +94,11 @@ juce::String performanceAgentModeToString(MainComponent::PerformanceAgentMode mo
 
     return "Snakes";
 }
+
+int boolToInt(bool value)
+{
+    return value ? 1 : 0;
+}
 }
 
 bool MainComponent::WaveVoice::canPlaySound(juce::SynthesiserSound* s)
@@ -509,6 +514,13 @@ void MainComponent::paint(juce::Graphics& g)
 
     drawBackdrop(g, bounds);
 
+    if (screenMode == ScreenMode::title)
+    {
+        drawWireframeGrid(g, bounds.reduced(18.0f, 120.0f));
+        drawTitleScreen(g, bounds);
+        return;
+    }
+
     if (isolatedSlab.isValid() && performanceMode)
     {
         auto content = bounds.reduced(18.0f);
@@ -545,6 +557,17 @@ void MainComponent::mouseWheelMove(const juce::MouseEvent&, const juce::MouseWhe
 
 void MainComponent::mouseMove(const juce::MouseEvent& event)
 {
+    if (screenMode == ScreenMode::title)
+    {
+        const auto nextAction = titleActionAt(event.position, getLocalBounds().toFloat());
+        if (nextAction != hoveredTitleAction)
+        {
+            hoveredTitleAction = nextAction;
+            repaint();
+        }
+        return;
+    }
+
     if (isolatedSlab.isValid())
     {
         if (performanceMode)
@@ -590,6 +613,12 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
 
 void MainComponent::mouseExit(const juce::MouseEvent&)
 {
+    if (screenMode == ScreenMode::title && hoveredTitleAction != TitleAction::none)
+    {
+        hoveredTitleAction = TitleAction::none;
+        repaint();
+    }
+
     if (performanceHoverCell.has_value())
     {
         performanceHoverCell.reset();
@@ -605,6 +634,18 @@ void MainComponent::mouseExit(const juce::MouseEvent&)
 
 void MainComponent::mouseUp(const juce::MouseEvent& event)
 {
+    if (screenMode == ScreenMode::title)
+    {
+        switch (titleActionAt(event.position, getLocalBounds().toFloat()))
+        {
+            case TitleAction::newWorld: enterWorldFromTitle(true); break;
+            case TitleAction::saveWorld: showSaveDialog(); break;
+            case TitleAction::loadWorld: showLoadDialog(); break;
+            case TitleAction::none: break;
+        }
+        return;
+    }
+
     if (layoutMode != LayoutMode::FourIslandsFourFloors)
         return;
 
@@ -689,7 +730,7 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         if (editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         {
             const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
-            setVoxel(editCursor.x, editCursor.y, editCursor.z, ! remove);
+            applyEditPlacement(! remove);
             repaint();
             return;
         }
@@ -712,6 +753,8 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         isolatedSlab = slab;
         hoveredSlab = slab;
         resetEditCursor();
+        editPlacementHeight = 1;
+        editChordType = EditChordType::single;
         performanceMode = false;
         performanceRegionMode = 2;
         performanceDiscs.clear();
@@ -906,6 +949,47 @@ bool MainComponent::keyPressed(const juce::KeyPress& key, juce::Component*)
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
 {
+    const auto modifiers = key.getModifiers();
+    const auto keyChar = static_cast<juce_wchar>(key.getTextCharacter());
+    const auto lowerChar = juce::CharacterFunctions::toLowerCase(keyChar);
+    const auto keyCode = juce::CharacterFunctions::toLowerCase(static_cast<juce_wchar>(key.getKeyCode()));
+    const bool commandShortcutDown = modifiers.isCommandDown() || modifiers.isCtrlDown();
+    const bool saveShortcut = commandShortcutDown && keyCode == 's';
+    const bool loadShortcut = commandShortcutDown && keyCode == 'o';
+
+    if (screenMode == ScreenMode::title)
+    {
+        if (key == juce::KeyPress::returnKey || key == juce::KeyPress::spaceKey || lowerChar == 'n')
+        {
+            enterWorldFromTitle(true);
+            return true;
+        }
+
+        if (keyCode == 's' && ! commandShortcutDown)
+        {
+            showSaveDialog();
+            return true;
+        }
+
+        if ((keyCode == 'l' && ! commandShortcutDown) || loadShortcut)
+        {
+            showLoadDialog();
+            return true;
+        }
+    }
+
+    if (saveShortcut)
+    {
+        showSaveDialog();
+        return true;
+    }
+
+    if (loadShortcut)
+    {
+        showLoadDialog();
+        return true;
+    }
+
     if (isolatedSlab.isValid())
     {
         if (key == juce::KeyPress::returnKey)
@@ -1056,10 +1140,20 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         if (key == juce::KeyPress::downKey) { moveEditCursor(0, 1, 0); repaint(); return true; }
         if (key == juce::KeyPress::pageUpKey || key == juce::KeyPress(']')) { moveEditCursor(0, 0, 1); repaint(); return true; }
         if (key == juce::KeyPress::pageDownKey || key == juce::KeyPress('[')) { moveEditCursor(0, 0, -1); repaint(); return true; }
+        if (key == juce::KeyPress('1')) { editPlacementHeight = 1; repaint(); return true; }
+        if (key == juce::KeyPress('2')) { editPlacementHeight = 2; repaint(); return true; }
+        if (key == juce::KeyPress('3')) { editPlacementHeight = 3; repaint(); return true; }
+        if (key == juce::KeyPress('4')) { editPlacementHeight = 4; repaint(); return true; }
+        if (key == juce::KeyPress('v'))
+        {
+            editChordType = static_cast<EditChordType>((static_cast<int>(editChordType) + 1) % 8);
+            repaint();
+            return true;
+        }
         if (key == juce::KeyPress('p'))
         {
             if (editCursor.active)
-                setVoxel(editCursor.x, editCursor.y, editCursor.z, true);
+                applyEditPlacement(true);
             repaint();
             return true;
         }
@@ -1072,7 +1166,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         if (key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x'))
         {
             if (editCursor.active)
-                setVoxel(editCursor.x, editCursor.y, editCursor.z, false);
+                applyEditPlacement(false);
             repaint();
             return true;
         }
@@ -1195,6 +1289,8 @@ void MainComponent::randomiseVoxels()
     hoveredSlab = {};
     isolatedSlab = {};
     editCursor = {};
+    editPlacementHeight = 1;
+    editChordType = EditChordType::single;
     performanceMode = false;
     performanceRegionMode = 2;
     performanceAgentMode = PerformanceAgentMode::snakes;
@@ -1520,6 +1616,8 @@ void MainComponent::splitIntoFourIslands()
     hoveredSlab = {};
     isolatedSlab = {};
     editCursor = {};
+    editPlacementHeight = 1;
+    editChordType = EditChordType::single;
     performanceMode = false;
     performanceRegionMode = 2;
     performanceAgentMode = PerformanceAgentMode::snakes;
@@ -1610,6 +1708,9 @@ juce::Point<int> MainComponent::islandOffsetForCell(int x, int y) const
 
 int MainComponent::renderBaseZForLayer(int z) const
 {
+    if (isolatedSlab.isValid())
+        return z - slabZStart(isolatedSlab);
+
     if (layoutMode != LayoutMode::FourIslandsFourFloors)
         return z;
 
@@ -1654,6 +1755,24 @@ void MainComponent::quadrantBounds(int quadrant, int& x0, int& y0, int& x1, int&
     x1 = right ? maxXCoord : centreX;
     y0 = bottom ? centreY : minYCoord;
     y1 = bottom ? maxYCoord : centreY;
+}
+
+int MainComponent::slabZStart(const SlabSelection& slab) const
+{
+    return slab.floor * floorBandHeight;
+}
+
+int MainComponent::slabZEndExclusive(const SlabSelection& slab) const
+{
+    if (! slab.isValid())
+        return 0;
+
+    const int zStart = slabZStart(slab);
+    const bool isCurrentIsolatedSlab = isolatedSlab.isValid()
+                                    && slab.quadrant == isolatedSlab.quadrant
+                                    && slab.floor == isolatedSlab.floor;
+    const int localHeight = isCurrentIsolatedSlab ? 20 : floorBandHeight;
+    return juce::jlimit(0, gridHeight, zStart + localHeight);
 }
 
 juce::Path MainComponent::slabPath(const SlabSelection& slab, juce::Rectangle<float> area) const
@@ -1702,8 +1821,7 @@ bool MainComponent::voxelInSelectedSlab(int x, int y, int z, const SlabSelection
     if (! slab.isValid())
         return false;
 
-    const int floor = z / floorBandHeight;
-    return floor == slab.floor && quadrantForCell(x, y) == slab.quadrant;
+    return z >= slabZStart(slab) && z < slabZEndExclusive(slab) && quadrantForCell(x, y) == slab.quadrant;
 }
 
 bool MainComponent::cellInSelectedSlab(int x, int y, const SlabSelection& slab) const
@@ -1717,15 +1835,24 @@ juce::Path MainComponent::cursorPath(const EditCursor& cursor, juce::Rectangle<f
     if (! cursor.active || ! isolatedSlab.isValid() || ! cellInSelectedSlab(cursor.x, cursor.y, isolatedSlab))
         return path;
 
-    const int baseZ = renderBaseZForLayer(cursor.z);
-    const auto aTop = projectCellCorner(cursor.x,     cursor.y,     baseZ + 1, cursor.x, cursor.y, area);
-    const auto bTop = projectCellCorner(cursor.x + 1, cursor.y,     baseZ + 1, cursor.x, cursor.y, area);
-    const auto cTop = projectCellCorner(cursor.x + 1, cursor.y + 1, baseZ + 1, cursor.x, cursor.y, area);
-    const auto dTop = projectCellCorner(cursor.x,     cursor.y + 1, baseZ + 1, cursor.x, cursor.y, area);
-    const auto aBottom = projectCellCorner(cursor.x,     cursor.y,     baseZ, cursor.x, cursor.y, area);
-    const auto bBottom = projectCellCorner(cursor.x + 1, cursor.y,     baseZ, cursor.x, cursor.y, area);
-    const auto cBottom = projectCellCorner(cursor.x + 1, cursor.y + 1, baseZ, cursor.x, cursor.y, area);
-    const auto dBottom = projectCellCorner(cursor.x,     cursor.y + 1, baseZ, cursor.x, cursor.y, area);
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
+    const int bottomLayer = renderBaseZForLayer(cursor.z);
+    int highestZ = cursor.z;
+    for (int octave = 0; octave < juce::jmax(1, editPlacementHeight); ++octave)
+        for (const int interval : editChordIntervals())
+            if (const int z = cursor.z + octave * 12 + interval; z >= zMin && z <= zMax)
+                highestZ = juce::jmax(highestZ, z);
+
+    const int topLayer = renderBaseZForLayer(highestZ);
+    const auto aTop = projectCellCorner(cursor.x,     cursor.y,     topLayer + 1, cursor.x, cursor.y, area);
+    const auto bTop = projectCellCorner(cursor.x + 1, cursor.y,     topLayer + 1, cursor.x, cursor.y, area);
+    const auto cTop = projectCellCorner(cursor.x + 1, cursor.y + 1, topLayer + 1, cursor.x, cursor.y, area);
+    const auto dTop = projectCellCorner(cursor.x,     cursor.y + 1, topLayer + 1, cursor.x, cursor.y, area);
+    const auto aBottom = projectCellCorner(cursor.x,     cursor.y,     bottomLayer, cursor.x, cursor.y, area);
+    const auto bBottom = projectCellCorner(cursor.x + 1, cursor.y,     bottomLayer, cursor.x, cursor.y, area);
+    const auto cBottom = projectCellCorner(cursor.x + 1, cursor.y + 1, bottomLayer, cursor.x, cursor.y, area);
+    const auto dBottom = projectCellCorner(cursor.x,     cursor.y + 1, bottomLayer, cursor.x, cursor.y, area);
 
     path.startNewSubPath(aTop);
     path.lineTo(bTop);
@@ -1825,7 +1952,7 @@ void MainComponent::resetEditCursor()
     quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
     editCursor.x = x0 + (x1 - x0) / 2;
     editCursor.y = y0 + (y1 - y0) / 2;
-    editCursor.z = juce::jlimit(0, gridHeight - 1, isolatedSlab.floor * floorBandHeight);
+    editCursor.z = juce::jlimit(0, gridHeight - 1, slabZStart(isolatedSlab));
     editCursor.active = true;
 }
 
@@ -1842,10 +1969,101 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
     editCursor.x = juce::jlimit(x0, x1 - 1, editCursor.x + dx);
     editCursor.y = juce::jlimit(y0, y1 - 1, editCursor.y + dy);
 
-    const int zMin = isolatedSlab.floor * floorBandHeight;
-    const int zMax = zMin + floorBandHeight - 1;
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
     editCursor.z = juce::jlimit(zMin, zMax, editCursor.z + dz);
     editCursor.active = true;
+}
+
+void MainComponent::applyEditPlacement(bool filled)
+{
+    if (! isolatedSlab.isValid() || ! editCursor.active || ! cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
+        return;
+
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
+    const int stackHeight = juce::jmax(1, editPlacementHeight);
+    const auto intervals = editChordIntervals();
+
+    for (int octave = 0; octave < stackHeight; ++octave)
+    {
+        for (const int interval : intervals)
+        {
+            const int z = editCursor.z + octave * 12 + interval;
+            if (z >= zMin && z <= zMax)
+                setVoxel(editCursor.x, editCursor.y, z, filled);
+        }
+    }
+}
+
+std::vector<int> MainComponent::editChordIntervals() const
+{
+    switch (editChordType)
+    {
+        case EditChordType::single: return { 0 };
+        case EditChordType::power: return { 0, 7 };
+        case EditChordType::majorTriad: return { 0, 4, 7 };
+        case EditChordType::minorTriad: return { 0, 3, 7 };
+        case EditChordType::sus2: return { 0, 2, 7 };
+        case EditChordType::sus4: return { 0, 5, 7 };
+        case EditChordType::majorSeventh: return { 0, 4, 7, 11 };
+        case EditChordType::minorSeventh: return { 0, 3, 7, 10 };
+    }
+
+    return { 0 };
+}
+
+juce::String MainComponent::editChordTypeName() const
+{
+    switch (editChordType)
+    {
+        case EditChordType::single: return "Single";
+        case EditChordType::power: return "Power";
+        case EditChordType::majorTriad: return "Major";
+        case EditChordType::minorTriad: return "Minor";
+        case EditChordType::sus2: return "Sus2";
+        case EditChordType::sus4: return "Sus4";
+        case EditChordType::majorSeventh: return "Maj7";
+        case EditChordType::minorSeventh: return "Min7";
+    }
+
+    return "Single";
+}
+
+juce::String MainComponent::pitchClassName(int semitone) const
+{
+    static constexpr std::array<const char*, 12> names {
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+    };
+
+    return names[static_cast<size_t>((semitone % 12 + 12) % 12)];
+}
+
+juce::String MainComponent::currentEditChordName() const
+{
+    if (! isolatedSlab.isValid() || ! editCursor.active)
+        return editChordTypeName();
+
+    const int localZ = editCursor.z - isolatedSlab.floor * floorBandHeight;
+    juce::String quality;
+    switch (editChordType)
+    {
+        case EditChordType::single: quality = ""; break;
+        case EditChordType::power: quality = "5"; break;
+        case EditChordType::majorTriad: quality = "Maj"; break;
+        case EditChordType::minorTriad: quality = "Min"; break;
+        case EditChordType::sus2: quality = "Sus2"; break;
+        case EditChordType::sus4: quality = "Sus4"; break;
+        case EditChordType::majorSeventh: quality = "Maj7"; break;
+        case EditChordType::minorSeventh: quality = "Min7"; break;
+    }
+
+    juce::String name = pitchClassName(localZ);
+    if (quality.isNotEmpty())
+        name << " " << quality;
+    if (editPlacementHeight > 1)
+        name << " x" << editPlacementHeight;
+    return name;
 }
 
 void MainComponent::clearIsolatedSlab()
@@ -1855,8 +2073,8 @@ void MainComponent::clearIsolatedSlab()
 
     int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
     quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
-    const int zMin = isolatedSlab.floor * floorBandHeight;
-    const int zMax = zMin + floorBandHeight;
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab);
 
     for (int z = zMin; z < zMax; ++z)
         for (int y = y0; y < y1; ++y)
@@ -1875,6 +2093,342 @@ void MainComponent::clearIsolatedSlab()
                 }
 
     resetEditCursor();
+}
+
+void MainComponent::rebuildFilledVoxelCache()
+{
+    filledVoxels.clear();
+    voxelCount = 0;
+    for (int z = 0; z < gridHeight; ++z)
+        for (int y = 0; y < gridDepth; ++y)
+            for (int x = 0; x < gridWidth; ++x)
+                if (voxels[voxelIndex(x, y, z)] != 0u)
+                {
+                    filledVoxels.push_back(FilledVoxel { static_cast<uint16_t>(x), static_cast<uint16_t>(y), static_cast<uint8_t>(z) });
+                    ++voxelCount;
+                }
+}
+
+bool MainComponent::saveStateToFile(const juce::File& targetFile)
+{
+    auto file = targetFile;
+    if (file.getFileExtension() != ".drd")
+        file = file.withFileExtension(".drd");
+
+    auto root = std::make_unique<juce::XmlElement>("drd");
+    root->setAttribute("version", 1);
+    root->setAttribute("gridWidth", gridWidth);
+    root->setAttribute("gridDepth", gridDepth);
+    root->setAttribute("gridHeight", gridHeight);
+
+    auto* cameraXml = root->createNewChildElement("camera");
+    cameraXml->setAttribute("rotation", camera.rotation);
+    cameraXml->setAttribute("zoom", static_cast<double>(camera.zoom));
+    cameraXml->setAttribute("targetZoom", static_cast<double>(targetZoom));
+    cameraXml->setAttribute("heightScale", static_cast<double>(camera.heightScale));
+    cameraXml->setAttribute("panX", static_cast<double>(camera.panX));
+    cameraXml->setAttribute("panY", static_cast<double>(camera.panY));
+
+    auto* stateXml = root->createNewChildElement("state");
+    stateXml->setAttribute("layoutMode", static_cast<int>(layoutMode));
+    stateXml->setAttribute("performanceMode", boolToInt(performanceMode));
+    stateXml->setAttribute("performanceRegionMode", performanceRegionMode);
+    stateXml->setAttribute("performanceAgentCount", performanceAgentCount);
+    stateXml->setAttribute("performanceAgentMode", static_cast<int>(performanceAgentMode));
+    stateXml->setAttribute("performanceTrackHorizontal", boolToInt(performanceTrackHorizontal));
+    stateXml->setAttribute("performancePlacementMode", static_cast<int>(performancePlacementMode));
+    stateXml->setAttribute("performanceTick", performanceTick);
+    stateXml->setAttribute("synthEngine", static_cast<int>(synthEngine));
+    stateXml->setAttribute("drumMode", static_cast<int>(drumMode));
+    stateXml->setAttribute("snakeTriggerMode", static_cast<int>(snakeTriggerMode));
+    stateXml->setAttribute("scale", static_cast<int>(scale));
+    stateXml->setAttribute("keyRoot", keyRoot);
+    stateXml->setAttribute("quantizeToScale", boolToInt(quantizeToScale));
+    stateXml->setAttribute("editPlacementHeight", editPlacementHeight);
+    stateXml->setAttribute("editChordType", static_cast<int>(editChordType));
+    stateXml->setAttribute("bpm", bpm);
+    stateXml->setAttribute("beatStepAccumulator", beatStepAccumulator);
+    stateXml->setAttribute("beatStepIndex", beatStepIndex);
+    stateXml->setAttribute("beatBarIndex", beatBarIndex);
+    stateXml->setAttribute("selectedDirX", performanceSelectedDirection.x);
+    stateXml->setAttribute("selectedDirY", performanceSelectedDirection.y);
+
+    auto* slabXml = root->createNewChildElement("slabState");
+    slabXml->setAttribute("hoveredQuadrant", hoveredSlab.quadrant);
+    slabXml->setAttribute("hoveredFloor", hoveredSlab.floor);
+    slabXml->setAttribute("isolatedQuadrant", isolatedSlab.quadrant);
+    slabXml->setAttribute("isolatedFloor", isolatedSlab.floor);
+    slabXml->setAttribute("cursorX", editCursor.x);
+    slabXml->setAttribute("cursorY", editCursor.y);
+    slabXml->setAttribute("cursorZ", editCursor.z);
+    slabXml->setAttribute("cursorActive", boolToInt(editCursor.active));
+    slabXml->setAttribute("hoverCellX", performanceHoverCell.has_value() ? performanceHoverCell->x : -1);
+    slabXml->setAttribute("hoverCellY", performanceHoverCell.has_value() ? performanceHoverCell->y : -1);
+    slabXml->setAttribute("selectionKind", static_cast<int>(performanceSelection.kind));
+    slabXml->setAttribute("selectionX", performanceSelection.isValid() ? performanceSelection.cell.x : -1);
+    slabXml->setAttribute("selectionY", performanceSelection.isValid() ? performanceSelection.cell.y : -1);
+
+    auto* presetsXml = root->createNewChildElement("slabPresets");
+    for (size_t i = 0; i < slabPerformanceModes.size(); ++i)
+    {
+        auto* presetXml = presetsXml->createNewChildElement("slab");
+        presetXml->setAttribute("index", static_cast<int>(i));
+        presetXml->setAttribute("mode", static_cast<int>(slabPerformanceModes[i]));
+        presetXml->setAttribute("tempo", slabStartingTempos[i]);
+    }
+
+    auto* voxelsXml = root->createNewChildElement("voxels");
+    voxelsXml->setAttribute("count", static_cast<int>(filledVoxels.size()));
+    for (const auto& voxel : filledVoxels)
+    {
+        auto* voxelXml = voxelsXml->createNewChildElement("voxel");
+        voxelXml->setAttribute("x", static_cast<int>(voxel.x));
+        voxelXml->setAttribute("y", static_cast<int>(voxel.y));
+        voxelXml->setAttribute("z", static_cast<int>(voxel.z));
+    }
+
+    auto* snakesXml = root->createNewChildElement("snakes");
+    for (const auto& snake : performanceSnakes)
+    {
+        auto* snakeXml = snakesXml->createNewChildElement("snake");
+        snakeXml->setAttribute("dirX", snake.direction.x);
+        snakeXml->setAttribute("dirY", snake.direction.y);
+        snakeXml->setAttribute("colour", static_cast<int>(snake.colour.getARGB()));
+        snakeXml->setAttribute("orbitIndex", snake.orbitIndex);
+        snakeXml->setAttribute("clockwise", boolToInt(snake.clockwise));
+        for (const auto& segment : snake.body)
+        {
+            auto* segXml = snakeXml->createNewChildElement("segment");
+            segXml->setAttribute("x", segment.x);
+            segXml->setAttribute("y", segment.y);
+        }
+    }
+
+    auto* discsXml = root->createNewChildElement("discs");
+    for (const auto& disc : performanceDiscs)
+    {
+        auto* discXml = discsXml->createNewChildElement("disc");
+        discXml->setAttribute("x", disc.cell.x);
+        discXml->setAttribute("y", disc.cell.y);
+        discXml->setAttribute("dirX", disc.direction.x);
+        discXml->setAttribute("dirY", disc.direction.y);
+    }
+
+    auto* tracksXml = root->createNewChildElement("tracks");
+    for (const auto& track : performanceTracks)
+    {
+        auto* trackXml = tracksXml->createNewChildElement("track");
+        trackXml->setAttribute("x", track.cell.x);
+        trackXml->setAttribute("y", track.cell.y);
+        trackXml->setAttribute("horizontal", boolToInt(track.horizontal));
+    }
+
+    auto* orbitXml = root->createNewChildElement("orbitCenters");
+    for (const auto& centre : performanceOrbitCenters)
+    {
+        auto* centreXml = orbitXml->createNewChildElement("center");
+        centreXml->setAttribute("x", centre.x);
+        centreXml->setAttribute("y", centre.y);
+    }
+
+    auto* automataXml = root->createNewChildElement("automataCells");
+    for (const auto& cell : performanceAutomataCells)
+    {
+        auto* cellXml = automataXml->createNewChildElement("cell");
+        cellXml->setAttribute("x", cell.x);
+        cellXml->setAttribute("y", cell.y);
+    }
+
+    return root->writeTo(file);
+}
+
+bool MainComponent::loadStateFromFile(const juce::File& file)
+{
+    auto parsed = juce::XmlDocument::parse(file);
+    if (parsed == nullptr || ! parsed->hasTagName("drd"))
+        return false;
+
+    std::fill(voxels.begin(), voxels.end(), 0u);
+    filledVoxels.clear();
+    performanceSnakes.clear();
+    performanceDiscs.clear();
+    performanceTracks.clear();
+    performanceOrbitCenters.clear();
+    performanceAutomataCells.clear();
+    performanceFlashes.clear();
+    pendingNoteOffs.clear();
+    pendingBeatNoteOffs.clear();
+
+    if (auto* cameraXml = parsed->getChildByName("camera"))
+    {
+        camera.rotation = cameraXml->getIntAttribute("rotation", 0);
+        camera.zoom = static_cast<float>(cameraXml->getDoubleAttribute("zoom", 1.0));
+        targetZoom = static_cast<float>(cameraXml->getDoubleAttribute("targetZoom", camera.zoom));
+        camera.heightScale = static_cast<float>(cameraXml->getDoubleAttribute("heightScale", 1.0));
+        camera.panX = static_cast<float>(cameraXml->getDoubleAttribute("panX", 0.0));
+        camera.panY = static_cast<float>(cameraXml->getDoubleAttribute("panY", 0.0));
+    }
+
+    if (auto* stateXml = parsed->getChildByName("state"))
+    {
+        layoutMode = static_cast<LayoutMode>(juce::jlimit(0, 2, stateXml->getIntAttribute("layoutMode", 0)));
+        performanceMode = stateXml->getBoolAttribute("performanceMode", false);
+        performanceRegionMode = juce::jlimit(0, 2, stateXml->getIntAttribute("performanceRegionMode", 2));
+        performanceAgentCount = juce::jlimit(0, 8, stateXml->getIntAttribute("performanceAgentCount", 1));
+        performanceAgentMode = static_cast<PerformanceAgentMode>(juce::jlimit(0, 3, stateXml->getIntAttribute("performanceAgentMode", 0)));
+        performanceTrackHorizontal = stateXml->getBoolAttribute("performanceTrackHorizontal", true);
+        performancePlacementMode = static_cast<PerformancePlacementMode>(juce::jlimit(0, 2, stateXml->getIntAttribute("performancePlacementMode", 0)));
+        performanceTick = stateXml->getIntAttribute("performanceTick", 0);
+        synthEngine = static_cast<SynthEngine>(juce::jlimit(0, 4, stateXml->getIntAttribute("synthEngine", 0)));
+        drumMode = static_cast<DrumMode>(juce::jlimit(0, 4, stateXml->getIntAttribute("drumMode", 0)));
+        snakeTriggerMode = static_cast<SnakeTriggerMode>(juce::jlimit(0, 1, stateXml->getIntAttribute("snakeTriggerMode", 0)));
+        scale = static_cast<ScaleType>(juce::jlimit(0, 4, stateXml->getIntAttribute("scale", 2)));
+        keyRoot = juce::jlimit(0, 11, stateXml->getIntAttribute("keyRoot", 0));
+        quantizeToScale = stateXml->getBoolAttribute("quantizeToScale", true);
+        editPlacementHeight = juce::jlimit(1, 4, stateXml->getIntAttribute("editPlacementHeight", 1));
+        editChordType = static_cast<EditChordType>(juce::jlimit(0, 7, stateXml->getIntAttribute("editChordType", 0)));
+        bpm = juce::jlimit(60.0, 220.0, stateXml->getDoubleAttribute("bpm", 168.0));
+        beatStepAccumulator = stateXml->getDoubleAttribute("beatStepAccumulator", 0.0);
+        beatStepIndex = stateXml->getIntAttribute("beatStepIndex", 0);
+        beatBarIndex = stateXml->getIntAttribute("beatBarIndex", 0);
+        performanceSelectedDirection = { stateXml->getIntAttribute("selectedDirX", 1),
+                                         stateXml->getIntAttribute("selectedDirY", 0) };
+    }
+
+    if (auto* slabXml = parsed->getChildByName("slabState"))
+    {
+        hoveredSlab = { slabXml->getIntAttribute("hoveredQuadrant", -1), slabXml->getIntAttribute("hoveredFloor", -1) };
+        isolatedSlab = { slabXml->getIntAttribute("isolatedQuadrant", -1), slabXml->getIntAttribute("isolatedFloor", -1) };
+        editCursor = { slabXml->getIntAttribute("cursorX", 0),
+                       slabXml->getIntAttribute("cursorY", 0),
+                       slabXml->getIntAttribute("cursorZ", 0),
+                       slabXml->getBoolAttribute("cursorActive", false) };
+        const int hoverX = slabXml->getIntAttribute("hoverCellX", -1);
+        const int hoverY = slabXml->getIntAttribute("hoverCellY", -1);
+        performanceHoverCell = (hoverX >= 0 && hoverY >= 0) ? std::optional<juce::Point<int>>(juce::Point<int>(hoverX, hoverY)) : std::nullopt;
+        performanceSelection.kind = static_cast<PerformanceSelection::Kind>(juce::jlimit(0, 2, slabXml->getIntAttribute("selectionKind", 0)));
+        performanceSelection.cell = { slabXml->getIntAttribute("selectionX", -1),
+                                      slabXml->getIntAttribute("selectionY", -1) };
+    }
+
+    if (auto* presetsXml = parsed->getChildByName("slabPresets"))
+    {
+        forEachXmlChildElementWithTagName(*presetsXml, presetXml, "slab")
+        {
+            const int index = juce::jlimit(0, 15, presetXml->getIntAttribute("index", 0));
+            slabPerformanceModes[static_cast<size_t>(index)] = static_cast<PerformanceAgentMode>(juce::jlimit(0, 3, presetXml->getIntAttribute("mode", 0)));
+            slabStartingTempos[static_cast<size_t>(index)] = presetXml->getDoubleAttribute("tempo", 168.0);
+        }
+    }
+
+    if (auto* voxelsXml = parsed->getChildByName("voxels"))
+    {
+        forEachXmlChildElementWithTagName(*voxelsXml, voxelXml, "voxel")
+        {
+            const int x = voxelXml->getIntAttribute("x", -1);
+            const int y = voxelXml->getIntAttribute("y", -1);
+            const int z = voxelXml->getIntAttribute("z", -1);
+            if (x >= 0 && x < gridWidth && y >= 0 && y < gridDepth && z >= 0 && z < gridHeight)
+                voxels[voxelIndex(x, y, z)] = 1u;
+        }
+    }
+
+    if (auto* snakesXml = parsed->getChildByName("snakes"))
+    {
+        forEachXmlChildElementWithTagName(*snakesXml, snakeXml, "snake")
+        {
+            Snake snake;
+            snake.direction = { snakeXml->getIntAttribute("dirX", 1), snakeXml->getIntAttribute("dirY", 0) };
+            snake.colour = juce::Colour(static_cast<juce::uint32>(snakeXml->getIntAttribute("colour", juce::Colours::white.getARGB())));
+            snake.orbitIndex = snakeXml->getIntAttribute("orbitIndex", 0);
+            snake.clockwise = snakeXml->getBoolAttribute("clockwise", true);
+            forEachXmlChildElementWithTagName(*snakeXml, segmentXml, "segment")
+                snake.body.push_back({ segmentXml->getIntAttribute("x", 0), segmentXml->getIntAttribute("y", 0) });
+            performanceSnakes.push_back(std::move(snake));
+        }
+    }
+
+    if (auto* discsXml = parsed->getChildByName("discs"))
+    {
+        forEachXmlChildElementWithTagName(*discsXml, discXml, "disc")
+            performanceDiscs.push_back({ { discXml->getIntAttribute("x", 0), discXml->getIntAttribute("y", 0) },
+                                         { discXml->getIntAttribute("dirX", 1), discXml->getIntAttribute("dirY", 0) } });
+    }
+
+    if (auto* tracksXml = parsed->getChildByName("tracks"))
+    {
+        forEachXmlChildElementWithTagName(*tracksXml, trackXml, "track")
+            performanceTracks.push_back({ { trackXml->getIntAttribute("x", 0), trackXml->getIntAttribute("y", 0) },
+                                          trackXml->getBoolAttribute("horizontal", true) });
+    }
+
+    if (auto* orbitXml = parsed->getChildByName("orbitCenters"))
+    {
+        forEachXmlChildElementWithTagName(*orbitXml, centreXml, "center")
+            performanceOrbitCenters.push_back({ centreXml->getIntAttribute("x", 0), centreXml->getIntAttribute("y", 0) });
+    }
+
+    if (auto* automataXml = parsed->getChildByName("automataCells"))
+    {
+        forEachXmlChildElementWithTagName(*automataXml, cellXml, "cell")
+            performanceAutomataCells.push_back({ cellXml->getIntAttribute("x", 0), cellXml->getIntAttribute("y", 0) });
+    }
+
+    visualStepCounter.store(beatStepIndex, std::memory_order_relaxed);
+    visualBarCounter.store(beatBarIndex, std::memory_order_relaxed);
+    visualBeatPulse = 0.0f;
+    visualBarPulse = 0.0f;
+    visualBarSweep = 0.0f;
+    performanceBeatEnergy = 0.0f;
+    rebuildFilledVoxelCache();
+    return true;
+}
+
+void MainComponent::showSaveDialog()
+{
+    activeFileChooser = std::make_unique<juce::FileChooser>("Save .drd state",
+                                                            juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("KlangKunstWorld.drd"),
+                                                            "*.drd");
+    juce::Component::SafePointer<MainComponent> safeThis(this);
+    activeFileChooser->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles,
+                                   [safeThis] (const juce::FileChooser& chooser)
+                                   {
+                                       if (auto* self = safeThis.getComponent())
+                                       {
+                                           const auto file = chooser.getResult();
+                                           if (file != juce::File{} && ! self->saveStateToFile(file))
+                                               juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, "Save Failed", "Could not save the .drd file.");
+                                           self->activeFileChooser.reset();
+                                       }
+                                   });
+}
+
+void MainComponent::showLoadDialog()
+{
+    activeFileChooser = std::make_unique<juce::FileChooser>("Load .drd state",
+                                                            juce::File::getSpecialLocation(juce::File::userDocumentsDirectory),
+                                                            "*.drd");
+    juce::Component::SafePointer<MainComponent> safeThis(this);
+    activeFileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                   [safeThis] (const juce::FileChooser& chooser)
+                                   {
+                                       if (auto* self = safeThis.getComponent())
+                                       {
+                                           const auto file = chooser.getResult();
+                                           if (file != juce::File{})
+                                           {
+                                               if (! self->loadStateFromFile(file))
+                                                   juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, "Load Failed", "Could not load the .drd file.");
+                                               else
+                                                {
+                                                    self->screenMode = ScreenMode::world;
+                                                    self->hoveredTitleAction = TitleAction::none;
+                                                   self->repaint();
+                                                }
+                                           }
+                                           self->activeFileChooser.reset();
+                                       }
+                                   });
 }
 
 int MainComponent::midiNoteForHeight(int z) const
@@ -1987,8 +2541,8 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
     if (! isolatedSlab.isValid())
         return;
 
-    const int zStart = isolatedSlab.floor * floorBandHeight;
-    const int zEnd = zStart + floorBandHeight;
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
     const juce::ScopedLock sl(synthLock);
 
     int triggered = 0;
@@ -2500,8 +3054,8 @@ juce::Point<float> MainComponent::projectionOffset(juce::Rectangle<float> area) 
     int zMax = renderedWorldHeight();
     if (isolatedSlab.isValid() && layoutMode == LayoutMode::FourIslandsFourFloors)
     {
-        zMin = isolatedSlab.floor * (floorBandHeight + floorBandGap);
-        zMax = zMin + floorBandHeight;
+        zMin = 0;
+        zMax = slabZEndExclusive(isolatedSlab) - slabZStart(isolatedSlab);
     }
 
     const std::array<juce::Point<float>, 8> corners {{
@@ -2580,8 +3134,8 @@ void MainComponent::drawPerformanceView(juce::Graphics& g, juce::Rectangle<float
     g.setColour(juce::Colour::fromRGBA(74, 144, 255, 72));
     g.drawRoundedRectangle(board.expanded(26.0f), 28.0f, 1.8f);
 
-    const int zStart = isolatedSlab.floor * floorBandHeight;
-    const int zEnd = zStart + floorBandHeight;
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
 
     for (int localY = 0; localY < slabHeight; ++localY)
     {
@@ -3099,9 +3653,10 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
             if (isolatedSlab.isValid() && (slab.quadrant != isolatedSlab.quadrant || slab.floor != isolatedSlab.floor))
                 continue;
 
-            const int floorZ = layoutMode == LayoutMode::FourIslandsFourFloors
-                                 ? floorIndex * (floorBandHeight + floorBandGap)
-                                 : 0;
+            const int floorZ = isolatedSlab.isValid() ? 0
+                               : layoutMode == LayoutMode::FourIslandsFourFloors
+                                   ? floorIndex * (floorBandHeight + floorBandGap)
+                                   : 0;
             const auto slabLift = hoverLiftForSlab(slab);
             const auto p00 = projectPoint(x0 + offset.x, y0 + offset.y, floorZ, area);
             const auto p10 = projectPoint(x1 + offset.x, y0 + offset.y, floorZ, area);
@@ -3175,7 +3730,7 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         if (isolatedSlab.isValid() && ! voxelInSelectedSlab(x, y, static_cast<int>(voxel.z), isolatedSlab))
             continue;
 
-        const int baseZ = renderBaseZForLayer(0);
+        const int baseZ = isolatedSlab.isValid() ? 0 : renderBaseZForLayer(0);
         const auto a0 = projectCellCorner(x,     y,     baseZ, x, y, area);
         const auto b0 = projectCellCorner(x + 1, y,     baseZ, x, y, area);
         const auto c0 = projectCellCorner(x + 1, y + 1, baseZ, x, y, area);
@@ -3270,7 +3825,7 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         const SlabSelection voxelSlab { quadrantForCell(x, y), z / floorBandHeight };
         const auto slabLift = hoverLiftForSlab(voxelSlab);
         const bool showTop = (z == gridHeight - 1)
-                          || (layoutMode == LayoutMode::FourIslandsFourFloors && (z % floorBandHeight) == floorBandHeight - 1)
+                          || (! isolatedSlab.isValid() && layoutMode == LayoutMode::FourIslandsFourFloors && (z % floorBandHeight) == floorBandHeight - 1)
                           || ! hasVoxel(x, y, z + 1);
         const bool showLeft = hasLeftFaceDirection ? ! hasVoxel(x + leftFaceDirection.dx, y + leftFaceDirection.dy, z) : true;
         const bool showRight = hasRightFaceDirection ? ! hasVoxel(x + rightFaceDirection.dx, y + rightFaceDirection.dy, z) : true;
@@ -3482,9 +4037,10 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
             if (isolatedSlab.isValid() && (slab.quadrant != isolatedSlab.quadrant || slab.floor != isolatedSlab.floor))
                 continue;
 
-            const int floorZ = layoutMode == LayoutMode::FourIslandsFourFloors
-                                 ? floorIndex * (floorBandHeight + floorBandGap)
-                                 : 0;
+            const int floorZ = isolatedSlab.isValid() ? 0
+                               : layoutMode == LayoutMode::FourIslandsFourFloors
+                                   ? floorIndex * (floorBandHeight + floorBandGap)
+                                   : 0;
             const auto slabLift = hoverLiftForSlab(slab);
             for (int x = x0; x <= x1; x += lineStep)
             {
@@ -3572,7 +4128,14 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         const auto pulsePhase = static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.008));
         const auto pulse = 0.5f + 0.5f * pulsePhase;
         const auto indicatorBounds = indicator.getBounds().expanded(10.0f + 4.0f * pulse);
-        const int cursorBaseZ = renderBaseZForLayer(editCursor.z);
+        int topCursorZ = editCursor.z;
+        const int slabZMin = isolatedSlab.floor * floorBandHeight;
+        const int slabZMax = slabZMin + floorBandHeight - 1;
+        for (int octave = 0; octave < juce::jmax(1, editPlacementHeight); ++octave)
+            for (const int interval : editChordIntervals())
+                if (const int z = editCursor.z + octave * 12 + interval; z >= slabZMin && z <= slabZMax)
+                    topCursorZ = juce::jmax(topCursorZ, z);
+        const int cursorBaseZ = renderBaseZForLayer(topCursorZ);
         const int floorBaseZ = renderBaseZForLayer(isolatedSlab.floor * floorBandHeight);
 
         juce::Path floorFootprint;
@@ -3617,7 +4180,7 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         g.setColour(juce::Colour::fromFloatRGBA(1.0f, 1.0f, 1.0f, 0.95f));
         g.strokePath(indicator, juce::PathStrokeType(1.2f));
 
-        auto zLabelBounds = juce::Rectangle<float>(52.0f, 22.0f)
+        auto zLabelBounds = juce::Rectangle<float>(92.0f, 22.0f)
                                 .withCentre({ topCentre.x + 46.0f, topCentre.y - 12.0f });
         zLabelBounds = zLabelBounds.withY(juce::jmax(area.getY() + 8.0f, zLabelBounds.getY()));
         g.setColour(juce::Colour::fromRGBA(8, 14, 34, 232));
@@ -3626,7 +4189,23 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         g.drawRoundedRectangle(zLabelBounds, 6.0f, 1.4f);
         g.setColour(juce::Colours::white);
         g.setFont(juce::FontOptions(12.5f));
-        g.drawFittedText("z " + juce::String(editCursor.z), zLabelBounds.toNearestInt(), juce::Justification::centred, 1);
+        const int localCursorZ = editCursor.z - slabZMin;
+        const int localTopCursorZ = topCursorZ - slabZMin;
+        const auto stackLabel = editPlacementHeight > 1
+                                  ? ("z " + juce::String(localCursorZ) + "-" + juce::String(localTopCursorZ))
+                                  : ("z " + juce::String(localCursorZ));
+        g.drawFittedText(stackLabel, zLabelBounds.toNearestInt(), juce::Justification::centred, 1);
+
+        auto chordLabelBounds = juce::Rectangle<float>(144.0f, 22.0f)
+                                    .withCentre({ topCentre.x + 74.0f, topCentre.y + 14.0f });
+        chordLabelBounds = chordLabelBounds.withY(juce::jmax(area.getY() + 34.0f, chordLabelBounds.getY()));
+        g.setColour(juce::Colour::fromRGBA(8, 14, 34, 232));
+        g.fillRoundedRectangle(chordLabelBounds, 6.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 194, 96, 210));
+        g.drawRoundedRectangle(chordLabelBounds, 6.0f, 1.3f);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(12.0f));
+        g.drawFittedText(currentEditChordName(), chordLabelBounds.toNearestInt(), juce::Justification::centred, 1);
     }
 
     if (! isolatedSlab.isValid())
@@ -3652,6 +4231,9 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
 
 void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
 {
+    if (screenMode == ScreenMode::title)
+        return;
+
     if (isolatedSlab.isValid() && performanceMode)
         return;
 
@@ -3780,7 +4362,7 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.drawRoundedRectangle(detailChip, 14.0f, 1.0f);
     g.setColour(juce::Colours::white);
     g.setFont(juce::FontOptions(14.0f));
-    g.drawFittedText("Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place   Right-click remove   Arrows move   [ ] height   C clear slab   Esc back",
+    g.drawFittedText("Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back",
                      detailChip.reduced(14.0f, 0.0f).toNearestInt(),
                      juce::Justification::centredLeft,
                      1);
@@ -3789,7 +4371,7 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
 
     auto statRow = inner.removeFromTop(56.0f);
     const float statGap = 10.0f;
-    const float statWidth = (statRow.getWidth() - statGap * 3.0f) / 4.0f;
+    const float statWidth = (statRow.getWidth() - statGap * 4.0f) / 5.0f;
     drawStat(statRow.removeFromLeft(statWidth), "SYNTH", synthName());
     statRow.removeFromLeft(statGap);
     drawStat(statRow.removeFromLeft(statWidth), "DRUMS", drumModeName());
@@ -3797,6 +4379,54 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     drawStat(statRow.removeFromLeft(statWidth), "KEY", keyName());
     statRow.removeFromLeft(statGap);
     drawStat(statRow.removeFromLeft(statWidth), "SCALE", scaleName());
+    statRow.removeFromLeft(statGap);
+    drawStat(statRow.removeFromLeft(statWidth), "PLACE", editChordTypeName());
+
+    inner.removeFromTop(10.0f);
+
+    auto chordRow = inner.removeFromTop(34.0f);
+    auto drawChordChip = [&] (juce::Rectangle<float> bounds, const juce::String& text, bool active)
+    {
+        g.setColour(active ? juce::Colour::fromRGBA(255, 168, 84, 72)
+                           : juce::Colour::fromRGBA(12, 22, 52, 182));
+        g.fillRoundedRectangle(bounds, 12.0f);
+        g.setColour(active ? juce::Colour::fromRGBA(255, 212, 140, 188)
+                           : juce::Colour::fromRGBA(102, 182, 255, 38));
+        g.drawRoundedRectangle(bounds, 12.0f, active ? 1.5f : 1.0f);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(active ? 12.5f : 12.0f));
+        g.drawFittedText(text, bounds.reduced(10.0f, 0.0f).toNearestInt(), juce::Justification::centred, 1);
+    };
+    auto chordLabelForType = [] (EditChordType type) -> juce::String
+    {
+        switch (type)
+        {
+            case EditChordType::single: return "Single";
+            case EditChordType::power: return "Power";
+            case EditChordType::majorTriad: return "Major";
+            case EditChordType::minorTriad: return "Minor";
+            case EditChordType::sus2: return "Sus2";
+            case EditChordType::sus4: return "Sus4";
+            case EditChordType::majorSeventh: return "Maj7";
+            case EditChordType::minorSeventh: return "Min7";
+        }
+
+        return "Single";
+    };
+
+    const std::array<EditChordType, 8> chordTypes {
+        EditChordType::single, EditChordType::power, EditChordType::majorTriad, EditChordType::minorTriad,
+        EditChordType::sus2, EditChordType::sus4, EditChordType::majorSeventh, EditChordType::minorSeventh
+    };
+    const float chordGap = 6.0f;
+    const float chordWidth = (chordRow.getWidth() - chordGap * 7.0f) / 8.0f;
+    for (size_t i = 0; i < chordTypes.size(); ++i)
+    {
+        auto chip = chordRow.removeFromLeft(chordWidth);
+        if (i + 1 < chordTypes.size())
+            chordRow.removeFromLeft(chordGap);
+        drawChordChip(chip, chordLabelForType(chordTypes[i]), chordTypes[i] == editChordType);
+    }
 
     inner.removeFromTop(10.0f);
 
@@ -3813,15 +4443,174 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     };
 
     const float infoGap = 8.0f;
-    const float infoWidth = (infoRow.getWidth() - infoGap * 2.0f) / 3.0f;
+    const float infoWidth = (infoRow.getWidth() - infoGap * 3.0f) / 4.0f;
+    const int slabBaseZ = isolatedSlab.floor * floorBandHeight;
+    const int localCursorZ = editCursor.z - slabBaseZ;
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(editCursor.z));
+                 "Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(localCursorZ));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "Note  " + noteNameForHeight(editCursor.z));
+                 "Root  " + pitchClassName(localCursorZ));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "M synth   B drums   K key   L scale   U quantize   C clear");
+                 "Layers  " + juce::String(editPlacementHeight) + " octaves");
+    infoRow.removeFromLeft(infoGap);
+    drawInfoChip(infoRow.removeFromLeft(infoWidth),
+                 "Name  " + currentEditChordName());
+
+    inner.removeFromTop(8.0f);
+    auto footerRow = inner.removeFromTop(28.0f);
+    drawInfoChip(footerRow,
+                 "P place   X delete   M/B/K/L/U sound");
+}
+
+juce::Rectangle<float> MainComponent::titleCardBounds(juce::Rectangle<float> area) const
+{
+    return area.withSizeKeepingCentre(900.0f, 400.0f).translated(0.0f, -16.0f);
+}
+
+juce::Rectangle<float> MainComponent::titleButtonBounds(juce::Rectangle<float> area, int index) const
+{
+    auto row = titleCardBounds(area).reduced(34.0f, 28.0f);
+    row.removeFromTop(206.0f);
+    const float gap = 18.0f;
+    const float buttonWidth = (row.getWidth() - gap * 2.0f) / 3.0f;
+    row.removeFromLeft((buttonWidth + gap) * static_cast<float>(index));
+    return row.removeFromLeft(buttonWidth).removeFromTop(110.0f);
+}
+
+MainComponent::TitleAction MainComponent::titleActionAt(juce::Point<float> position, juce::Rectangle<float> area) const
+{
+    for (int i = 0; i < 3; ++i)
+        if (titleButtonBounds(area, i).contains(position))
+            return static_cast<TitleAction>(i + 1);
+
+    return TitleAction::none;
+}
+
+juce::String MainComponent::titleActionLabel(TitleAction action) const
+{
+    switch (action)
+    {
+        case TitleAction::newWorld: return "NEW";
+        case TitleAction::saveWorld: return "SAVE";
+        case TitleAction::loadWorld: return "LOAD";
+        case TitleAction::none: break;
+    }
+
+    return {};
+}
+
+void MainComponent::enterWorldFromTitle(bool regenerateWorld)
+{
+    if (regenerateWorld)
+        randomiseVoxels();
+
+    screenMode = ScreenMode::world;
+    hoveredTitleAction = TitleAction::none;
+    repaint();
+}
+
+void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    auto card = titleCardBounds(area);
+    g.setColour(juce::Colour::fromRGBA(75, 136, 255, 20));
+    g.fillRoundedRectangle(card.expanded(22.0f, 18.0f), 34.0f);
+
+    juce::ColourGradient fill(juce::Colour::fromRGBA(7, 12, 34, 234),
+                              card.getX(), card.getY(),
+                              juce::Colour::fromRGBA(18, 30, 70, 226),
+                              card.getRight(), card.getBottom(),
+                              false);
+    g.setGradientFill(fill);
+    g.fillRoundedRectangle(card, 28.0f);
+    g.setColour(juce::Colour::fromRGBA(122, 214, 255, 94));
+    g.drawRoundedRectangle(card, 28.0f, 1.7f);
+
+    auto inner = card.reduced(34.0f, 28.0f);
+    auto titleArea = inner.removeFromTop(72.0f);
+    auto subtitleArea = inner.removeFromTop(58.0f);
+    auto statsArea = inner.removeFromTop(56.0f);
+    inner.removeFromTop(20.0f);
+    auto buttonArea = inner.removeFromTop(110.0f);
+    inner.removeFromTop(18.0f);
+    auto hintArea = inner.removeFromTop(26.0f);
+
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(46.0f));
+    g.drawText("KlangKunstWorld", titleArea.toNearestInt(), juce::Justification::centred);
+
+    g.setColour(juce::Colour::fromRGBA(214, 228, 255, 228));
+    g.setFont(juce::FontOptions(18.0f));
+    g.drawFittedText("Sculpt a voxel world, split it into islands and floors, then dive into compact musical performance spaces.",
+                     subtitleArea.toNearestInt(), juce::Justification::centred, 2);
+
+    auto drawStat = [&] (juce::Rectangle<float> bounds, const juce::String& label, const juce::String& value)
+    {
+        g.setColour(juce::Colour::fromRGBA(11, 20, 46, 204));
+        g.fillRoundedRectangle(bounds, 14.0f);
+        g.setColour(juce::Colour::fromRGBA(102, 182, 255, 44));
+        g.drawRoundedRectangle(bounds, 14.0f, 1.0f);
+        auto statInner = bounds.reduced(12.0f, 8.0f);
+        g.setColour(juce::Colour::fromRGBA(150, 210, 255, 168));
+        g.setFont(juce::FontOptions(11.0f));
+        g.drawText(label, statInner.removeFromTop(12.0f).toNearestInt(), juce::Justification::centredLeft);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(15.0f));
+        g.drawText(value, statInner.toNearestInt(), juce::Justification::centredLeft);
+    };
+
+    const float statGap = 12.0f;
+    const float statWidth = (statsArea.getWidth() - statGap * 2.0f) / 3.0f;
+    drawStat(statsArea.removeFromLeft(statWidth), "WORLD", "128 x 128 x 48");
+    statsArea.removeFromLeft(statGap);
+    drawStat(statsArea.removeFromLeft(statWidth), "SAVES", ".drd");
+    statsArea.removeFromLeft(statGap);
+    drawStat(statsArea.removeFromLeft(statWidth), "FLOW", "Build / Perform");
+
+    const float buttonGap = 18.0f;
+    const float buttonWidth = (buttonArea.getWidth() - buttonGap * 2.0f) / 3.0f;
+    const std::array<TitleAction, 3> actions { TitleAction::newWorld, TitleAction::saveWorld, TitleAction::loadWorld };
+    const std::array<juce::String, 3> captions {
+        "Generate a fresh world and enter build mode",
+        "Write the current world and systems to a .drd",
+        "Load a previously saved .drd session"
+    };
+
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        auto button = buttonArea.removeFromLeft(buttonWidth);
+        if (i + 1 < actions.size())
+            buttonArea.removeFromLeft(buttonGap);
+
+        const bool hovered = hoveredTitleAction == actions[i];
+        const float pulse = hovered ? (0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.006))) : 0.0f;
+
+        g.setColour(juce::Colour::fromRGBA(12, 22, 54, hovered ? 238 : 214));
+        g.fillRoundedRectangle(button, 18.0f);
+        g.setColour(hovered ? juce::Colour::fromRGBA(146, 244, 255, static_cast<uint8_t>(178 + 40 * pulse))
+                            : juce::Colour::fromRGBA(108, 182, 255, 64));
+        g.drawRoundedRectangle(button, 18.0f, hovered ? 2.2f : 1.2f);
+        g.setColour(hovered ? juce::Colour::fromRGBA(82, 232, 255, static_cast<uint8_t>(26 + 28 * pulse))
+                            : juce::Colour::fromRGBA(58, 138, 255, 14));
+        g.fillRoundedRectangle(button.reduced(4.0f, 4.0f), 15.0f);
+
+        auto buttonInner = button.reduced(18.0f, 14.0f);
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(22.0f));
+        g.drawText(titleActionLabel(actions[i]),
+                   buttonInner.removeFromTop(28.0f).toNearestInt(),
+                   juce::Justification::centredLeft);
+        g.setColour(juce::Colour::fromRGBA(194, 224, 255, 214));
+        g.setFont(juce::FontOptions(14.5f));
+        g.drawFittedText(captions[i], buttonInner.toNearestInt(), juce::Justification::centredLeft, 2);
+    }
+
+    g.setColour(juce::Colour::fromRGBA(198, 220, 255, 182));
+    g.setFont(juce::FontOptions(13.0f));
+    g.drawText("Enter or N starts a new world   S saves   L loads",
+               hintArea.toNearestInt(),
+               juce::Justification::centred);
 }
 
 void MainComponent::drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area)
