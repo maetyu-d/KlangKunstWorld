@@ -15,6 +15,8 @@ constexpr int boardInset = 26;
 constexpr int islandGapSize = 20;
 constexpr int floorBandHeight = 12;
 constexpr int floorBandGap = 12;
+constexpr int isolatedBuildMaxHeight = 20;
+constexpr int tetrisLayerCount = 13;
 const std::array<juce::Point<int>, 4> snakeDirections {{
     { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
 }};
@@ -98,6 +100,11 @@ juce::String performanceAgentModeToString(MainComponent::PerformanceAgentMode mo
 int boolToInt(bool value)
 {
     return value ? 1 : 0;
+}
+
+int tetrominoTypeCount()
+{
+    return 7;
 }
 }
 
@@ -542,7 +549,9 @@ void MainComponent::resized()
 
 void MainComponent::mouseWheelMove(const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
 {
-    if (isolatedSlab.isValid() && performanceMode)
+    if (isolatedSlab.isValid() && (performanceMode
+                                   || isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                                   || isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown))
         return;
 
     const float delta = wheel.deltaY != 0.0f ? wheel.deltaY : wheel.deltaX;
@@ -579,6 +588,41 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
             if (nextCell != performanceHoverCell)
             {
                 performanceHoverCell = nextCell;
+                repaint();
+            }
+            return;
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+        {
+            auto bounds = getLocalBounds().toFloat();
+            bounds.removeFromTop(112.0f);
+            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
+            if (nextCell.has_value())
+            {
+                if (! tetrisPiece.active)
+                    spawnTetrisPiece(false);
+
+                TetrisPiece moved = tetrisPiece;
+                moved.anchor = *nextCell;
+                clampTetrisPieceToSlab(moved);
+                if (moved.anchor != tetrisPiece.anchor)
+                {
+                    tetrisPiece = moved;
+                    repaint();
+                }
+            }
+            return;
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+        {
+            auto bounds = getLocalBounds().toFloat();
+            bounds.removeFromTop(112.0f);
+            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
+            if (nextCell != stampHoverCell)
+            {
+                stampHoverCell = nextCell;
                 repaint();
             }
             return;
@@ -727,6 +771,63 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
             return;
         }
 
+        if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+        {
+            const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
+            if (clickedCell.has_value())
+            {
+                if (! tetrisPiece.active)
+                    spawnTetrisPiece(false);
+
+                tetrisPiece.anchor = *clickedCell;
+                clampTetrisPieceToSlab(tetrisPiece);
+                const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
+                placeTetrisPiece(! remove);
+                repaint();
+                return;
+            }
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+        {
+            const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
+            if (clickedCell.has_value())
+            {
+                stampHoverCell = clickedCell;
+                if (stampCaptureMode)
+                {
+                    if (! stampCaptureAnchor.has_value())
+                    {
+                        stampCaptureAnchor = *clickedCell;
+                    }
+                    else
+                    {
+                        const auto xMin = juce::jmin(stampCaptureAnchor->x, clickedCell->x);
+                        const auto yMin = juce::jmin(stampCaptureAnchor->y, clickedCell->y);
+                        const auto xMax = juce::jmax(stampCaptureAnchor->x, clickedCell->x);
+                        const auto yMax = juce::jmax(stampCaptureAnchor->y, clickedCell->y);
+                        captureStampFromSelection({ xMin, yMin, xMax - xMin + 1, yMax - yMin + 1 });
+                        stampCaptureMode = false;
+                        stampCaptureAnchor.reset();
+                    }
+                    repaint();
+                    return;
+                }
+
+                if (! stampLibrary.empty())
+                {
+                    const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
+                    applyStampAtCell(stampLibrary[static_cast<size_t>(juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex))],
+                                     *clickedCell,
+                                     slabZStart(isolatedSlab) + stampBaseLayer,
+                                     stampRotation,
+                                     ! remove);
+                }
+                repaint();
+                return;
+            }
+        }
+
         if (editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         {
             const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
@@ -744,6 +845,19 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         isolatedSlab = {};
         hoveredSlab = {};
         editCursor = {};
+        isolatedBuildMode = IsolatedBuildMode::cursor3D;
+        tetrisPiece = {};
+        nextTetrisType = TetrominoType::L;
+        tetrisBuildLayer = 0;
+        tetrisRotatePerLayerSession = false;
+        tetrisGravityTick = 0;
+        stampLibrary.clear();
+        stampLibraryIndex = 0;
+        stampRotation = 0;
+        stampBaseLayer = 0;
+        stampHoverCell.reset();
+        stampCaptureMode = false;
+        stampCaptureAnchor.reset();
         repaint();
         return;
     }
@@ -755,7 +869,22 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         resetEditCursor();
         editPlacementHeight = 1;
         editChordType = EditChordType::single;
+        isolatedBuildMode = slabNumber(slab) == 4
+                              ? IsolatedBuildMode::cursor3D
+                              : slabNumber(slab) <= 4
+                                  ? IsolatedBuildMode::cursor3D
+                                  : juce::Random::getSystemRandom().nextInt(4) == 0
+                                      ? IsolatedBuildMode::stampLibraryTopDown
+                                      : IsolatedBuildMode::cursor3D;
         performanceMode = false;
+        tetrisPiece = {};
+        nextTetrisType = TetrominoType::L;
+        tetrisBuildLayer = 0;
+        tetrisRotatePerLayerSession = false;
+        tetrisGravityTick = 0;
+        rebuildStampLibrary();
+        stampCaptureMode = false;
+        stampCaptureAnchor.reset();
         performanceRegionMode = 2;
         performanceDiscs.clear();
         performanceTracks.clear();
@@ -770,6 +899,8 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         performanceTick = 0;
         performanceBeatEnergy = 0.0f;
         applyPerformancePresetForSlab(slab);
+        if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+            stampHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
         repaint();
     }
 }
@@ -994,13 +1125,57 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     {
         if (key == juce::KeyPress::returnKey)
         {
-            performanceMode = ! performanceMode;
-            if (performanceMode && performanceSnakes.empty() && performanceAutomataCells.empty())
-                setPerformanceSnakeCount(performanceAgentCount);
+            if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! performanceMode)
+            {
+                tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer + 1);
+                if (tetrisRotatePerLayerSession)
+                    rotateIsolatedSlabQuarterTurn();
+                if (editCursor.active)
+                    editCursor.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
+                if (tetrisPiece.active)
+                    tetrisPiece.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
+                else
+                    spawnTetrisPiece(true);
+            }
+            else
+            {
+                performanceMode = ! performanceMode;
+                if (performanceMode && performanceSnakes.empty() && performanceAutomataCells.empty())
+                    setPerformanceSnakeCount(performanceAgentCount);
+            }
             repaint();
             return true;
         }
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
+        if (key == juce::KeyPress::tabKey && ! performanceMode)
+        {
+            if (slabNumber(isolatedSlab) == 4)
+                isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                                      ? IsolatedBuildMode::cursor3D
+                                      : IsolatedBuildMode::stampLibraryTopDown;
+            else if (slabNumber(isolatedSlab) <= 4)
+                isolatedBuildMode = IsolatedBuildMode::cursor3D;
+            else
+                isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::cursor3D
+                                      ? IsolatedBuildMode::tetrisTopDown
+                                      : isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                                          ? IsolatedBuildMode::stampLibraryTopDown
+                                          : IsolatedBuildMode::cursor3D;
+            if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+            {
+                tetrisBuildLayer = 0;
+                tetrisRotatePerLayerSession = juce::Random::getSystemRandom().nextBool();
+                editCursor.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
+                spawnTetrisPiece(true);
+            }
+            else if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+            {
+                rebuildStampLibrary();
+                stampHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
+            }
+            repaint();
+            return true;
+        }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; isolatedBuildMode = IsolatedBuildMode::cursor3D; tetrisPiece = {}; nextTetrisType = TetrominoType::L; tetrisBuildLayer = 0; tetrisRotatePerLayerSession = false; tetrisGravityTick = 0; stampLibrary.clear(); stampLibraryIndex = 0; stampRotation = 0; stampBaseLayer = 0; stampHoverCell.reset(); stampCaptureMode = false; stampCaptureAnchor.reset(); performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
 
         if (performanceMode)
         {
@@ -1131,6 +1306,47 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             if (key == juce::KeyPress('6')) { setPerformanceSnakeCount(6); repaint(); return true; }
             if (key == juce::KeyPress('7')) { setPerformanceSnakeCount(7); repaint(); return true; }
             if (key == juce::KeyPress('8')) { setPerformanceSnakeCount(8); repaint(); return true; }
+            return true;
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+        {
+            if (key == juce::KeyPress::leftKey) { moveTetrisPiece(-1, 0, 0); repaint(); return true; }
+            if (key == juce::KeyPress::rightKey) { moveTetrisPiece(1, 0, 0); repaint(); return true; }
+            if (key == juce::KeyPress::upKey) { moveTetrisPiece(0, -1, 0); repaint(); return true; }
+            if (key == juce::KeyPress::downKey) { moveTetrisPiece(0, 1, 0); repaint(); return true; }
+            if (key == juce::KeyPress::pageUpKey || key == juce::KeyPress(']')) { tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer + 1); tetrisPiece.z = slabZStart(isolatedSlab) + tetrisBuildLayer; repaint(); return true; }
+            if (key == juce::KeyPress::pageDownKey || key == juce::KeyPress('[')) { tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer - 1); tetrisPiece.z = slabZStart(isolatedSlab) + tetrisBuildLayer; repaint(); return true; }
+            if (key == juce::KeyPress('1')) { editPlacementHeight = 1; repaint(); return true; }
+            if (key == juce::KeyPress('2')) { editPlacementHeight = 2; repaint(); return true; }
+            if (key == juce::KeyPress('3')) { editPlacementHeight = 3; repaint(); return true; }
+            if (key == juce::KeyPress('4')) { editPlacementHeight = 4; repaint(); return true; }
+            if (key == juce::KeyPress('v')) { editChordType = static_cast<EditChordType>((static_cast<int>(editChordType) + 1) % 8); repaint(); return true; }
+            if (key == juce::KeyPress('r')) { rotateTetrisPiece(); repaint(); return true; }
+            if (key == juce::KeyPress('n')) { spawnTetrisPiece(true); repaint(); return true; }
+            if (key == juce::KeyPress('s')) { softDropTetrisPiece(); repaint(); return true; }
+            if (key == juce::KeyPress::spaceKey) { hardDropTetrisPiece(); repaint(); return true; }
+            if (key == juce::KeyPress('p')) { placeTetrisPiece(true); repaint(); return true; }
+            if (key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x')) { placeTetrisPiece(false); repaint(); return true; }
+            if (key == juce::KeyPress('c')) { clearIsolatedSlab(); repaint(); return true; }
+            return true;
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+        {
+            if (key == juce::KeyPress::leftKey && stampHoverCell.has_value()) { stampHoverCell = juce::Point<int>(stampHoverCell->x - 1, stampHoverCell->y); repaint(); return true; }
+            if (key == juce::KeyPress::rightKey && stampHoverCell.has_value()) { stampHoverCell = juce::Point<int>(stampHoverCell->x + 1, stampHoverCell->y); repaint(); return true; }
+            if (key == juce::KeyPress::upKey && stampHoverCell.has_value()) { stampHoverCell = juce::Point<int>(stampHoverCell->x, stampHoverCell->y - 1); repaint(); return true; }
+            if (key == juce::KeyPress::downKey && stampHoverCell.has_value()) { stampHoverCell = juce::Point<int>(stampHoverCell->x, stampHoverCell->y + 1); repaint(); return true; }
+            if (key == juce::KeyPress::pageUpKey || key == juce::KeyPress(']')) { stampBaseLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stampBaseLayer + 1); repaint(); return true; }
+            if (key == juce::KeyPress::pageDownKey || key == juce::KeyPress('[')) { stampBaseLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stampBaseLayer - 1); repaint(); return true; }
+            if (key == juce::KeyPress('s')) { stampCaptureMode = ! stampCaptureMode; stampCaptureAnchor.reset(); repaint(); return true; }
+            if (key == juce::KeyPress('n')) { if (! stampLibrary.empty()) stampLibraryIndex = (stampLibraryIndex + 1) % static_cast<int>(stampLibrary.size()); repaint(); return true; }
+            if (key == juce::KeyPress('b')) { if (! stampLibrary.empty()) stampLibraryIndex = (stampLibraryIndex + static_cast<int>(stampLibrary.size()) - 1) % static_cast<int>(stampLibrary.size()); repaint(); return true; }
+            if (key == juce::KeyPress('r')) { stampRotation = (stampRotation + 1) % 4; repaint(); return true; }
+            if (key == juce::KeyPress('p') && stampHoverCell.has_value() && ! stampLibrary.empty()) { applyStampAtCell(stampLibrary[static_cast<size_t>(stampLibraryIndex)], *stampHoverCell, slabZStart(isolatedSlab) + stampBaseLayer, stampRotation, true); repaint(); return true; }
+            if ((key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x')) && stampHoverCell.has_value() && ! stampLibrary.empty()) { applyStampAtCell(stampLibrary[static_cast<size_t>(stampLibraryIndex)], *stampHoverCell, slabZStart(isolatedSlab) + stampBaseLayer, stampRotation, false); repaint(); return true; }
+            if (key == juce::KeyPress('c')) { clearIsolatedSlab(); repaint(); return true; }
             return true;
         }
 
@@ -1279,6 +1495,18 @@ void MainComponent::timerCallback()
         performanceBeatEnergy *= 0.97f;
     }
 
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! performanceMode)
+    {
+        ++tetrisGravityTick;
+        const int gravityFrames = 20;
+        if (tetrisGravityTick >= gravityFrames)
+        {
+            tetrisGravityTick = 0;
+            advanceTetrisGravity();
+            needsRepaint = true;
+        }
+    }
+
     if (needsRepaint)
         repaint();
 }
@@ -1291,6 +1519,19 @@ void MainComponent::randomiseVoxels()
     editCursor = {};
     editPlacementHeight = 1;
     editChordType = EditChordType::single;
+    isolatedBuildMode = IsolatedBuildMode::cursor3D;
+    tetrisPiece = {};
+    nextTetrisType = TetrominoType::L;
+    tetrisBuildLayer = 0;
+    tetrisRotatePerLayerSession = false;
+    tetrisGravityTick = 0;
+    stampLibrary.clear();
+    stampLibraryIndex = 0;
+    stampRotation = 0;
+    stampBaseLayer = 0;
+    stampHoverCell.reset();
+    stampCaptureMode = false;
+    stampCaptureAnchor.reset();
     performanceMode = false;
     performanceRegionMode = 2;
     performanceAgentMode = PerformanceAgentMode::snakes;
@@ -1618,6 +1859,19 @@ void MainComponent::splitIntoFourIslands()
     editCursor = {};
     editPlacementHeight = 1;
     editChordType = EditChordType::single;
+    isolatedBuildMode = IsolatedBuildMode::cursor3D;
+    tetrisPiece = {};
+    nextTetrisType = TetrominoType::L;
+    tetrisBuildLayer = 0;
+    tetrisRotatePerLayerSession = false;
+    tetrisGravityTick = 0;
+    stampLibrary.clear();
+    stampLibraryIndex = 0;
+    stampRotation = 0;
+    stampBaseLayer = 0;
+    stampHoverCell.reset();
+    stampCaptureMode = false;
+    stampCaptureAnchor.reset();
     performanceMode = false;
     performanceRegionMode = 2;
     performanceAgentMode = PerformanceAgentMode::snakes;
@@ -1771,7 +2025,7 @@ int MainComponent::slabZEndExclusive(const SlabSelection& slab) const
     const bool isCurrentIsolatedSlab = isolatedSlab.isValid()
                                     && slab.quadrant == isolatedSlab.quadrant
                                     && slab.floor == isolatedSlab.floor;
-    const int localHeight = isCurrentIsolatedSlab ? 20 : floorBandHeight;
+    const int localHeight = isCurrentIsolatedSlab ? isolatedBuildMaxHeight : floorBandHeight;
     return juce::jlimit(0, gridHeight, zStart + localHeight);
 }
 
@@ -1931,6 +2185,8 @@ bool MainComponent::updateCursorFromPosition(juce::Point<float> position, juce::
     if (! found)
         return false;
 
+    bestCell = canonicalBuildCellForSlab(bestCell, isolatedSlab);
+
     if (! editCursor.active || editCursor.x != bestCell.x || editCursor.y != bestCell.y)
     {
         editCursor.x = bestCell.x;
@@ -1950,10 +2206,27 @@ void MainComponent::resetEditCursor()
 
     int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
     quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
-    editCursor.x = x0 + (x1 - x0) / 2;
-    editCursor.y = y0 + (y1 - y0) / 2;
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    switch (buildRuleForSlab(isolatedSlab))
+    {
+        case IsolatedBuildRule::mirror:
+            editCursor.x = x0 + juce::jmax(0, width / 4);
+            editCursor.y = y0 + height / 2;
+            break;
+        case IsolatedBuildRule::kaleidoscope:
+            editCursor.x = x0 + juce::jmax(0, width / 4);
+            editCursor.y = y0 + juce::jmax(0, height / 4);
+            break;
+        case IsolatedBuildRule::standard:
+        case IsolatedBuildRule::stampClone:
+            editCursor.x = x0 + width / 2;
+            editCursor.y = y0 + height / 2;
+            break;
+    }
     editCursor.z = juce::jlimit(0, gridHeight - 1, slabZStart(isolatedSlab));
     editCursor.active = true;
+    spawnTetrisPiece(false);
 }
 
 void MainComponent::moveEditCursor(int dx, int dy, int dz)
@@ -1966,8 +2239,25 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
 
     int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
     quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
-    editCursor.x = juce::jlimit(x0, x1 - 1, editCursor.x + dx);
-    editCursor.y = juce::jlimit(y0, y1 - 1, editCursor.y + dy);
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    int maxX = x1 - 1;
+    int maxY = y1 - 1;
+    switch (buildRuleForSlab(isolatedSlab))
+    {
+        case IsolatedBuildRule::mirror:
+            maxX = x0 + juce::jmax(1, width / 2) - 1;
+            break;
+        case IsolatedBuildRule::kaleidoscope:
+            maxX = x0 + juce::jmax(1, width / 2) - 1;
+            maxY = y0 + juce::jmax(1, height / 2) - 1;
+            break;
+        case IsolatedBuildRule::standard:
+        case IsolatedBuildRule::stampClone:
+            break;
+    }
+    editCursor.x = juce::jlimit(x0, maxX, editCursor.x + dx);
+    editCursor.y = juce::jlimit(y0, maxY, editCursor.y + dy);
 
     const int zMin = slabZStart(isolatedSlab);
     const int zMax = slabZEndExclusive(isolatedSlab) - 1;
@@ -1980,20 +2270,165 @@ void MainComponent::applyEditPlacement(bool filled)
     if (! isolatedSlab.isValid() || ! editCursor.active || ! cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         return;
 
+    applyEditPlacementAtCell(editCursor.x, editCursor.y, editCursor.z, filled);
+}
+
+MainComponent::IsolatedBuildRule MainComponent::buildRuleForSlab(const SlabSelection& slab) const
+{
+    switch (slabNumber(slab))
+    {
+        case 2: return IsolatedBuildRule::mirror;
+        case 3: return IsolatedBuildRule::kaleidoscope;
+        case 4: return IsolatedBuildRule::stampClone;
+        default: return IsolatedBuildRule::standard;
+    }
+}
+
+juce::String MainComponent::buildRuleName(IsolatedBuildRule rule) const
+{
+    switch (rule)
+    {
+        case IsolatedBuildRule::standard: return "Standard";
+        case IsolatedBuildRule::mirror: return "Mirror";
+        case IsolatedBuildRule::kaleidoscope: return "Kaleidoscope";
+        case IsolatedBuildRule::stampClone: return "Stamp + Clone";
+    }
+
+    return "Standard";
+}
+
+juce::Point<int> MainComponent::canonicalBuildCellForSlab(juce::Point<int> cell, const SlabSelection& slab) const
+{
+    if (! slab.isValid())
+        return cell;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(slab.quadrant, x0, y0, x1, y1);
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    const int halfW = juce::jmax(1, width / 2);
+    const int halfH = juce::jmax(1, height / 2);
+
+    cell.x = juce::jlimit(x0, x1 - 1, cell.x);
+    cell.y = juce::jlimit(y0, y1 - 1, cell.y);
+
+    switch (buildRuleForSlab(slab))
+    {
+        case IsolatedBuildRule::mirror:
+            if (cell.x >= x0 + halfW)
+                cell.x = x0 + (width - 1 - (cell.x - x0));
+            break;
+        case IsolatedBuildRule::kaleidoscope:
+        {
+            int localX = cell.x - x0;
+            int localY = cell.y - y0;
+            const bool right = localX >= halfW;
+            const bool bottom = localY >= halfH;
+
+            if (! right && ! bottom)
+                break;
+            if (right && ! bottom)
+            {
+                const int rx = localX - halfW;
+                const int ry = localY;
+                localX = ry;
+                localY = halfW - 1 - rx;
+            }
+            else if (right && bottom)
+            {
+                const int rx = localX - halfW;
+                const int ry = localY - halfH;
+                localX = halfW - 1 - rx;
+                localY = halfH - 1 - ry;
+            }
+            else
+            {
+                const int rx = localX;
+                const int ry = localY - halfH;
+                localX = halfH - 1 - ry;
+                localY = rx;
+            }
+
+            cell.x = x0 + juce::jlimit(0, halfW - 1, localX);
+            cell.y = y0 + juce::jlimit(0, halfH - 1, localY);
+            break;
+        }
+        case IsolatedBuildRule::standard:
+        case IsolatedBuildRule::stampClone:
+            break;
+    }
+
+    return cell;
+}
+
+std::vector<juce::Point<int>> MainComponent::placementCellsForSourceCell(juce::Point<int> sourceCell, const SlabSelection& slab) const
+{
+    std::vector<juce::Point<int>> cells;
+    if (! slab.isValid())
+        return cells;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(slab.quadrant, x0, y0, x1, y1);
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    const int halfW = juce::jmax(1, width / 2);
+    const int halfH = juce::jmax(1, height / 2);
+    sourceCell = canonicalBuildCellForSlab(sourceCell, slab);
+
+    auto addUnique = [&] (juce::Point<int> cell)
+    {
+        if (! cellInSelectedSlab(cell.x, cell.y, slab))
+            return;
+        if (std::find(cells.begin(), cells.end(), cell) == cells.end())
+            cells.push_back(cell);
+    };
+
+    switch (buildRuleForSlab(slab))
+    {
+        case IsolatedBuildRule::mirror:
+        {
+            const int localX = sourceCell.x - x0;
+            addUnique(sourceCell);
+            addUnique({ x0 + halfW + (halfW - 1 - localX), sourceCell.y });
+            break;
+        }
+        case IsolatedBuildRule::kaleidoscope:
+        {
+            const int dx = sourceCell.x - x0;
+            const int dy = sourceCell.y - y0;
+            addUnique({ x0 + dx, y0 + dy });
+            addUnique({ x0 + halfW + (halfW - 1 - dy), y0 + dx });
+            addUnique({ x0 + halfW + (halfW - 1 - dx), y0 + halfH + (halfH - 1 - dy) });
+            addUnique({ x0 + dy, y0 + halfH + (halfH - 1 - dx) });
+            break;
+        }
+        case IsolatedBuildRule::standard:
+        case IsolatedBuildRule::stampClone:
+            addUnique(sourceCell);
+            break;
+    }
+
+    return cells;
+}
+
+void MainComponent::applyEditPlacementAtCell(int x, int y, int z, bool filled)
+{
+    if (! isolatedSlab.isValid() || ! cellInSelectedSlab(x, y, isolatedSlab))
+        return;
+
     const int zMin = slabZStart(isolatedSlab);
     const int zMax = slabZEndExclusive(isolatedSlab) - 1;
     const int stackHeight = juce::jmax(1, editPlacementHeight);
     const auto intervals = editChordIntervals();
 
-    for (int octave = 0; octave < stackHeight; ++octave)
-    {
-        for (const int interval : intervals)
-        {
-            const int z = editCursor.z + octave * 12 + interval;
-            if (z >= zMin && z <= zMax)
-                setVoxel(editCursor.x, editCursor.y, z, filled);
-        }
-    }
+    for (const auto& cell : placementCellsForSourceCell({ x, y }, isolatedSlab))
+        for (int octave = 0; octave < stackHeight; ++octave)
+            for (const int interval : intervals)
+            {
+                const int noteZ = z + octave * 12 + interval;
+                if (noteZ >= zMin && noteZ <= zMax)
+                    setVoxel(cell.x, cell.y, noteZ, filled);
+            }
 }
 
 std::vector<int> MainComponent::editChordIntervals() const
@@ -2041,10 +2476,15 @@ juce::String MainComponent::pitchClassName(int semitone) const
 
 juce::String MainComponent::currentEditChordName() const
 {
-    if (! isolatedSlab.isValid() || ! editCursor.active)
+    if (! isolatedSlab.isValid())
         return editChordTypeName();
 
-    const int localZ = editCursor.z - isolatedSlab.floor * floorBandHeight;
+    const bool usingTetris = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && tetrisPiece.active;
+    const bool usingStamp = isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown;
+    if (! usingTetris && ! usingStamp && ! editCursor.active)
+        return editChordTypeName();
+
+    const int localZ = (usingTetris ? tetrisPiece.z : usingStamp ? (slabZStart(isolatedSlab) + stampBaseLayer) : editCursor.z) - slabZStart(isolatedSlab);
     juce::String quality;
     switch (editChordType)
     {
@@ -2064,6 +2504,405 @@ juce::String MainComponent::currentEditChordName() const
     if (editPlacementHeight > 1)
         name << " x" << editPlacementHeight;
     return name;
+}
+
+juce::String MainComponent::isolatedBuildModeName() const
+{
+    switch (isolatedBuildMode)
+    {
+        case IsolatedBuildMode::cursor3D:
+            return isolatedSlab.isValid() ? buildRuleName(buildRuleForSlab(isolatedSlab)) : "3D Cursor";
+        case IsolatedBuildMode::tetrisTopDown: return "Tetris Topdown";
+        case IsolatedBuildMode::stampLibraryTopDown: return "Stamp Library";
+    }
+
+    return "3D Cursor";
+}
+
+juce::String MainComponent::tetrominoTypeName(TetrominoType type) const
+{
+    switch (type)
+    {
+        case TetrominoType::I: return "I";
+        case TetrominoType::O: return "O";
+        case TetrominoType::T: return "T";
+        case TetrominoType::L: return "L";
+        case TetrominoType::J: return "J";
+        case TetrominoType::S: return "S";
+        case TetrominoType::Z: return "Z";
+    }
+
+    return "T";
+}
+
+std::array<juce::Point<int>, 4> MainComponent::tetrominoOffsets(TetrominoType type, int rotation) const
+{
+    const int r = ((rotation % 4) + 4) % 4;
+    switch (type)
+    {
+        case TetrominoType::I:
+            return (r % 2) == 0
+                     ? std::array<juce::Point<int>, 4> {{ { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 } }}
+                     : std::array<juce::Point<int>, 4> {{ { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 } }};
+        case TetrominoType::O:
+            return {{ { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } }};
+        case TetrominoType::T:
+            switch (r)
+            {
+                case 0: return {{ { 0, 0 }, { 1, 0 }, { 2, 0 }, { 1, 1 } }};
+                case 1: return {{ { 1, 0 }, { 1, 1 }, { 1, 2 }, { 0, 1 } }};
+                case 2: return {{ { 1, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }};
+                default: return {{ { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 1 } }};
+            }
+        case TetrominoType::L:
+            switch (r)
+            {
+                case 0: return {{ { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 2 } }};
+                case 1: return {{ { 0, 0 }, { 1, 0 }, { 2, 0 }, { 0, 1 } }};
+                case 2: return {{ { 0, 0 }, { 1, 0 }, { 1, 1 }, { 1, 2 } }};
+                default: return {{ { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }};
+            }
+        case TetrominoType::J:
+            switch (r)
+            {
+                case 0: return {{ { 1, 0 }, { 1, 1 }, { 1, 2 }, { 0, 2 } }};
+                case 1: return {{ { 0, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }};
+                case 2: return {{ { 0, 0 }, { 1, 0 }, { 0, 1 }, { 0, 2 } }};
+                default: return {{ { 0, 0 }, { 1, 0 }, { 2, 0 }, { 2, 1 } }};
+            }
+        case TetrominoType::S:
+            return (r % 2) == 0
+                     ? std::array<juce::Point<int>, 4> {{ { 1, 0 }, { 2, 0 }, { 0, 1 }, { 1, 1 } }}
+                     : std::array<juce::Point<int>, 4> {{ { 0, 0 }, { 0, 1 }, { 1, 1 }, { 1, 2 } }};
+        case TetrominoType::Z:
+            return (r % 2) == 0
+                     ? std::array<juce::Point<int>, 4> {{ { 0, 0 }, { 1, 0 }, { 1, 1 }, { 2, 1 } }}
+                     : std::array<juce::Point<int>, 4> {{ { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 2 } }};
+    }
+
+    return {{ { 0, 0 }, { 1, 0 }, { 2, 0 }, { 1, 1 } }};
+}
+
+void MainComponent::clampTetrisPieceToSlab(TetrisPiece& piece) const
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const auto offsets = tetrominoOffsets(piece.type, piece.rotation);
+    int minDx = offsets[0].x, maxDx = offsets[0].x;
+    int minDy = offsets[0].y, maxDy = offsets[0].y;
+    for (const auto& offset : offsets)
+    {
+        minDx = juce::jmin(minDx, offset.x);
+        maxDx = juce::jmax(maxDx, offset.x);
+        minDy = juce::jmin(minDy, offset.y);
+        maxDy = juce::jmax(maxDy, offset.y);
+    }
+
+    piece.anchor.x = juce::jlimit(x0 - minDx, x1 - 1 - maxDx, piece.anchor.x);
+    piece.anchor.y = juce::jlimit(y0 - maxDy - 1, y1 - 1 - maxDy, piece.anchor.y);
+    piece.z = juce::jlimit(slabZStart(isolatedSlab), slabZEndExclusive(isolatedSlab) - 1, piece.z);
+}
+
+bool MainComponent::tetrisPieceFits(const TetrisPiece& piece) const
+{
+    if (! isolatedSlab.isValid())
+        return false;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
+    const auto intervals = editChordIntervals();
+    const int stackHeight = juce::jmax(1, editPlacementHeight);
+
+    for (const auto& offset : tetrominoOffsets(piece.type, piece.rotation))
+    {
+        const int x = piece.anchor.x + offset.x;
+        const int y = piece.anchor.y + offset.y;
+        if (x < x0 || x >= x1 || y >= y1)
+            return false;
+
+        for (int octave = 0; octave < stackHeight; ++octave)
+            for (const int interval : intervals)
+                if (const int noteZ = piece.z + octave * 12 + interval; noteZ < zMin || noteZ > zMax)
+                    return false;
+    }
+
+    return true;
+}
+
+bool MainComponent::tetrisPieceCollidesWithVoxels(const TetrisPiece& piece) const
+{
+    if (! isolatedSlab.isValid())
+        return false;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
+    const auto intervals = editChordIntervals();
+    const int stackHeight = juce::jmax(1, editPlacementHeight);
+
+    for (const auto& offset : tetrominoOffsets(piece.type, piece.rotation))
+    {
+        const int x = piece.anchor.x + offset.x;
+        const int y = piece.anchor.y + offset.y;
+        if (y < y0 || x < x0 || x >= x1 || y >= y1)
+            continue;
+
+        for (int octave = 0; octave < stackHeight; ++octave)
+        {
+            for (const int interval : intervals)
+            {
+                const int noteZ = piece.z + octave * 12 + interval;
+                if (noteZ < zMin || noteZ > zMax)
+                    continue;
+                if (hasVoxel(x, y, noteZ))
+                    return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+MainComponent::TetrominoType MainComponent::randomTetrominoType() const
+{
+    juce::Random rng;
+    return static_cast<TetrominoType>(rng.nextInt(tetrominoTypeCount()));
+}
+
+void MainComponent::spawnTetrisPiece(bool randomizeType)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    if (! tetrisPiece.active)
+    {
+        tetrisPiece.type = randomTetrominoType();
+        nextTetrisType = randomTetrominoType();
+    }
+    else if (randomizeType)
+    {
+        tetrisPiece.type = nextTetrisType;
+        nextTetrisType = randomTetrominoType();
+    }
+
+    tetrisPiece.rotation = 0;
+
+    const auto offsets = tetrominoOffsets(tetrisPiece.type, tetrisPiece.rotation);
+    int maxDy = offsets[0].y;
+    for (const auto& offset : offsets)
+        maxDy = juce::jmax(maxDy, offset.y);
+
+    tetrisPiece.anchor = { x0 + (x1 - x0) / 2 - 1, y0 - maxDy - 1 };
+    tetrisPiece.z = slabZStart(isolatedSlab) + juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer);
+    tetrisPiece.active = true;
+    clampTetrisPieceToSlab(tetrisPiece);
+    tetrisGravityTick = 0;
+}
+
+void MainComponent::moveTetrisPiece(int dx, int dy, int dz)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(false);
+
+    TetrisPiece moved = tetrisPiece;
+    moved.anchor += juce::Point<int>(dx, dy);
+    moved.z += dz;
+    clampTetrisPieceToSlab(moved);
+    if (tetrisPieceFits(moved) && ! tetrisPieceCollidesWithVoxels(moved))
+        tetrisPiece = moved;
+}
+
+void MainComponent::rotateTetrisPiece()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(false);
+
+    TetrisPiece rotated = tetrisPiece;
+    rotated.rotation = (rotated.rotation + 1) % 4;
+    clampTetrisPieceToSlab(rotated);
+    if (tetrisPieceFits(rotated) && ! tetrisPieceCollidesWithVoxels(rotated))
+        tetrisPiece = rotated;
+}
+
+void MainComponent::placeTetrisPiece(bool filled)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(false);
+
+    if (! tetrisPieceFits(tetrisPiece))
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    for (const auto& offset : tetrominoOffsets(tetrisPiece.type, tetrisPiece.rotation))
+        if (tetrisPiece.anchor.y + offset.y < y0)
+            return;
+
+    if (filled && tetrisPieceCollidesWithVoxels(tetrisPiece))
+        return;
+
+    for (const auto& offset : tetrominoOffsets(tetrisPiece.type, tetrisPiece.rotation))
+        applyEditPlacementAtCell(tetrisPiece.anchor.x + offset.x, tetrisPiece.anchor.y + offset.y, tetrisPiece.z, filled);
+
+    editCursor.x = tetrisPiece.anchor.x;
+    editCursor.y = tetrisPiece.anchor.y;
+    editCursor.z = tetrisPiece.z;
+    editCursor.active = true;
+    spawnTetrisPiece(true);
+}
+
+void MainComponent::advanceTetrisGravity()
+{
+    if (! isolatedSlab.isValid() || isolatedBuildMode != IsolatedBuildMode::tetrisTopDown || performanceMode)
+        return;
+
+    if (! tetrisPiece.active)
+    {
+        spawnTetrisPiece(true);
+        return;
+    }
+
+    TetrisPiece dropped = tetrisPiece;
+    dropped.anchor.y += 1;
+    clampTetrisPieceToSlab(dropped);
+    if (dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped) && ! tetrisPieceCollidesWithVoxels(dropped))
+    {
+        tetrisPiece = dropped;
+        return;
+    }
+
+    if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+        placeTetrisPiece(true);
+}
+
+void MainComponent::softDropTetrisPiece()
+{
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(true);
+
+    TetrisPiece dropped = tetrisPiece;
+    dropped.anchor.y += 1;
+    clampTetrisPieceToSlab(dropped);
+    if (dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped) && ! tetrisPieceCollidesWithVoxels(dropped))
+        tetrisPiece = dropped;
+    else if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+        placeTetrisPiece(true);
+}
+
+void MainComponent::hardDropTetrisPiece()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(true);
+
+    while (true)
+    {
+        TetrisPiece dropped = tetrisPiece;
+        dropped.anchor.y += 1;
+        clampTetrisPieceToSlab(dropped);
+        if (dropped.anchor.y == tetrisPiece.anchor.y || ! tetrisPieceFits(dropped) || tetrisPieceCollidesWithVoxels(dropped))
+            break;
+        tetrisPiece = dropped;
+    }
+
+    if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+        placeTetrisPiece(true);
+}
+
+void MainComponent::rotateIsolatedSlabQuarterTurn()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    if (width != height)
+        return;
+
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = juce::jmin(slabZEndExclusive(isolatedSlab), zStart + tetrisLayerCount);
+    std::vector<uint8_t> rotated(static_cast<size_t>(width * height * (zEnd - zStart)), 0u);
+
+    auto rotatedIndex = [width, height, zStart, x0, y0] (int x, int y, int z)
+    {
+        const int localX = x - x0;
+        const int localY = y - y0;
+        const int localZ = z - zStart;
+        return static_cast<size_t>((localZ * height + localY) * width + localX);
+    };
+
+    for (int z = zStart; z < zEnd; ++z)
+    {
+        for (int y = y0; y < y1; ++y)
+        {
+            for (int x = x0; x < x1; ++x)
+            {
+                if (! hasVoxel(x, y, z))
+                    continue;
+
+                const int localX = x - x0;
+                const int localY = y - y0;
+                const int rotatedX = x0 + (height - 1 - localY);
+                const int rotatedY = y0 + localX;
+                rotated[rotatedIndex(rotatedX, rotatedY, z)] = 1u;
+            }
+        }
+    }
+
+    for (int z = zStart; z < zEnd; ++z)
+        for (int y = y0; y < y1; ++y)
+            for (int x = x0; x < x1; ++x)
+                setVoxel(x, y, z, false);
+
+    for (int z = zStart; z < zEnd; ++z)
+        for (int y = y0; y < y1; ++y)
+            for (int x = x0; x < x1; ++x)
+                if (rotated[rotatedIndex(x, y, z)] != 0u)
+                    setVoxel(x, y, z, true);
+
+    if (editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
+    {
+        const int localX = editCursor.x - x0;
+        const int localY = editCursor.y - y0;
+        editCursor.x = x0 + (height - 1 - localY);
+        editCursor.y = y0 + localX;
+    }
+
+    if (tetrisPiece.active)
+    {
+        const int localX = tetrisPiece.anchor.x - x0;
+        const int localY = tetrisPiece.anchor.y - y0;
+        tetrisPiece.anchor.x = x0 + (height - 1 - localY);
+        tetrisPiece.anchor.y = y0 + localX;
+        tetrisPiece.rotation = (tetrisPiece.rotation + 1) % 4;
+        clampTetrisPieceToSlab(tetrisPiece);
+    }
 }
 
 void MainComponent::clearIsolatedSlab()
@@ -2146,6 +2985,14 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
     stateXml->setAttribute("quantizeToScale", boolToInt(quantizeToScale));
     stateXml->setAttribute("editPlacementHeight", editPlacementHeight);
     stateXml->setAttribute("editChordType", static_cast<int>(editChordType));
+    stateXml->setAttribute("isolatedBuildMode", static_cast<int>(isolatedBuildMode));
+    stateXml->setAttribute("nextTetrisType", static_cast<int>(nextTetrisType));
+    stateXml->setAttribute("tetrisBuildLayer", tetrisBuildLayer);
+    stateXml->setAttribute("tetrisGravityTick", tetrisGravityTick);
+    stateXml->setAttribute("stampLibraryIndex", stampLibraryIndex);
+    stateXml->setAttribute("stampRotation", stampRotation);
+    stateXml->setAttribute("stampBaseLayer", stampBaseLayer);
+    stateXml->setAttribute("stampCaptureMode", boolToInt(stampCaptureMode));
     stateXml->setAttribute("bpm", bpm);
     stateXml->setAttribute("beatStepAccumulator", beatStepAccumulator);
     stateXml->setAttribute("beatStepIndex", beatStepIndex);
@@ -2167,6 +3014,12 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
     slabXml->setAttribute("selectionKind", static_cast<int>(performanceSelection.kind));
     slabXml->setAttribute("selectionX", performanceSelection.isValid() ? performanceSelection.cell.x : -1);
     slabXml->setAttribute("selectionY", performanceSelection.isValid() ? performanceSelection.cell.y : -1);
+    slabXml->setAttribute("tetrisType", static_cast<int>(tetrisPiece.type));
+    slabXml->setAttribute("tetrisRotation", tetrisPiece.rotation);
+    slabXml->setAttribute("tetrisAnchorX", tetrisPiece.anchor.x);
+    slabXml->setAttribute("tetrisAnchorY", tetrisPiece.anchor.y);
+    slabXml->setAttribute("tetrisZ", tetrisPiece.z);
+    slabXml->setAttribute("tetrisActive", boolToInt(tetrisPiece.active));
 
     auto* presetsXml = root->createNewChildElement("slabPresets");
     for (size_t i = 0; i < slabPerformanceModes.size(); ++i)
@@ -2287,6 +3140,14 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         quantizeToScale = stateXml->getBoolAttribute("quantizeToScale", true);
         editPlacementHeight = juce::jlimit(1, 4, stateXml->getIntAttribute("editPlacementHeight", 1));
         editChordType = static_cast<EditChordType>(juce::jlimit(0, 7, stateXml->getIntAttribute("editChordType", 0)));
+        isolatedBuildMode = static_cast<IsolatedBuildMode>(juce::jlimit(0, 2, stateXml->getIntAttribute("isolatedBuildMode", 0)));
+        nextTetrisType = static_cast<TetrominoType>(juce::jlimit(0, tetrominoTypeCount() - 1, stateXml->getIntAttribute("nextTetrisType", static_cast<int>(TetrominoType::L))));
+        tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, stateXml->getIntAttribute("tetrisBuildLayer", 0));
+        tetrisGravityTick = juce::jmax(0, stateXml->getIntAttribute("tetrisGravityTick", 0));
+        stampLibraryIndex = juce::jmax(0, stateXml->getIntAttribute("stampLibraryIndex", 0));
+        stampRotation = ((stateXml->getIntAttribute("stampRotation", 0) % 4) + 4) % 4;
+        stampBaseLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stateXml->getIntAttribute("stampBaseLayer", 0));
+        stampCaptureMode = stateXml->getBoolAttribute("stampCaptureMode", false);
         bpm = juce::jlimit(60.0, 220.0, stateXml->getDoubleAttribute("bpm", 168.0));
         beatStepAccumulator = stateXml->getDoubleAttribute("beatStepAccumulator", 0.0);
         beatStepIndex = stateXml->getIntAttribute("beatStepIndex", 0);
@@ -2309,6 +3170,12 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         performanceSelection.kind = static_cast<PerformanceSelection::Kind>(juce::jlimit(0, 2, slabXml->getIntAttribute("selectionKind", 0)));
         performanceSelection.cell = { slabXml->getIntAttribute("selectionX", -1),
                                       slabXml->getIntAttribute("selectionY", -1) };
+        tetrisPiece.type = static_cast<TetrominoType>(juce::jlimit(0, tetrominoTypeCount() - 1, slabXml->getIntAttribute("tetrisType", 2)));
+        tetrisPiece.rotation = juce::jlimit(0, 3, slabXml->getIntAttribute("tetrisRotation", 0));
+        tetrisPiece.anchor = { slabXml->getIntAttribute("tetrisAnchorX", 0),
+                               slabXml->getIntAttribute("tetrisAnchorY", 0) };
+        tetrisPiece.z = slabXml->getIntAttribute("tetrisZ", 0);
+        tetrisPiece.active = slabXml->getBoolAttribute("tetrisActive", false);
     }
 
     if (auto* presetsXml = parsed->getChildByName("slabPresets"))
@@ -2380,6 +3247,21 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
     visualBarPulse = 0.0f;
     visualBarSweep = 0.0f;
     performanceBeatEnergy = 0.0f;
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+    {
+        tetrisPiece.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
+        if (tetrisPiece.active)
+            clampTetrisPieceToSlab(tetrisPiece);
+        else
+            spawnTetrisPiece(false);
+    }
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+    {
+        rebuildStampLibrary();
+        stampLibraryIndex = juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex);
+        stampHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
+        stampCaptureAnchor.reset();
+    }
     rebuildFilledVoxelCache();
     return true;
 }
@@ -2599,15 +3481,17 @@ float MainComponent::hoverLiftForSlab(const SlabSelection& slab) const
     return slab.quadrant == hoveredSlab.quadrant && slab.floor == hoveredSlab.floor ? 10.0f * camera.zoom : 0.0f;
 }
 
+int MainComponent::slabNumber(const SlabSelection& slab) const
+{
+    return slab.isValid() ? slabIndex(slab) + 1 : 0;
+}
+
 juce::String MainComponent::labelForSlab(const SlabSelection& slab) const
 {
-    static constexpr std::array<const char*, 4> quadrantNames { "NW", "NE", "SW", "SE" };
-
     if (! slab.isValid())
         return {};
 
-    return juce::String(quadrantNames[static_cast<size_t>(juce::jlimit(0, 3, slab.quadrant))])
-         + " Floor " + juce::String(slab.floor + 1);
+    return "Island " + juce::String(slabNumber(slab));
 }
 
 juce::Rectangle<int> MainComponent::performanceRegionBounds() const
@@ -3615,11 +4499,523 @@ void MainComponent::drawPerformanceSidebar(juce::Graphics& g, juce::Rectangle<fl
     g.drawFittedText(help, infoBlock.toNearestInt(), juce::Justification::topLeft, 8);
 }
 
+void MainComponent::drawTetrisBuildView(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const auto board = performanceBoardBounds(area);
+    const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+    const float pulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0032));
+
+    g.setColour(juce::Colour::fromRGBA(6, 11, 30, 236));
+    g.fillRoundedRectangle(board.expanded(26.0f), 28.0f);
+    g.setColour(juce::Colour::fromRGBA(74, 144, 255, 72));
+    g.drawRoundedRectangle(board.expanded(26.0f), 28.0f, 1.8f);
+
+    juce::ColourGradient boardGlow(juce::Colour::fromRGBA(42, 102, 212, 102),
+                                   board.getCentreX(), board.getCentreY(),
+                                   juce::Colour::fromRGBA(8, 13, 36, 0),
+                                   board.getCentreX(), board.getBottom() + 80.0f,
+                                   true);
+    g.setGradientFill(boardGlow);
+    g.fillEllipse(board.expanded(96.0f, 82.0f));
+
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
+    const int activeLayerZ = zStart + juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer);
+    for (int localY = 0; localY < slabHeight; ++localY)
+    {
+        for (int localX = 0; localX < slabWidth; ++localX)
+        {
+            const int worldX = x0 + localX;
+            const int worldY = y0 + localY;
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(localX) * tileSize,
+                                               board.getY() + static_cast<float>(localY) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            g.setColour(juce::Colour::fromRGBA(8, 14, 34, 214));
+            g.fillRect(cell);
+
+            struct LayerSlice
+            {
+                juce::Colour colour;
+                bool active = false;
+            };
+
+            std::vector<LayerSlice> slices;
+            slices.reserve(static_cast<size_t>(zEnd - zStart));
+            for (int z = zStart; z < zEnd; ++z)
+                if (hasVoxel(worldX, worldY, z))
+                    slices.push_back({ colourForHeight(z), z == activeLayerZ });
+
+            if (! slices.empty())
+            {
+                auto innerCell = cell.reduced(2.0f);
+                const float sliceHeight = innerCell.getHeight() / static_cast<float>(slices.size());
+                for (size_t i = 0; i < slices.size(); ++i)
+                {
+                    auto sliceBounds = juce::Rectangle<float>(innerCell.getX(),
+                                                              innerCell.getY() + sliceHeight * static_cast<float>(i),
+                                                              innerCell.getWidth(),
+                                                              juce::jmax(1.0f, sliceHeight + 0.5f));
+                    auto colour = slices[i].colour;
+                    if (slices[i].active)
+                        colour = colour.withMultipliedBrightness(1.12f);
+                    else
+                        colour = colour.interpolatedWith(juce::Colour::greyLevel(colour.getPerceivedBrightness()), 0.88f)
+                                       .withMultipliedBrightness(0.52f)
+                                       .withMultipliedAlpha(0.55f);
+                    g.setColour(colour);
+                    g.fillRect(sliceBounds);
+                    if (slices[i].active)
+                    {
+                        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 72));
+                        g.drawRect(sliceBounds, 1.0f);
+                    }
+                }
+            }
+
+            g.setColour(juce::Colour::fromRGBA(88, 122, 214, 32));
+            g.drawRect(cell, 1.0f);
+        }
+    }
+
+    if (! tetrisPiece.active)
+        spawnTetrisPiece(false);
+
+    const bool pieceFits = tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece);
+    const auto pieceColour = pieceFits ? juce::Colour::fromRGBA(84, 238, 255, 210)
+                                       : juce::Colour::fromRGBA(255, 116, 116, 214);
+    const auto pieceGlow = pieceFits ? juce::Colour::fromRGBA(84, 238, 255, static_cast<uint8_t>(44 + 24 * pulse))
+                                     : juce::Colour::fromRGBA(255, 116, 116, static_cast<uint8_t>(44 + 24 * pulse));
+    for (const auto& offset : tetrominoOffsets(tetrisPiece.type, tetrisPiece.rotation))
+    {
+        const int worldX = tetrisPiece.anchor.x + offset.x;
+        const int worldY = tetrisPiece.anchor.y + offset.y;
+        if (! cellInSelectedSlab(worldX, worldY, isolatedSlab))
+            continue;
+
+        const int localX = worldX - x0;
+        const int localY = worldY - y0;
+        auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(localX) * tileSize,
+                                           board.getY() + static_cast<float>(localY) * tileSize,
+                                           tileSize,
+                                           tileSize).reduced(1.5f);
+        g.setColour(pieceGlow);
+        g.fillRoundedRectangle(cell.expanded(4.0f), 6.0f);
+        g.setColour(pieceColour.withAlpha(0.26f));
+        g.fillRoundedRectangle(cell, 5.0f);
+        g.setColour(pieceColour);
+        g.drawRoundedRectangle(cell, 5.0f, 2.3f);
+        g.setColour(juce::Colours::white.withAlpha(0.82f));
+        g.drawLine(cell.getX() + 4.0f, cell.getY() + 4.0f, cell.getRight() - 4.0f, cell.getBottom() - 4.0f, 1.2f);
+        g.drawLine(cell.getRight() - 4.0f, cell.getY() + 4.0f, cell.getX() + 4.0f, cell.getBottom() - 4.0f, 1.2f);
+    }
+
+    auto pieceTag = juce::Rectangle<float>(156.0f, 28.0f)
+                        .withCentre({ board.getCentreX(), board.getY() - 24.0f });
+    g.setColour(juce::Colour::fromRGBA(8, 14, 34, 228));
+    g.fillRoundedRectangle(pieceTag, 8.0f);
+    g.setColour(pieceColour.withAlpha(0.9f));
+    g.drawRoundedRectangle(pieceTag, 8.0f, 1.5f);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(13.0f));
+    g.drawFittedText("Piece " + tetrominoTypeName(tetrisPiece.type) + "  layer " + juce::String(tetrisBuildLayer),
+                     pieceTag.toNearestInt(),
+                     juce::Justification::centred,
+                     1);
+
+    auto previewPanel = juce::Rectangle<float>(board.getRight() + 34.0f, board.getY() + 10.0f, 112.0f, 112.0f);
+    previewPanel = previewPanel.withRight(juce::jmin(area.getRight() - 12.0f, previewPanel.getRight()));
+    g.setColour(juce::Colour::fromRGBA(8, 14, 34, 226));
+    g.fillRoundedRectangle(previewPanel, 14.0f);
+    g.setColour(juce::Colour::fromRGBA(84, 238, 255, 88));
+    g.drawRoundedRectangle(previewPanel, 14.0f, 1.4f);
+    g.setColour(juce::Colour::fromRGBA(170, 214, 255, 170));
+    g.setFont(juce::FontOptions(12.0f));
+    g.drawText("NEXT", previewPanel.removeFromTop(24.0f).toNearestInt(), juce::Justification::centred);
+    auto previewArea = previewPanel.reduced(18.0f);
+    const auto previewOffsets = tetrominoOffsets(nextTetrisType, 0);
+    int minX = previewOffsets[0].x, maxX = previewOffsets[0].x, minY = previewOffsets[0].y, maxY = previewOffsets[0].y;
+    for (const auto& offset : previewOffsets)
+    {
+        minX = juce::jmin(minX, offset.x);
+        maxX = juce::jmax(maxX, offset.x);
+        minY = juce::jmin(minY, offset.y);
+        maxY = juce::jmax(maxY, offset.y);
+    }
+    const float previewTile = juce::jmin(previewArea.getWidth() / static_cast<float>(maxX - minX + 2),
+                                         previewArea.getHeight() / static_cast<float>(maxY - minY + 2));
+    const float previewStartX = previewArea.getCentreX() - previewTile * static_cast<float>(maxX - minX + 1) * 0.5f;
+    const float previewStartY = previewArea.getCentreY() - previewTile * static_cast<float>(maxY - minY + 1) * 0.5f;
+    for (const auto& offset : previewOffsets)
+    {
+        auto cell = juce::Rectangle<float>(previewStartX + previewTile * static_cast<float>(offset.x - minX),
+                                           previewStartY + previewTile * static_cast<float>(offset.y - minY),
+                                           previewTile,
+                                           previewTile).reduced(1.5f);
+        g.setColour(juce::Colour::fromRGBA(84, 238, 255, 52));
+        g.fillRoundedRectangle(cell.expanded(2.0f), 4.0f);
+        g.setColour(juce::Colour::fromRGBA(84, 238, 255, 168));
+        g.fillRoundedRectangle(cell, 4.0f);
+        g.setColour(juce::Colours::white.withAlpha(0.84f));
+        g.drawRoundedRectangle(cell, 4.0f, 1.1f);
+    }
+}
+
+void MainComponent::rebuildStampLibrary()
+{
+    stampLibrary.clear();
+    stampLibraryIndex = 0;
+    stampRotation = 0;
+    stampBaseLayer = 0;
+    stampHoverCell.reset();
+
+    std::vector<StampMotif> candidates;
+    candidates.reserve(32);
+
+    for (int quadrant = 0; quadrant < 4; ++quadrant)
+    {
+        int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+        quadrantBounds(quadrant, x0, y0, x1, y1);
+
+        for (int floor = 0; floor < 4; ++floor)
+        {
+            const int zStart = floor * floorBandHeight;
+            const int zEnd = juce::jmin(gridHeight, zStart + floorBandHeight);
+
+            for (int startY = y0; startY <= y1 - 4; startY += 5)
+            {
+                for (int startX = x0; startX <= x1 - 4; startX += 5)
+                {
+                    StampMotif motif;
+                    motif.width = 4;
+                    motif.height = 4;
+                    motif.maxDz = 0;
+                    for (int z = zStart; z < zEnd; ++z)
+                    {
+                        for (int y = startY; y < startY + 4; ++y)
+                        {
+                            for (int x = startX; x < startX + 4; ++x)
+                            {
+                                if (! hasVoxel(x, y, z))
+                                    continue;
+
+                                motif.voxels.push_back({ x - startX, y - startY, z - zStart });
+                                motif.maxDz = juce::jmax(motif.maxDz, z - zStart);
+                            }
+                        }
+                    }
+
+                    if (motif.voxels.size() < 4 || motif.voxels.size() > 28)
+                        continue;
+
+                    motif.name = labelForSlab({ quadrant, floor }) + " " + juce::String(static_cast<int>(candidates.size()) + 1);
+                    candidates.push_back(std::move(motif));
+                }
+            }
+        }
+    }
+
+    std::sort(candidates.begin(), candidates.end(), [] (const StampMotif& a, const StampMotif& b)
+    {
+        return a.voxels.size() > b.voxels.size();
+    });
+
+    const int keepCount = juce::jmin(8, static_cast<int>(candidates.size()));
+    for (int i = 0; i < keepCount; ++i)
+        stampLibrary.push_back(candidates[static_cast<size_t>(i)]);
+
+    if (stampLibrary.empty())
+    {
+        StampMotif fallback;
+        fallback.name = "Block";
+        fallback.width = 1;
+        fallback.height = 1;
+        fallback.maxDz = 0;
+        fallback.voxels.push_back({ 0, 0, 0 });
+        stampLibrary.push_back(std::move(fallback));
+    }
+}
+
+bool MainComponent::captureStampFromSelection(juce::Rectangle<int> selection)
+{
+    if (! isolatedSlab.isValid() || selection.isEmpty())
+        return false;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const auto slabBounds = juce::Rectangle<int>(x0, y0, x1 - x0, y1 - y0);
+    selection = selection.getIntersection(slabBounds);
+    if (selection.isEmpty())
+        return false;
+
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
+    int minZ = zEnd;
+    int maxZ = zStart - 1;
+
+    for (int z = zStart; z < zEnd; ++z)
+        for (int y = selection.getY(); y < selection.getBottom(); ++y)
+            for (int x = selection.getX(); x < selection.getRight(); ++x)
+                if (hasVoxel(x, y, z))
+                {
+                    minZ = juce::jmin(minZ, z);
+                    maxZ = juce::jmax(maxZ, z);
+                }
+
+    if (maxZ < minZ)
+        return false;
+
+    StampMotif motif;
+    motif.name = "Selection";
+    motif.width = selection.getWidth();
+    motif.height = selection.getHeight();
+    motif.maxDz = maxZ - minZ;
+
+    for (int z = minZ; z <= maxZ; ++z)
+        for (int y = selection.getY(); y < selection.getBottom(); ++y)
+            for (int x = selection.getX(); x < selection.getRight(); ++x)
+                if (hasVoxel(x, y, z))
+                    motif.voxels.push_back({ x - selection.getX(), y - selection.getY(), z - minZ });
+
+    if (! motif.isValid())
+        return false;
+
+    if (stampLibrary.empty())
+        stampLibrary.push_back(motif);
+    else
+        stampLibrary[static_cast<size_t>(juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex))] = motif;
+
+    stampRotation = 0;
+    return true;
+}
+
+std::vector<MainComponent::StampVoxel> MainComponent::rotatedStampVoxels(const StampMotif& motif, int rotation, int& widthOut, int& heightOut) const
+{
+    const int r = ((rotation % 4) + 4) % 4;
+    std::vector<StampVoxel> rotated;
+    rotated.reserve(motif.voxels.size());
+
+    for (const auto& voxel : motif.voxels)
+    {
+        StampVoxel out = voxel;
+        switch (r)
+        {
+            case 0:
+                out.dx = voxel.dx;
+                out.dy = voxel.dy;
+                break;
+            case 1:
+                out.dx = motif.height - 1 - voxel.dy;
+                out.dy = voxel.dx;
+                break;
+            case 2:
+                out.dx = motif.width - 1 - voxel.dx;
+                out.dy = motif.height - 1 - voxel.dy;
+                break;
+            default:
+                out.dx = voxel.dy;
+                out.dy = motif.width - 1 - voxel.dx;
+                break;
+        }
+        rotated.push_back(out);
+    }
+
+    widthOut = (r % 2) == 0 ? motif.width : motif.height;
+    heightOut = (r % 2) == 0 ? motif.height : motif.width;
+    return rotated;
+}
+
+bool MainComponent::stampFitsAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation) const
+{
+    if (! isolatedSlab.isValid())
+        return false;
+
+    int width = 0, height = 0;
+    const auto rotated = rotatedStampVoxels(motif, rotation, width, height);
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab) - 1;
+
+    for (const auto& voxel : rotated)
+    {
+        const int x = cell.x + voxel.dx;
+        const int y = cell.y + voxel.dy;
+        const int z = baseZ + voxel.dz;
+        if (! cellInSelectedSlab(x, y, isolatedSlab))
+            return false;
+        if (z < zMin || z > zMax)
+            return false;
+    }
+
+    return true;
+}
+
+void MainComponent::applyStampAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation, bool filled)
+{
+    if (! stampFitsAtCell(motif, cell, baseZ, rotation))
+        return;
+
+    int width = 0, height = 0;
+    const auto rotated = rotatedStampVoxels(motif, rotation, width, height);
+    for (const auto& voxel : rotated)
+        setVoxel(cell.x + voxel.dx, cell.y + voxel.dy, baseZ + voxel.dz, filled);
+}
+
+void MainComponent::drawStampLibraryBuildView(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const auto board = performanceBoardBounds(area);
+    const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+    const float pulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0032));
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
+    const int activeLayerZ = zStart + juce::jlimit(0, isolatedBuildMaxHeight - 1, stampBaseLayer);
+
+    g.setColour(juce::Colour::fromRGBA(6, 11, 30, 236));
+    g.fillRoundedRectangle(board.expanded(26.0f), 28.0f);
+    g.setColour(juce::Colour::fromRGBA(74, 144, 255, 72));
+    g.drawRoundedRectangle(board.expanded(26.0f), 28.0f, 1.8f);
+
+    juce::ColourGradient boardGlow(juce::Colour::fromRGBA(42, 102, 212, 102),
+                                   board.getCentreX(), board.getCentreY(),
+                                   juce::Colour::fromRGBA(8, 13, 36, 0),
+                                   board.getCentreX(), board.getBottom() + 80.0f,
+                                   true);
+    g.setGradientFill(boardGlow);
+    g.fillEllipse(board.expanded(96.0f, 82.0f));
+
+    for (int localY = 0; localY < slabHeight; ++localY)
+    {
+        for (int localX = 0; localX < slabWidth; ++localX)
+        {
+            const int worldX = x0 + localX;
+            const int worldY = y0 + localY;
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(localX) * tileSize,
+                                               board.getY() + static_cast<float>(localY) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            g.setColour(juce::Colour::fromRGBA(8, 14, 34, 214));
+            g.fillRect(cell);
+
+            std::vector<juce::Colour> slices;
+            for (int z = zStart; z < zEnd; ++z)
+                if (hasVoxel(worldX, worldY, z))
+                {
+                    auto colour = colourForHeight(z);
+                    if (z != activeLayerZ)
+                        colour = colour.interpolatedWith(juce::Colour::greyLevel(colour.getPerceivedBrightness()), 0.84f)
+                                       .withMultipliedBrightness(0.5f)
+                                       .withMultipliedAlpha(0.55f);
+                    slices.push_back(colour);
+                }
+
+            if (! slices.empty())
+            {
+                auto innerCell = cell.reduced(2.0f);
+                const float sliceHeight = innerCell.getHeight() / static_cast<float>(slices.size());
+                for (size_t i = 0; i < slices.size(); ++i)
+                {
+                    auto sliceBounds = juce::Rectangle<float>(innerCell.getX(),
+                                                              innerCell.getY() + sliceHeight * static_cast<float>(i),
+                                                              innerCell.getWidth(),
+                                                              juce::jmax(1.0f, sliceHeight + 0.5f));
+                    g.setColour(slices[i]);
+                    g.fillRect(sliceBounds);
+                }
+            }
+
+            g.setColour(juce::Colour::fromRGBA(88, 122, 214, 32));
+            g.drawRect(cell, 1.0f);
+        }
+    }
+
+    if (! stampLibrary.empty() && stampHoverCell.has_value())
+    {
+        const auto& motif = stampLibrary[static_cast<size_t>(juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex))];
+        int rotatedWidth = 0, rotatedHeight = 0;
+        const auto rotated = rotatedStampVoxels(motif, stampRotation, rotatedWidth, rotatedHeight);
+        const bool fits = stampFitsAtCell(motif, *stampHoverCell, activeLayerZ, stampRotation);
+        const auto previewColour = fits ? juce::Colour::fromRGBA(84, 238, 255, 188)
+                                        : juce::Colour::fromRGBA(255, 116, 116, 188);
+
+        for (const auto& voxel : rotated)
+        {
+            const int worldX = stampHoverCell->x + voxel.dx;
+            const int worldY = stampHoverCell->y + voxel.dy;
+            if (! cellInSelectedSlab(worldX, worldY, isolatedSlab))
+                continue;
+
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(worldX - x0) * tileSize,
+                                               board.getY() + static_cast<float>(worldY - y0) * tileSize,
+                                               tileSize,
+                                               tileSize).reduced(1.6f);
+            g.setColour(previewColour.withAlpha(0.22f + 0.08f * pulse));
+            g.fillRoundedRectangle(cell, 5.0f);
+            g.setColour(previewColour);
+            g.drawRoundedRectangle(cell, 5.0f, 2.0f);
+        }
+    }
+
+    if (stampCaptureMode && stampHoverCell.has_value())
+    {
+        const auto start = stampCaptureAnchor.value_or(*stampHoverCell);
+        const auto xMin = juce::jmin(start.x, stampHoverCell->x);
+        const auto yMin = juce::jmin(start.y, stampHoverCell->y);
+        const auto xMax = juce::jmax(start.x, stampHoverCell->x);
+        const auto yMax = juce::jmax(start.y, stampHoverCell->y);
+        auto selectionBounds = juce::Rectangle<float>(board.getX() + static_cast<float>(xMin - x0) * tileSize,
+                                                      board.getY() + static_cast<float>(yMin - y0) * tileSize,
+                                                      static_cast<float>(xMax - xMin + 1) * tileSize,
+                                                      static_cast<float>(yMax - yMin + 1) * tileSize).reduced(1.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 214, 120, 28));
+        g.fillRoundedRectangle(selectionBounds, 8.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 228, 168, 220));
+        g.drawRoundedRectangle(selectionBounds, 8.0f, 2.2f);
+    }
+
+    auto infoTag = juce::Rectangle<float>(224.0f, 28.0f).withCentre({ board.getCentreX(), board.getY() - 24.0f });
+    g.setColour(juce::Colour::fromRGBA(8, 14, 34, 228));
+    g.fillRoundedRectangle(infoTag, 8.0f);
+    g.setColour(juce::Colour::fromRGBA(84, 238, 255, 160));
+    g.drawRoundedRectangle(infoTag, 8.0f, 1.5f);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(13.0f));
+    const auto& motif = stampLibrary[static_cast<size_t>(juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex))];
+    g.drawFittedText((stampCaptureMode ? "Capture source" : "Stamp " + motif.name) + "  layer " + juce::String(stampBaseLayer),
+                     infoTag.toNearestInt(), juce::Justification::centred, 1);
+}
+
 void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area)
 {
     if (isolatedSlab.isValid() && performanceMode)
     {
         drawPerformanceView(g, area);
+        return;
+    }
+
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
+    {
+        drawTetrisBuildView(g, area);
+        return;
+    }
+
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
+    {
+        drawStampLibraryBuildView(g, area);
         return;
     }
 
@@ -4180,6 +5576,22 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         g.setColour(juce::Colour::fromFloatRGBA(1.0f, 1.0f, 1.0f, 0.95f));
         g.strokePath(indicator, juce::PathStrokeType(1.2f));
 
+        const auto mirroredCells = placementCellsForSourceCell({ editCursor.x, editCursor.y }, isolatedSlab);
+        for (const auto& cell : mirroredCells)
+        {
+            if (cell.x == editCursor.x && cell.y == editCursor.y)
+                continue;
+
+            EditCursor ghostCursor = editCursor;
+            ghostCursor.x = cell.x;
+            ghostCursor.y = cell.y;
+            auto ghost = cursorPath(ghostCursor, area);
+            g.setColour(juce::Colour::fromRGBA(120, 232, 255, 36));
+            g.fillPath(ghost);
+            g.setColour(juce::Colour::fromRGBA(120, 232, 255, 150));
+            g.strokePath(ghost, juce::PathStrokeType(2.0f));
+        }
+
         auto zLabelBounds = juce::Rectangle<float>(92.0f, 22.0f)
                                 .withCentre({ topCentre.x + 46.0f, topCentre.y - 12.0f });
         zLabelBounds = zLabelBounds.withY(juce::jmax(area.getY() + 8.0f, zLabelBounds.getY()));
@@ -4248,7 +5660,10 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.setColour(juce::Colour::fromRGBA(122, 210, 255, 96));
     g.drawRoundedRectangle(panel, 24.0f, 1.6f);
 
-    const auto modeLabel = isolatedSlab.isValid() ? (performanceMode ? "PERFORMANCE" : "EDIT VIEW")
+    const auto modeLabel = isolatedSlab.isValid() ? (performanceMode ? "PERFORMANCE"
+                                                                     : (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? "TETRIS BUILD"
+                                                                                                                               : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? "STAMP LIBRARY"
+                                                                                                                                                                                     : "EDIT VIEW"))
                                                   : "BUILD MODE";
     if (! isolatedSlab.isValid())
     {
@@ -4362,7 +5777,19 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.drawRoundedRectangle(detailChip, 14.0f, 1.0f);
     g.setColour(juce::Colours::white);
     g.setFont(juce::FontOptions(14.0f));
-    g.drawFittedText("Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back",
+    const auto currentRule = buildRuleForSlab(isolatedSlab);
+    const auto detailText = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                              ? "Tab 3D mode   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
+                              : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                                  ? "Tab 3D mode   S capture source   Click twice to mark source   Click stamp/remove   N/B motif   R rotate   [ ] layer   P stamp   C clear   Esc back"
+                              : currentRule == IsolatedBuildRule::mirror
+                                  ? "Build in the left half   Right half mirrors live   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
+                              : currentRule == IsolatedBuildRule::kaleidoscope
+                                  ? "Build in the top-left quarter   Other quarters rotate and mirror   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
+                              : currentRule == IsolatedBuildRule::stampClone
+                                  ? "Tab stamp library   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
+                                  : "Tab Tetris mode   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back";
+    g.drawFittedText(detailText,
                      detailChip.reduced(14.0f, 0.0f).toNearestInt(),
                      juce::Justification::centredLeft,
                      1);
@@ -4372,15 +5799,23 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     auto statRow = inner.removeFromTop(56.0f);
     const float statGap = 10.0f;
     const float statWidth = (statRow.getWidth() - statGap * 4.0f) / 5.0f;
-    drawStat(statRow.removeFromLeft(statWidth), "SYNTH", synthName());
+    drawStat(statRow.removeFromLeft(statWidth), "BUILD", isolatedBuildModeName());
     statRow.removeFromLeft(statGap);
-    drawStat(statRow.removeFromLeft(statWidth), "DRUMS", drumModeName());
+    drawStat(statRow.removeFromLeft(statWidth), "PLACE", editChordTypeName());
     statRow.removeFromLeft(statGap);
     drawStat(statRow.removeFromLeft(statWidth), "KEY", keyName());
     statRow.removeFromLeft(statGap);
     drawStat(statRow.removeFromLeft(statWidth), "SCALE", scaleName());
     statRow.removeFromLeft(statGap);
-    drawStat(statRow.removeFromLeft(statWidth), "PLACE", editChordTypeName());
+    drawStat(statRow.removeFromLeft(statWidth),
+             isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? "PIECE"
+                 : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? "STAMP"
+                 : "SYNTH",
+             isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? tetrominoTypeName(tetrisPiece.type)
+                 : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                     ? (stampCaptureMode ? "Capture Source"
+                                         : (stampLibrary.empty() ? "None" : stampLibrary[static_cast<size_t>(juce::jlimit(0, static_cast<int>(stampLibrary.size()) - 1, stampLibraryIndex))].name))
+                     : synthName());
 
     inner.removeFromTop(10.0f);
 
@@ -4444,10 +5879,17 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
 
     const float infoGap = 8.0f;
     const float infoWidth = (infoRow.getWidth() - infoGap * 3.0f) / 4.0f;
-    const int slabBaseZ = isolatedSlab.floor * floorBandHeight;
-    const int localCursorZ = editCursor.z - slabBaseZ;
+    const int slabBaseZ = slabZStart(isolatedSlab);
+    const int displayZ = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? (slabBaseZ + tetrisBuildLayer)
+                       : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? (slabBaseZ + stampBaseLayer)
+                       : editCursor.z;
+    const int localCursorZ = displayZ - slabBaseZ;
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(localCursorZ));
+                 isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                     ? ("Piece  x" + juce::String(tetrisPiece.anchor.x) + "  y" + juce::String(tetrisPiece.anchor.y) + "  layer " + juce::String(localCursorZ))
+                     : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                         ? ("Stamp  " + (stampHoverCell.has_value() ? ("x" + juce::String(stampHoverCell->x) + "  y" + juce::String(stampHoverCell->y)) : juce::String("hover board")) + "  layer " + juce::String(localCursorZ))
+                     : ("Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(localCursorZ)));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
                  "Root  " + pitchClassName(localCursorZ));
@@ -4456,12 +5898,22 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                  "Layers  " + juce::String(editPlacementHeight) + " octaves");
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "Name  " + currentEditChordName());
+                 isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                     ? ("Next  " + tetrominoTypeName(nextTetrisType) + "   " + currentEditChordName() + (tetrisPieceFits(tetrisPiece) ? "" : "  blocked"))
+                     : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                         ? (stampCaptureMode
+                               ? (stampCaptureAnchor.has_value() ? "Capture  choose opposite corner" : "Capture  click first corner")
+                               : ("Next  " + juce::String(stampLibraryIndex + 1) + "/" + juce::String(static_cast<int>(stampLibrary.size())) + "   " + currentEditChordName()))
+                         : ("Name  " + currentEditChordName()));
 
     inner.removeFromTop(8.0f);
     auto footerRow = inner.removeFromTop(28.0f);
     drawInfoChip(footerRow,
-                 "P place   X delete   M/B/K/L/U sound");
+                 isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                     ? "P place now   X delete   S soft drop   Space hard drop   M/B/K/L/U sound"
+                     : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
+                         ? "S capture   P stamp   X delete stamp   N/B browse   R rotate   M/B/K/L/U sound"
+                         : "P place   X delete   M/B/K/L/U sound");
 }
 
 juce::Rectangle<float> MainComponent::titleCardBounds(juce::Rectangle<float> area) const
@@ -4508,6 +5960,8 @@ void MainComponent::enterWorldFromTitle(bool regenerateWorld)
 
     screenMode = ScreenMode::world;
     hoveredTitleAction = TitleAction::none;
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! tetrisPiece.active)
+        spawnTetrisPiece(false);
     repaint();
 }
 

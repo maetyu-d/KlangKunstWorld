@@ -92,6 +92,21 @@ public:
         minorSeventh
     };
 
+    enum class IsolatedBuildMode
+    {
+        cursor3D,
+        tetrisTopDown,
+        stampLibraryTopDown
+    };
+
+    enum class IsolatedBuildRule
+    {
+        standard,
+        mirror,
+        kaleidoscope,
+        stampClone
+    };
+
 private:
     enum class ScreenMode
     {
@@ -137,6 +152,44 @@ private:
         int y = 0;
         int z = 0;
         bool active = false;
+    };
+
+    enum class TetrominoType
+    {
+        I,
+        O,
+        T,
+        L,
+        J,
+        S,
+        Z
+    };
+
+    struct TetrisPiece
+    {
+        TetrominoType type = TetrominoType::T;
+        int rotation = 0;
+        juce::Point<int> anchor;
+        int z = 0;
+        bool active = false;
+    };
+
+    struct StampVoxel
+    {
+        int dx = 0;
+        int dy = 0;
+        int dz = 0;
+    };
+
+    struct StampMotif
+    {
+        juce::String name;
+        int width = 1;
+        int height = 1;
+        int maxDz = 0;
+        std::vector<StampVoxel> voxels;
+
+        bool isValid() const { return ! voxels.empty(); }
     };
 
     struct Snake
@@ -268,10 +321,37 @@ private:
     void moveEditCursor(int dx, int dy, int dz);
     void clearIsolatedSlab();
     void applyEditPlacement(bool filled);
+    void applyEditPlacementAtCell(int x, int y, int z, bool filled);
+    IsolatedBuildRule buildRuleForSlab(const SlabSelection& slab) const;
+    juce::String buildRuleName(IsolatedBuildRule rule) const;
+    juce::Point<int> canonicalBuildCellForSlab(juce::Point<int> cell, const SlabSelection& slab) const;
+    std::vector<juce::Point<int>> placementCellsForSourceCell(juce::Point<int> sourceCell, const SlabSelection& slab) const;
     std::vector<int> editChordIntervals() const;
     juce::String editChordTypeName() const;
     juce::String pitchClassName(int semitone) const;
     juce::String currentEditChordName() const;
+    juce::String isolatedBuildModeName() const;
+    juce::String tetrominoTypeName(TetrominoType type) const;
+    std::array<juce::Point<int>, 4> tetrominoOffsets(TetrominoType type, int rotation) const;
+    bool tetrisPieceFits(const TetrisPiece& piece) const;
+    bool tetrisPieceCollidesWithVoxels(const TetrisPiece& piece) const;
+    void clampTetrisPieceToSlab(TetrisPiece& piece) const;
+    void spawnTetrisPiece(bool randomizeType);
+    void moveTetrisPiece(int dx, int dy, int dz);
+    void rotateTetrisPiece();
+    void placeTetrisPiece(bool filled);
+    void advanceTetrisGravity();
+    void softDropTetrisPiece();
+    void hardDropTetrisPiece();
+    TetrominoType randomTetrominoType() const;
+    void rotateIsolatedSlabQuarterTurn();
+    void drawTetrisBuildView(juce::Graphics& g, juce::Rectangle<float> area);
+    void rebuildStampLibrary();
+    bool captureStampFromSelection(juce::Rectangle<int> selection);
+    std::vector<StampVoxel> rotatedStampVoxels(const StampMotif& motif, int rotation, int& widthOut, int& heightOut) const;
+    bool stampFitsAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation) const;
+    void applyStampAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation, bool filled);
+    void drawStampLibraryBuildView(juce::Graphics& g, juce::Rectangle<float> area);
     void rebuildFilledVoxelCache();
     bool saveStateToFile(const juce::File& file);
     bool loadStateFromFile(const juce::File& file);
@@ -282,6 +362,7 @@ private:
     void addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples);
     juce::Colour displayColourForVoxel(int x, int y, int z, juce::Colour base) const;
     float hoverLiftForSlab(const SlabSelection& slab) const;
+    int slabNumber(const SlabSelection& slab) const;
     juce::String labelForSlab(const SlabSelection& slab) const;
     juce::Rectangle<int> performanceRegionBounds() const;
     juce::Rectangle<float> performanceBoardBounds(juce::Rectangle<float> area) const;
@@ -341,6 +422,19 @@ private:
     EditCursor editCursor;
     int editPlacementHeight = 1;
     EditChordType editChordType = EditChordType::single;
+    IsolatedBuildMode isolatedBuildMode = IsolatedBuildMode::cursor3D;
+    TetrisPiece tetrisPiece;
+    TetrominoType nextTetrisType = TetrominoType::L;
+    int tetrisBuildLayer = 0;
+    bool tetrisRotatePerLayerSession = false;
+    int tetrisGravityTick = 0;
+    std::vector<StampMotif> stampLibrary;
+    int stampLibraryIndex = 0;
+    int stampRotation = 0;
+    int stampBaseLayer = 0;
+    std::optional<juce::Point<int>> stampHoverCell;
+    bool stampCaptureMode = false;
+    std::optional<juce::Point<int>> stampCaptureAnchor;
     bool performanceMode = false;
     int performanceRegionMode = 2;
     int performanceAgentCount = 1;
