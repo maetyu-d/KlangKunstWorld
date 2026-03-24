@@ -2686,6 +2686,10 @@ bool MainComponent::tetrisPieceFits(const TetrisPiece& piece) const
                     return false;
     }
 
+    for (const auto& cell : tetrisPlacementCells(piece))
+        if (cell.x < x0 || cell.x >= x1 || cell.y < y0 || cell.y >= y1)
+            return false;
+
     return true;
 }
 
@@ -2702,10 +2706,10 @@ bool MainComponent::tetrisPieceCollidesWithVoxels(const TetrisPiece& piece) cons
     const auto intervals = editChordIntervals();
     const int stackHeight = juce::jmax(1, editPlacementHeight);
 
-    for (const auto& offset : tetrominoOffsets(piece.type, piece.rotation))
+    for (const auto& cell : tetrisPlacementCells(piece))
     {
-        const int x = piece.anchor.x + offset.x;
-        const int y = piece.anchor.y + offset.y;
+        const int x = cell.x;
+        const int y = cell.y;
         if (y < y0 || x < x0 || x >= x1 || y >= y1)
             continue;
 
@@ -2785,15 +2789,26 @@ void MainComponent::moveTetrisPiece(int dx, int dy, int dz)
 std::vector<juce::Point<int>> MainComponent::tetrisPlacementCells(const TetrisPiece& piece) const
 {
     std::vector<juce::Point<int>> cells;
+    if (! isolatedSlab.isValid())
+        return cells;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
     for (const auto& offset : tetrominoOffsets(piece.type, piece.rotation))
     {
         const auto baseCell = juce::Point<int>(piece.anchor.x + offset.x, piece.anchor.y + offset.y);
         if (isolatedSlab.isValid() && tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette && rouletteMirrorPlacement)
         {
-            const auto mirroredCells = placementCellsForSourceCell(baseCell, isolatedSlab);
-            for (const auto& cell : mirroredCells)
-                if (std::find(cells.begin(), cells.end(), cell) == cells.end())
-                    cells.push_back(cell);
+            if (baseCell.x >= x0 && baseCell.x < x1 && baseCell.y >= y0 && baseCell.y < y1)
+            {
+                const int localX = baseCell.x - x0;
+                const int mirroredX = x0 + (x1 - x0 - 1 - localX);
+                const std::array<juce::Point<int>, 2> mirroredCells { baseCell, juce::Point<int>(mirroredX, baseCell.y) };
+                for (const auto& cell : mirroredCells)
+                    if (std::find(cells.begin(), cells.end(), cell) == cells.end())
+                        cells.push_back(cell);
+            }
         }
         else
         {
