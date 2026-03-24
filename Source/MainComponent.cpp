@@ -710,6 +710,8 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
 
     if (isolatedSlab.isValid())
     {
+        const bool readOnlyTetrisPreview = tetrisVariantForSlab(isolatedSlab) != TetrisVariant::none
+                                        && isolatedBuildMode == IsolatedBuildMode::cursor3D;
         if (performanceMode)
         {
             const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
@@ -828,7 +830,7 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
             }
         }
 
-        if (editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
+        if (! readOnlyTetrisPreview && editCursor.active && cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         {
             const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
             applyEditPlacement(! remove);
@@ -869,7 +871,9 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         resetEditCursor();
         editPlacementHeight = 1;
         editChordType = EditChordType::single;
-        isolatedBuildMode = slabNumber(slab) == 4
+        isolatedBuildMode = slabNumber(slab) >= 5 && slabNumber(slab) <= 8
+                              ? IsolatedBuildMode::cursor3D
+                              : slabNumber(slab) == 4
                               ? IsolatedBuildMode::cursor3D
                               : slabNumber(slab) <= 4
                                   ? IsolatedBuildMode::cursor3D
@@ -880,8 +884,13 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         tetrisPiece = {};
         nextTetrisType = TetrominoType::L;
         tetrisBuildLayer = 0;
-        tetrisRotatePerLayerSession = false;
+        tetrisRotatePerLayerSession = tetrisVariantForSlab(slab) == TetrisVariant::standard
+                                        ? juce::Random::getSystemRandom().nextBool()
+                                        : false;
         tetrisGravityTick = 0;
+        tetrisGravityFrames = 20;
+        rouletteMirrorPlacement = false;
+        rouletteRotatePerLayer = false;
         rebuildStampLibrary();
         stampCaptureMode = false;
         stampCaptureAnchor.reset();
@@ -1123,12 +1132,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (isolatedSlab.isValid())
     {
+        const bool readOnlyTetrisPreview = tetrisVariantForSlab(isolatedSlab) != TetrisVariant::none
+                                        && isolatedBuildMode == IsolatedBuildMode::cursor3D;
         if (key == juce::KeyPress::returnKey)
         {
             if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! performanceMode)
             {
                 tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer + 1);
-                if (tetrisRotatePerLayerSession)
+                if (tetrisRotatePerLayerSession || (tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette && rouletteRotatePerLayer))
                     rotateIsolatedSlabQuarterTurn();
                 if (editCursor.active)
                     editCursor.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
@@ -1148,7 +1159,11 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         }
         if (key == juce::KeyPress::tabKey && ! performanceMode)
         {
-            if (slabNumber(isolatedSlab) == 4)
+            if (slabNumber(isolatedSlab) >= 5 && slabNumber(isolatedSlab) <= 8)
+                isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                                      ? IsolatedBuildMode::cursor3D
+                                      : IsolatedBuildMode::tetrisTopDown;
+            else if (slabNumber(isolatedSlab) == 4)
                 isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                                       ? IsolatedBuildMode::cursor3D
                                       : IsolatedBuildMode::stampLibraryTopDown;
@@ -1163,7 +1178,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
             {
                 tetrisBuildLayer = 0;
-                tetrisRotatePerLayerSession = juce::Random::getSystemRandom().nextBool();
+                tetrisRotatePerLayerSession = tetrisVariantForSlab(isolatedSlab) == TetrisVariant::standard
+                                                ? juce::Random::getSystemRandom().nextBool()
+                                                : false;
+                tetrisGravityFrames = 20;
+                rouletteMirrorPlacement = false;
+                rouletteRotatePerLayer = false;
                 editCursor.z = slabZStart(isolatedSlab) + tetrisBuildLayer;
                 spawnTetrisPiece(true);
             }
@@ -1175,7 +1195,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             repaint();
             return true;
         }
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; isolatedBuildMode = IsolatedBuildMode::cursor3D; tetrisPiece = {}; nextTetrisType = TetrominoType::L; tetrisBuildLayer = 0; tetrisRotatePerLayerSession = false; tetrisGravityTick = 0; stampLibrary.clear(); stampLibraryIndex = 0; stampRotation = 0; stampBaseLayer = 0; stampHoverCell.reset(); stampCaptureMode = false; stampCaptureAnchor.reset(); performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; isolatedBuildMode = IsolatedBuildMode::cursor3D; tetrisPiece = {}; nextTetrisType = TetrominoType::L; tetrisBuildLayer = 0; tetrisRotatePerLayerSession = false; tetrisGravityTick = 0; tetrisGravityFrames = 20; rouletteMirrorPlacement = false; rouletteRotatePerLayer = false; stampLibrary.clear(); stampLibraryIndex = 0; stampRotation = 0; stampBaseLayer = 0; stampHoverCell.reset(); stampCaptureMode = false; stampCaptureAnchor.reset(); performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
 
         if (performanceMode)
         {
@@ -1368,20 +1388,21 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         }
         if (key == juce::KeyPress('p'))
         {
-            if (editCursor.active)
+            if (! readOnlyTetrisPreview && editCursor.active)
                 applyEditPlacement(true);
             repaint();
             return true;
         }
         if (key == juce::KeyPress('c'))
         {
-            clearIsolatedSlab();
+            if (! readOnlyTetrisPreview)
+                clearIsolatedSlab();
             repaint();
             return true;
         }
         if (key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x'))
         {
-            if (editCursor.active)
+            if (! readOnlyTetrisPreview && editCursor.active)
                 applyEditPlacement(false);
             repaint();
             return true;
@@ -1498,8 +1519,7 @@ void MainComponent::timerCallback()
     if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! performanceMode)
     {
         ++tetrisGravityTick;
-        const int gravityFrames = 20;
-        if (tetrisGravityTick >= gravityFrames)
+        if (tetrisGravityTick >= tetrisGravityFrames)
         {
             tetrisGravityTick = 0;
             advanceTetrisGravity();
@@ -1525,6 +1545,9 @@ void MainComponent::randomiseVoxels()
     tetrisBuildLayer = 0;
     tetrisRotatePerLayerSession = false;
     tetrisGravityTick = 0;
+    tetrisGravityFrames = 20;
+    rouletteMirrorPlacement = false;
+    rouletteRotatePerLayer = false;
     stampLibrary.clear();
     stampLibraryIndex = 0;
     stampRotation = 0;
@@ -1865,6 +1888,9 @@ void MainComponent::splitIntoFourIslands()
     tetrisBuildLayer = 0;
     tetrisRotatePerLayerSession = false;
     tetrisGravityTick = 0;
+    tetrisGravityFrames = 20;
+    rouletteMirrorPlacement = false;
+    rouletteRotatePerLayer = false;
     stampLibrary.clear();
     stampLibraryIndex = 0;
     stampRotation = 0;
@@ -2297,6 +2323,32 @@ juce::String MainComponent::buildRuleName(IsolatedBuildRule rule) const
     return "Standard";
 }
 
+MainComponent::TetrisVariant MainComponent::tetrisVariantForSlab(const SlabSelection& slab) const
+{
+    switch (slabNumber(slab))
+    {
+        case 5: return TetrisVariant::standard;
+        case 6: return TetrisVariant::destruct;
+        case 7: return TetrisVariant::fracture;
+        case 8: return TetrisVariant::roulette;
+        default: return TetrisVariant::none;
+    }
+}
+
+juce::String MainComponent::tetrisVariantName(TetrisVariant variant) const
+{
+    switch (variant)
+    {
+        case TetrisVariant::none: return "None";
+        case TetrisVariant::standard: return "Tetris";
+        case TetrisVariant::destruct: return "Destruct Tetris";
+        case TetrisVariant::fracture: return "Fracture Tetris";
+        case TetrisVariant::roulette: return "Roulette Tetris";
+    }
+
+    return "Tetris";
+}
+
 juce::Point<int> MainComponent::canonicalBuildCellForSlab(juce::Point<int> cell, const SlabSelection& slab) const
 {
     if (! slab.isValid())
@@ -2512,7 +2564,8 @@ juce::String MainComponent::isolatedBuildModeName() const
     {
         case IsolatedBuildMode::cursor3D:
             return isolatedSlab.isValid() ? buildRuleName(buildRuleForSlab(isolatedSlab)) : "3D Cursor";
-        case IsolatedBuildMode::tetrisTopDown: return "Tetris Topdown";
+        case IsolatedBuildMode::tetrisTopDown:
+            return isolatedSlab.isValid() ? tetrisVariantName(tetrisVariantForSlab(isolatedSlab)) : "Tetris Topdown";
         case IsolatedBuildMode::stampLibraryTopDown: return "Stamp Library";
     }
 
@@ -2709,6 +2762,8 @@ void MainComponent::spawnTetrisPiece(bool randomizeType)
     tetrisPiece.active = true;
     clampTetrisPieceToSlab(tetrisPiece);
     tetrisGravityTick = 0;
+    if (tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette)
+        applyRouletteRuleOnNewPiece();
 }
 
 void MainComponent::moveTetrisPiece(int dx, int dy, int dz)
@@ -2725,6 +2780,40 @@ void MainComponent::moveTetrisPiece(int dx, int dy, int dz)
     clampTetrisPieceToSlab(moved);
     if (tetrisPieceFits(moved) && ! tetrisPieceCollidesWithVoxels(moved))
         tetrisPiece = moved;
+}
+
+std::vector<juce::Point<int>> MainComponent::tetrisPlacementCells(const TetrisPiece& piece) const
+{
+    std::vector<juce::Point<int>> cells;
+    for (const auto& offset : tetrominoOffsets(piece.type, piece.rotation))
+    {
+        const auto baseCell = juce::Point<int>(piece.anchor.x + offset.x, piece.anchor.y + offset.y);
+        if (isolatedSlab.isValid() && tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette && rouletteMirrorPlacement)
+        {
+            const auto mirroredCells = placementCellsForSourceCell(baseCell, isolatedSlab);
+            for (const auto& cell : mirroredCells)
+                if (std::find(cells.begin(), cells.end(), cell) == cells.end())
+                    cells.push_back(cell);
+        }
+        else
+        {
+            if (std::find(cells.begin(), cells.end(), baseCell) == cells.end())
+                cells.push_back(baseCell);
+        }
+    }
+
+    return cells;
+}
+
+bool MainComponent::shouldTetrisPieceDestroy(const TetrisPiece& piece) const
+{
+    if (! isolatedSlab.isValid())
+        return false;
+
+    if (tetrisVariantForSlab(isolatedSlab) != TetrisVariant::destruct)
+        return false;
+
+    return piece.type == TetrominoType::I || piece.type == TetrominoType::J || piece.type == TetrominoType::Z;
 }
 
 void MainComponent::rotateTetrisPiece()
@@ -2759,16 +2848,19 @@ void MainComponent::placeTetrisPiece(bool filled)
         if (tetrisPiece.anchor.y + offset.y < y0)
             return;
 
-    if (filled && tetrisPieceCollidesWithVoxels(tetrisPiece))
+    const bool destructivePlacement = filled && shouldTetrisPieceDestroy(tetrisPiece);
+    if (filled && ! destructivePlacement && tetrisPieceCollidesWithVoxels(tetrisPiece))
         return;
 
-    for (const auto& offset : tetrominoOffsets(tetrisPiece.type, tetrisPiece.rotation))
-        applyEditPlacementAtCell(tetrisPiece.anchor.x + offset.x, tetrisPiece.anchor.y + offset.y, tetrisPiece.z, filled);
+    for (const auto& cell : tetrisPlacementCells(tetrisPiece))
+        applyEditPlacementAtCell(cell.x, cell.y, tetrisPiece.z, destructivePlacement ? false : filled);
 
     editCursor.x = tetrisPiece.anchor.x;
     editCursor.y = tetrisPiece.anchor.y;
     editCursor.z = tetrisPiece.z;
     editCursor.active = true;
+    if (filled && tetrisVariantForSlab(isolatedSlab) == TetrisVariant::fracture)
+        applyFractureToCurrentLayer();
     spawnTetrisPiece(true);
 }
 
@@ -2794,6 +2886,68 @@ void MainComponent::advanceTetrisGravity()
 
     if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
         placeTetrisPiece(true);
+}
+
+void MainComponent::applyFractureToCurrentLayer()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    const int z = slabZStart(isolatedSlab) + juce::jlimit(0, tetrisLayerCount - 1, tetrisBuildLayer);
+
+    int filledCells = 0;
+    for (int y = y0; y < y1; ++y)
+        for (int x = x0; x < x1; ++x)
+            if (hasVoxel(x, y, z))
+                ++filledCells;
+
+    const float occupancy = static_cast<float>(filledCells) / static_cast<float>(juce::jmax(1, width * height));
+    if (occupancy < 0.35f)
+        return;
+
+    std::vector<juce::Point<int>> layerCells;
+    for (int y = y0; y < y1; ++y)
+        for (int x = x0; x < x1; ++x)
+            if (hasVoxel(x, y, z))
+                layerCells.push_back({ x, y });
+
+    for (const auto& cell : layerCells)
+        setVoxel(cell.x, cell.y, z, false);
+
+    const int halfW = juce::jmax(1, width / 2);
+    const int halfH = juce::jmax(1, height / 2);
+    for (const auto& cell : layerCells)
+    {
+        int dx = 0;
+        int dy = 0;
+        if (cell.x < x0 + halfW) dx = -1; else dx = 1;
+        if (cell.y < y0 + halfH) dy = -1; else dy = 1;
+        setVoxel(juce::jlimit(x0, x1 - 1, cell.x + dx), juce::jlimit(y0, y1 - 1, cell.y + dy), z, true);
+    }
+}
+
+void MainComponent::applyRouletteRuleOnNewPiece()
+{
+    const int rule = juce::Random::getSystemRandom().nextInt(3);
+    switch (rule)
+    {
+        case 0:
+            tetrisGravityFrames = juce::Random::getSystemRandom().nextBool() ? 10 : 28;
+            break;
+        case 1:
+            scale = static_cast<ScaleType>(juce::Random::getSystemRandom().nextInt(5));
+            break;
+        case 2:
+            rouletteMirrorPlacement = juce::Random::getSystemRandom().nextBool();
+            rouletteRotatePerLayer = juce::Random::getSystemRandom().nextBool();
+            break;
+        default:
+            break;
+    }
 }
 
 void MainComponent::softDropTetrisPiece()
@@ -2989,6 +3143,9 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
     stateXml->setAttribute("nextTetrisType", static_cast<int>(nextTetrisType));
     stateXml->setAttribute("tetrisBuildLayer", tetrisBuildLayer);
     stateXml->setAttribute("tetrisGravityTick", tetrisGravityTick);
+    stateXml->setAttribute("tetrisGravityFrames", tetrisGravityFrames);
+    stateXml->setAttribute("rouletteMirrorPlacement", boolToInt(rouletteMirrorPlacement));
+    stateXml->setAttribute("rouletteRotatePerLayer", boolToInt(rouletteRotatePerLayer));
     stateXml->setAttribute("stampLibraryIndex", stampLibraryIndex);
     stateXml->setAttribute("stampRotation", stampRotation);
     stateXml->setAttribute("stampBaseLayer", stampBaseLayer);
@@ -3144,6 +3301,9 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         nextTetrisType = static_cast<TetrominoType>(juce::jlimit(0, tetrominoTypeCount() - 1, stateXml->getIntAttribute("nextTetrisType", static_cast<int>(TetrominoType::L))));
         tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, stateXml->getIntAttribute("tetrisBuildLayer", 0));
         tetrisGravityTick = juce::jmax(0, stateXml->getIntAttribute("tetrisGravityTick", 0));
+        tetrisGravityFrames = juce::jlimit(6, 40, stateXml->getIntAttribute("tetrisGravityFrames", 20));
+        rouletteMirrorPlacement = stateXml->getBoolAttribute("rouletteMirrorPlacement", false);
+        rouletteRotatePerLayer = stateXml->getBoolAttribute("rouletteRotatePerLayer", false);
         stampLibraryIndex = juce::jmax(0, stateXml->getIntAttribute("stampLibraryIndex", 0));
         stampRotation = ((stateXml->getIntAttribute("stampRotation", 0) % 4) + 4) % 4;
         stampBaseLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stateXml->getIntAttribute("stampBaseLayer", 0));
@@ -5778,14 +5938,24 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     g.setColour(juce::Colours::white);
     g.setFont(juce::FontOptions(14.0f));
     const auto currentRule = buildRuleForSlab(isolatedSlab);
+    const bool readOnlyTetrisPreview = tetrisVariantForSlab(isolatedSlab) != TetrisVariant::none
+                                    && isolatedBuildMode == IsolatedBuildMode::cursor3D;
     const auto detailText = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
-                              ? "Tab 3D mode   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
+                              ? (tetrisVariantForSlab(isolatedSlab) == TetrisVariant::destruct
+                                     ? "Destructive pieces carve on impact   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
+                                     : tetrisVariantForSlab(isolatedSlab) == TetrisVariant::fracture
+                                         ? "Dense layers fracture outward   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
+                                         : tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette
+                                             ? "Every new piece mutates gravity, scale, or mirroring   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
+                                             : "Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back")
                               : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                                   ? "Tab 3D mode   S capture source   Click twice to mark source   Click stamp/remove   N/B motif   R rotate   [ ] layer   P stamp   C clear   Esc back"
+                              : readOnlyTetrisPreview
+                                  ? "Read-only isometric preview   Tab enter topdown tetris   Enter performance   WASD pan   Wheel zoom   Arrows inspect   [ ] height   Esc back"
                               : currentRule == IsolatedBuildRule::mirror
                                   ? "Build in the left half   Right half mirrors live   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
-                              : currentRule == IsolatedBuildRule::kaleidoscope
-                                  ? "Build in the top-left quarter   Other quarters rotate and mirror   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
+                                  : currentRule == IsolatedBuildRule::kaleidoscope
+                                      ? "Build in the top-left quarter   Other quarters rotate and mirror   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
                               : currentRule == IsolatedBuildRule::stampClone
                                   ? "Tab stamp library   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
                                   : "Tab Tetris mode   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back";
@@ -5904,15 +6074,21 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                          ? (stampCaptureMode
                                ? (stampCaptureAnchor.has_value() ? "Capture  choose opposite corner" : "Capture  click first corner")
                                : ("Next  " + juce::String(stampLibraryIndex + 1) + "/" + juce::String(static_cast<int>(stampLibrary.size())) + "   " + currentEditChordName()))
+                         : readOnlyTetrisPreview
+                             ? ("Mode  " + tetrisVariantName(tetrisVariantForSlab(isolatedSlab)))
                          : ("Name  " + currentEditChordName()));
 
     inner.removeFromTop(8.0f);
     auto footerRow = inner.removeFromTop(28.0f);
     drawInfoChip(footerRow,
                  isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
-                     ? "P place now   X delete   S soft drop   Space hard drop   M/B/K/L/U sound"
+                     ? (tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette
+                            ? ("P place now   X delete   S soft drop   Space hard drop   grav " + juce::String(tetrisGravityFrames) + "   " + (rouletteMirrorPlacement ? "mirror on" : "mirror off"))
+                            : "P place now   X delete   S soft drop   Space hard drop   M/B/K/L/U sound")
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? "S capture   P stamp   X delete stamp   N/B browse   R rotate   M/B/K/L/U sound"
+                         : readOnlyTetrisPreview
+                             ? "Tab enter tetris   Enter performance   Read-only 3D preview"
                          : "P place   X delete   M/B/K/L/U sound");
 }
 

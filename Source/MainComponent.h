@@ -107,6 +107,15 @@ public:
         stampClone
     };
 
+    enum class TetrisVariant
+    {
+        none,
+        standard,
+        destruct,
+        fracture,
+        roulette
+    };
+
 private:
     enum class ScreenMode
     {
@@ -324,6 +333,12 @@ private:
     void applyEditPlacementAtCell(int x, int y, int z, bool filled);
     IsolatedBuildRule buildRuleForSlab(const SlabSelection& slab) const;
     juce::String buildRuleName(IsolatedBuildRule rule) const;
+    TetrisVariant tetrisVariantForSlab(const SlabSelection& slab) const;
+    juce::String tetrisVariantName(TetrisVariant variant) const;
+    std::vector<juce::Point<int>> tetrisPlacementCells(const TetrisPiece& piece) const;
+    bool shouldTetrisPieceDestroy(const TetrisPiece& piece) const;
+    void applyFractureToCurrentLayer();
+    void applyRouletteRuleOnNewPiece();
     juce::Point<int> canonicalBuildCellForSlab(juce::Point<int> cell, const SlabSelection& slab) const;
     std::vector<juce::Point<int>> placementCellsForSourceCell(juce::Point<int> sourceCell, const SlabSelection& slab) const;
     std::vector<int> editChordIntervals() const;
@@ -428,6 +443,9 @@ private:
     int tetrisBuildLayer = 0;
     bool tetrisRotatePerLayerSession = false;
     int tetrisGravityTick = 0;
+    int tetrisGravityFrames = 20;
+    bool rouletteMirrorPlacement = false;
+    bool rouletteRotatePerLayer = false;
     std::vector<StampMotif> stampLibrary;
     int stampLibraryIndex = 0;
     int stampRotation = 0;
