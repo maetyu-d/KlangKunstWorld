@@ -5743,15 +5743,33 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
         const int x = static_cast<int>(voxel.x);
         const int y = static_cast<int>(voxel.y);
         const int z = static_cast<int>(voxel.z);
+        auto hasRenderableVoxel = [this] (int vx, int vy, int vz, const std::optional<SlabSelection>& slabSelection)
+        {
+            if (! hasVoxel(vx, vy, vz))
+                return false;
+            if (slabSelection.has_value())
+                return voxelInSelectedSlab(vx, vy, vz, *slabSelection);
+            return true;
+        };
         const int baseZ = renderBaseZForLayer(z);
         const auto colour = colourForHeight(z);
         const SlabSelection voxelSlab { quadrantForCell(x, y), z / floorBandHeight };
         const auto slabLift = hoverLiftForSlab(voxelSlab);
         const bool showTop = (z == gridHeight - 1)
                           || (! isolatedSlab.isValid() && layoutMode == LayoutMode::FourIslandsFourFloors && (z % floorBandHeight) == floorBandHeight - 1)
-                          || ! hasVoxel(x, y, z + 1);
-        const bool showLeft = hasLeftFaceDirection ? ! hasVoxel(x + leftFaceDirection.dx, y + leftFaceDirection.dy, z) : true;
-        const bool showRight = hasRightFaceDirection ? ! hasVoxel(x + rightFaceDirection.dx, y + rightFaceDirection.dy, z) : true;
+                          || ! hasRenderableVoxel(x, y, z + 1, isolatedSlab.isValid() ? std::optional<SlabSelection>(isolatedSlab) : std::nullopt);
+        const bool showLeft = hasLeftFaceDirection
+                            ? ! hasRenderableVoxel(x + leftFaceDirection.dx,
+                                                   y + leftFaceDirection.dy,
+                                                   z,
+                                                   isolatedSlab.isValid() ? std::optional<SlabSelection>(isolatedSlab) : std::nullopt)
+                            : true;
+        const bool showRight = hasRightFaceDirection
+                             ? ! hasRenderableVoxel(x + rightFaceDirection.dx,
+                                                    y + rightFaceDirection.dy,
+                                                    z,
+                                                    isolatedSlab.isValid() ? std::optional<SlabSelection>(isolatedSlab) : std::nullopt)
+                             : true;
 
         const auto aTop = projectCellCorner(x,     y,     baseZ + 1, x, y, area);
         const auto bTop = projectCellCorner(x + 1, y,     baseZ + 1, x, y, area);
