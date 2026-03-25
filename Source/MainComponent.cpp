@@ -595,23 +595,6 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
 
         if (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown)
         {
-            auto bounds = getLocalBounds().toFloat();
-            bounds.removeFromTop(112.0f);
-            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
-            if (nextCell.has_value())
-            {
-                if (! tetrisPiece.active)
-                    spawnTetrisPiece(false);
-
-                TetrisPiece moved = tetrisPiece;
-                moved.anchor = *nextCell;
-                clampTetrisPieceToSlab(moved);
-                if (moved.anchor != tetrisPiece.anchor)
-                {
-                    tetrisPiece = moved;
-                    repaint();
-                }
-            }
             return;
         }
 
@@ -931,6 +914,15 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     juce::MidiBuffer beatMidi;
     const float blockSeconds = static_cast<float>(bufferToFill.numSamples / juce::jmax(1.0, currentSampleRate));
     const double stepSeconds = 60.0 / bpm / 4.0;
+    const int activeSlabNumber = isolatedSlab.isValid() ? slabNumber(isolatedSlab) : 0;
+    const bool tetrisChiptuneMode = isolatedSlab.isValid()
+                                 && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
+                                 && ! performanceMode;
+    const bool simCityBuildMode = isolatedSlab.isValid()
+                               && ! performanceMode
+                               && isolatedBuildMode == IsolatedBuildMode::cursor3D
+                               && activeSlabNumber >= 1
+                               && activeSlabNumber <= 4;
 
     double localTime = 0.0;
     while (localTime < blockSeconds)
@@ -1037,6 +1029,332 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
             }
         }
 
+        if (tetrisChiptuneMode)
+        {
+            auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
+            {
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.80f)),
+                              juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
+                pendingNoteOffs.push_back({ midiNote, lengthSeconds });
+            };
+
+            static constexpr std::array<int, 16> leadPatternA {
+                76, -1, 71, -1, 72, -1, 74, -1,
+                71, -1, 67, -1, 64, -1, 67, -1
+            };
+            static constexpr std::array<int, 16> leadPatternB {
+                74, -1, 72, -1, 71, -1, 67, -1,
+                64, -1, 67, -1, 71, -1, 72, -1
+            };
+            static constexpr std::array<int, 16> leadPatternC {
+                76, -1, 79, -1, 77, -1, 76, -1,
+                74, -1, 72, -1, 71, -1, 72, -1
+            };
+            static constexpr std::array<int, 16> leadPatternD {
+                74, -1, 71, -1, 67, -1, 69, -1,
+                71, -1, 72, -1, 74, -1, 76, -1
+            };
+            static constexpr std::array<int, 16> bassPatternA {
+                40, -1, -1, -1, 47, -1, -1, -1,
+                45, -1, -1, -1, 43, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> bassPatternB {
+                43, -1, -1, -1, 40, -1, -1, -1,
+                47, -1, -1, -1, 45, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> destructLeadPattern {
+                76, 74, -1, 71, 72, -1, 67, 69,
+                71, -1, 67, 64, 66, -1, 62, 64
+            };
+            static constexpr std::array<int, 16> destructBassPattern {
+                35, -1, 35, -1, 42, -1, 42, -1,
+                40, -1, 40, -1, 38, -1, 38, -1
+            };
+            static constexpr std::array<int, 16> fractureLeadPattern {
+                79, -1, 76, 74, -1, 72, 71, -1,
+                74, 76, -1, 79, 83, -1, 81, 79
+            };
+            static constexpr std::array<int, 16> fractureBassPattern {
+                40, -1, -1, 47, -1, 45, -1, -1,
+                43, -1, -1, 50, -1, 47, -1, -1
+            };
+            static constexpr std::array<int, 8> arpPattern {
+                88, 83, 79, 83, 86, 81, 78, 81
+            };
+            static constexpr std::array<int, 8> fractureArpPattern {
+                91, 86, 83, 79, 88, 84, 81, 76
+            };
+            static constexpr std::array<int, 16> rouletteLeadMirror {
+                79, -1, 76, -1, 72, -1, 74, -1,
+                71, -1, 67, -1, 69, -1, 71, -1
+            };
+            static constexpr std::array<int, 16> rouletteLeadGravity {
+                84, 79, -1, 76, 74, -1, 72, 71,
+                -1, 74, 76, -1, 79, 81, -1, 83
+            };
+            static constexpr std::array<int, 16> rouletteLeadRotate {
+                76, -1, 83, -1, 79, -1, 74, -1,
+                81, -1, 77, -1, 72, -1, 69, -1
+            };
+            static constexpr std::array<int, 16> rouletteBassPattern {
+                40, -1, 47, -1, 45, -1, 52, -1,
+                43, -1, 50, -1, 47, -1, 45, -1
+            };
+
+            const auto tetrisVariant = tetrisVariantForSlab(isolatedSlab);
+            const int processPhase = beatBarIndex % 8;
+            const int leadShift = processPhase % 4;
+            const int bassShift = (beatBarIndex / 2) % 4;
+            const int additiveWindow = 4 + processPhase;
+            const bool addUpperPulse = processPhase >= 3;
+            const bool addLowPedal = processPhase >= 5;
+            const auto& classicLeadPattern = beatBarIndex % 4 == 0 ? leadPatternA
+                                             : beatBarIndex % 4 == 1 ? leadPatternB
+                                             : beatBarIndex % 4 == 2 ? leadPatternC
+                                                                      : leadPatternD;
+            const auto& classicBassPattern = (beatBarIndex % 2 == 0) ? bassPatternA : bassPatternB;
+
+            switch (tetrisVariant)
+            {
+                case TetrisVariant::destruct:
+                {
+                    const int leadIndex = (step + leadShift) % 16;
+                    if (step < additiveWindow)
+                    {
+                        if (const int leadNote = destructLeadPattern[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                            addSynthEvent(leadNote, (step % 4 == 0) ? 0.42f : 0.28f, 0.08f);
+                    }
+
+                    const int bassIndex = (step + bassShift) % 16;
+                    if (const int bassNote = destructBassPattern[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                        addSynthEvent(bassNote, 0.22f, 0.12f);
+
+                    if (addUpperPulse && (step == 3 || step == 7 || step == 11 || step == 15))
+                    {
+                        const int stab = destructLeadPattern[static_cast<size_t>((leadIndex + 1) % 16)];
+                        if (stab >= 0)
+                            addSynthEvent(stab - 12, 0.11f, 0.05f);
+                    }
+
+                    if (addLowPedal && step == 0)
+                    {
+                        addSynthEvent(35, 0.12f, 0.32f);
+                    }
+                    break;
+                }
+
+                case TetrisVariant::fracture:
+                {
+                    const int leadIndex = (step + leadShift) % 16;
+                    if (step < additiveWindow)
+                    {
+                        if (const int leadNote = fractureLeadPattern[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                            addSynthEvent(leadNote, 0.28f, 0.10f);
+                    }
+
+                    const int bassIndex = (step + bassShift) % 16;
+                    if (const int bassNote = fractureBassPattern[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                        addSynthEvent(bassNote, 0.19f, 0.14f);
+
+                    const int arpIndex = (step + beatBarIndex * 2 + leadShift) % static_cast<int>(fractureArpPattern.size());
+                    if ((step % 2) == 0 || addUpperPulse)
+                        addSynthEvent(fractureArpPattern[static_cast<size_t>(arpIndex)], 0.09f, 0.05f);
+                    break;
+                }
+
+                case TetrisVariant::roulette:
+                {
+                    const auto& rouletteLeadPattern = rouletteMirrorPlacement ? rouletteLeadMirror
+                                                      : rouletteRotatePerLayer ? rouletteLeadRotate
+                                                                               : rouletteLeadGravity;
+                    const float leadVelocity = tetrisGravityFrames <= 12 ? 0.42f
+                                               : tetrisGravityFrames >= 28 ? 0.28f
+                                                                           : 0.35f;
+
+                    const int leadIndex = (step + leadShift + (rouletteMirrorPlacement ? 1 : 0)) % 16;
+                    if (step < additiveWindow)
+                    {
+                        if (const int leadNote = rouletteLeadPattern[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                            addSynthEvent(leadNote + (rouletteRotatePerLayer ? 2 : 0), leadVelocity, 0.09f);
+                    }
+
+                    const int bassIndex = (step + bassShift) % 16;
+                    if (const int bassNote = rouletteBassPattern[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                        addSynthEvent(bassNote + (rouletteMirrorPlacement ? 5 : 0), 0.24f, 0.15f);
+
+                    if ((step % 2) == 1 || addUpperPulse)
+                    {
+                        const int arpIndex = (step / 2 + beatBarIndex + leadShift + (rouletteMirrorPlacement ? 1 : 0))
+                                           % static_cast<int>(arpPattern.size());
+                        addSynthEvent(arpPattern[static_cast<size_t>(arpIndex)] + (rouletteRotatePerLayer ? 3 : 0),
+                                      0.10f,
+                                      0.05f);
+                    }
+                    break;
+                }
+
+                case TetrisVariant::standard:
+                case TetrisVariant::none:
+                default:
+                {
+                    const int leadIndex = (step + leadShift) % 16;
+                    if (step < additiveWindow)
+                    {
+                        if (const int leadNote = classicLeadPattern[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                            addSynthEvent(leadNote, 0.34f, 0.11f);
+                    }
+
+                    const int bassIndex = (step + bassShift) % 16;
+                    if (const int bassNote = classicBassPattern[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                        addSynthEvent(bassNote, 0.24f, 0.16f);
+
+                    if ((step % 2) == 1 || addUpperPulse)
+                    {
+                        const int arpIndex = (step / 2 + beatBarIndex + leadShift) % static_cast<int>(arpPattern.size());
+                        addSynthEvent(arpPattern[static_cast<size_t>(arpIndex)], 0.12f, 0.06f);
+                    }
+
+                    if (addLowPedal && step == 0)
+                    {
+                        addSynthEvent(classicBassPattern[0] - 12, 0.10f, 0.28f);
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (simCityBuildMode)
+        {
+            auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
+            {
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 1.18f)),
+                              juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
+                pendingNoteOffs.push_back({ midiNote, lengthSeconds });
+            };
+
+            static constexpr std::array<int, 16> island1Lead {
+                67, -1, -1, -1, 72, -1, -1, -1,
+                71, -1, -1, -1, 69, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> island2Lead {
+                64, -1, -1, -1, 67, -1, -1, -1,
+                66, -1, -1, -1, 62, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> island3Lead {
+                62, -1, -1, -1, 67, -1, -1, -1,
+                71, -1, -1, -1, 69, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> island4Lead {
+                64, -1, -1, -1, 69, -1, -1, -1,
+                72, -1, -1, -1, 67, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> bassPatternLight {
+                36, -1, -1, -1, -1, -1, -1, -1,
+                43, -1, -1, -1, -1, -1, -1, -1
+            };
+            static constexpr std::array<int, 16> bassPatternDark {
+                31, -1, -1, -1, -1, -1, -1, -1,
+                38, -1, -1, -1, -1, -1, -1, -1
+            };
+            static constexpr std::array<int, 8> padIsland1 { 79, 74, 71, 74, 76, 72, 69, 72 };
+            static constexpr std::array<int, 8> padIsland2 { 72, 67, 64, 67, 71, 66, 62, 66 };
+            static constexpr std::array<int, 8> padIsland3 { 74, 69, 66, 69, 71, 67, 64, 67 };
+            static constexpr std::array<int, 8> padIsland4 { 76, 72, 69, 72, 79, 74, 71, 74 };
+            static constexpr std::array<int, 4> chordRoots1 { 55, 52, 50, 48 };
+            static constexpr std::array<int, 4> chordRoots2 { 48, 45, 43, 41 };
+            static constexpr std::array<int, 4> chordRoots3 { 46, 43, 41, 38 };
+            static constexpr std::array<int, 4> chordRoots4 { 52, 48, 45, 50 };
+            static constexpr std::array<std::array<int, 3>, 4> chordIntervals1 {{
+                {{ 0, 3, 10 }}, {{ 0, 5, 10 }}, {{ 0, 3, 8 }}, {{ 0, 3, 10 }}
+            }};
+            static constexpr std::array<std::array<int, 3>, 4> chordIntervals2 {{
+                {{ 0, 3, 10 }}, {{ 0, 3, 8 }}, {{ 0, 5, 10 }}, {{ 0, 3, 10 }}
+            }};
+            static constexpr std::array<std::array<int, 3>, 4> chordIntervals3 {{
+                {{ 0, 3, 8 }}, {{ 0, 3, 10 }}, {{ 0, 5, 10 }}, {{ 0, 3, 8 }}
+            }};
+            static constexpr std::array<std::array<int, 3>, 4> chordIntervals4 {{
+                {{ 0, 5, 10 }}, {{ 0, 3, 10 }}, {{ 0, 3, 8 }}, {{ 0, 5, 10 }}
+            }};
+
+            const auto& leadPattern = activeSlabNumber == 1 ? island1Lead
+                                      : activeSlabNumber == 2 ? island2Lead
+                                      : activeSlabNumber == 3 ? island3Lead
+                                                               : island4Lead;
+            const auto& padPattern = activeSlabNumber == 1 ? padIsland1
+                                     : activeSlabNumber == 2 ? padIsland2
+                                     : activeSlabNumber == 3 ? padIsland3
+                                                              : padIsland4;
+            const auto& bassPattern = (activeSlabNumber == 2 || activeSlabNumber == 3) ? bassPatternDark
+                                                                                        : bassPatternLight;
+            const auto& chordRoots = activeSlabNumber == 1 ? chordRoots1
+                                     : activeSlabNumber == 2 ? chordRoots2
+                                     : activeSlabNumber == 3 ? chordRoots3
+                                                              : chordRoots4;
+            const auto& chordIntervals = activeSlabNumber == 1 ? chordIntervals1
+                                         : activeSlabNumber == 2 ? chordIntervals2
+                                         : activeSlabNumber == 3 ? chordIntervals3
+                                                                  : chordIntervals4;
+            const bool darkIsland = activeSlabNumber == 2 || activeSlabNumber == 3;
+            const int processPhase = beatBarIndex % 8;
+            const int leadShift = processPhase % 4;
+            const int padShift = (beatBarIndex / 2) % 4;
+            const int additiveWindow = 3 + processPhase;
+            const bool gentleBassStep = step == 0 || (processPhase >= 6 && step == 8);
+            const bool padStep = step == 4 || (processPhase >= 5 && step == 12);
+            const bool echoLead = processPhase >= 4;
+            const bool lowPedal = processPhase >= 6;
+            const bool chordStep = step == 0 || (processPhase >= 4 && step == 8);
+
+            const int leadIndex = (step + leadShift) % 16;
+            if (step < additiveWindow && (step % 4) == 0)
+            {
+                if (const int leadNote = leadPattern[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                    addSynthEvent(leadNote - 12, darkIsland ? 0.10f : 0.13f, darkIsland ? 0.58f : 0.48f);
+            }
+
+            if (gentleBassStep)
+            {
+                const int bassIndex = (step + padShift) % 16;
+                if (const int bassNote = bassPattern[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                    addSynthEvent(bassNote - 5, darkIsland ? 0.08f : 0.10f, darkIsland ? 0.78f : 0.62f);
+            }
+
+            if (padStep)
+            {
+                const int padIndex = ((step == 4 ? 0 : step == 8 ? 2 : 4) + beatBarIndex + padShift)
+                                   % static_cast<int>(padPattern.size());
+                addSynthEvent(padPattern[static_cast<size_t>(padIndex)] - 12,
+                              darkIsland ? 0.05f : 0.06f,
+                              darkIsland ? 0.92f : 0.76f);
+                addSynthEvent(padPattern[static_cast<size_t>((padIndex + 1) % static_cast<int>(padPattern.size()))] - 24,
+                              darkIsland ? 0.04f : 0.05f,
+                              darkIsland ? 0.92f : 0.76f);
+            }
+
+            if (echoLead && (step == 6 || step == 14))
+            {
+                const int echoIndex = (leadIndex + 1) % 16;
+                if (const int echoNote = leadPattern[static_cast<size_t>(echoIndex)]; echoNote >= 0)
+                    addSynthEvent(echoNote - 24, darkIsland ? 0.05f : 0.06f, 0.34f);
+            }
+
+            if (lowPedal && step == 0)
+            {
+                addSynthEvent((darkIsland ? 26 : 31) - (processPhase >= 7 ? 5 : 0), 0.05f, 1.10f);
+            }
+
+            if (chordStep)
+            {
+                const int chordIndex = ((step == 0 ? 0 : 2) + beatBarIndex) % static_cast<int>(chordRoots.size());
+                const int root = chordRoots[static_cast<size_t>(chordIndex)] - (darkIsland ? 12 : 7);
+                const auto& intervals = chordIntervals[static_cast<size_t>(chordIndex)];
+                addSynthEvent(root, darkIsland ? 0.045f : 0.05f, darkIsland ? 1.45f : 1.20f);
+                addSynthEvent(root + intervals[1], darkIsland ? 0.038f : 0.043f, darkIsland ? 1.45f : 1.20f);
+                addSynthEvent(root + intervals[2], darkIsland ? 0.032f : 0.037f, darkIsland ? 1.45f : 1.20f);
+            }
+        }
+
         ++beatStepIndex;
         visualStepCounter.store(beatStepIndex, std::memory_order_relaxed);
         if (beatStepIndex % 16 == 0)
@@ -1074,7 +1392,15 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         }
     }
 
+    const auto previousSynthEngine = synthEngine;
+    if (tetrisChiptuneMode || simCityBuildMode)
+        synthEngine = SynthEngine::chipPulse;
+
     synth.renderNextBlock(*bufferToFill.buffer, midi, bufferToFill.startSample, bufferToFill.numSamples);
+
+    if (tetrisChiptuneMode || simCityBuildMode)
+        synthEngine = previousSynthEngine;
+
     beatSynth.renderNextBlock(*bufferToFill.buffer, beatMidi, bufferToFill.startSample, bufferToFill.numSamples);
 }
 
@@ -2687,7 +3013,7 @@ bool MainComponent::tetrisPieceFits(const TetrisPiece& piece) const
     }
 
     for (const auto& cell : tetrisPlacementCells(piece))
-        if (cell.x < x0 || cell.x >= x1 || cell.y < y0 || cell.y >= y1)
+        if (cell.x < x0 || cell.x >= x1 || cell.y >= y1)
             return false;
 
     return true;
@@ -2782,7 +3108,7 @@ void MainComponent::moveTetrisPiece(int dx, int dy, int dz)
     moved.anchor += juce::Point<int>(dx, dy);
     moved.z += dz;
     clampTetrisPieceToSlab(moved);
-    if (tetrisPieceFits(moved) && ! tetrisPieceCollidesWithVoxels(moved))
+    if (tetrisPieceFits(moved) && (shouldTetrisPieceDestroy(moved) || ! tetrisPieceCollidesWithVoxels(moved)))
         tetrisPiece = moved;
 }
 
@@ -2842,7 +3168,7 @@ void MainComponent::rotateTetrisPiece()
     TetrisPiece rotated = tetrisPiece;
     rotated.rotation = (rotated.rotation + 1) % 4;
     clampTetrisPieceToSlab(rotated);
-    if (tetrisPieceFits(rotated) && ! tetrisPieceCollidesWithVoxels(rotated))
+    if (tetrisPieceFits(rotated) && (shouldTetrisPieceDestroy(rotated) || ! tetrisPieceCollidesWithVoxels(rotated)))
         tetrisPiece = rotated;
 }
 
@@ -2893,13 +3219,23 @@ void MainComponent::advanceTetrisGravity()
     TetrisPiece dropped = tetrisPiece;
     dropped.anchor.y += 1;
     clampTetrisPieceToSlab(dropped);
-    if (dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped) && ! tetrisPieceCollidesWithVoxels(dropped))
+    const bool destructive = shouldTetrisPieceDestroy(tetrisPiece);
+    const bool droppedFits = dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped);
+    const bool droppedCollides = droppedFits && tetrisPieceCollidesWithVoxels(dropped);
+    if (droppedFits && ! droppedCollides)
     {
         tetrisPiece = dropped;
         return;
     }
 
-    if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+    if (destructive && droppedFits && droppedCollides)
+    {
+        tetrisPiece = dropped;
+        placeTetrisPiece(true);
+        return;
+    }
+
+    if (tetrisPieceFits(tetrisPiece) && (destructive || ! tetrisPieceCollidesWithVoxels(tetrisPiece)))
         placeTetrisPiece(true);
 }
 
@@ -2973,9 +3309,17 @@ void MainComponent::softDropTetrisPiece()
     TetrisPiece dropped = tetrisPiece;
     dropped.anchor.y += 1;
     clampTetrisPieceToSlab(dropped);
-    if (dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped) && ! tetrisPieceCollidesWithVoxels(dropped))
+    const bool destructive = shouldTetrisPieceDestroy(tetrisPiece);
+    const bool droppedFits = dropped.anchor.y != tetrisPiece.anchor.y && tetrisPieceFits(dropped);
+    const bool droppedCollides = droppedFits && tetrisPieceCollidesWithVoxels(dropped);
+    if (droppedFits && ! droppedCollides)
         tetrisPiece = dropped;
-    else if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+    else if (destructive && droppedFits && droppedCollides)
+    {
+        tetrisPiece = dropped;
+        placeTetrisPiece(true);
+    }
+    else if (tetrisPieceFits(tetrisPiece) && (destructive || ! tetrisPieceCollidesWithVoxels(tetrisPiece)))
         placeTetrisPiece(true);
 }
 
@@ -2987,17 +3331,25 @@ void MainComponent::hardDropTetrisPiece()
     if (! tetrisPiece.active)
         spawnTetrisPiece(true);
 
+    const bool destructive = shouldTetrisPieceDestroy(tetrisPiece);
     while (true)
     {
         TetrisPiece dropped = tetrisPiece;
         dropped.anchor.y += 1;
         clampTetrisPieceToSlab(dropped);
-        if (dropped.anchor.y == tetrisPiece.anchor.y || ! tetrisPieceFits(dropped) || tetrisPieceCollidesWithVoxels(dropped))
+        if (dropped.anchor.y == tetrisPiece.anchor.y || ! tetrisPieceFits(dropped))
+            break;
+        if (destructive && tetrisPieceCollidesWithVoxels(dropped))
+        {
+            tetrisPiece = dropped;
+            break;
+        }
+        if (! destructive && tetrisPieceCollidesWithVoxels(dropped))
             break;
         tetrisPiece = dropped;
     }
 
-    if (tetrisPieceFits(tetrisPiece) && ! tetrisPieceCollidesWithVoxels(tetrisPiece))
+    if (tetrisPieceFits(tetrisPiece) && (destructive || ! tetrisPieceCollidesWithVoxels(tetrisPiece)))
         placeTetrisPiece(true);
 }
 
@@ -3609,7 +3961,7 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
             continue;
 
         const int midiNote = midiNoteForHeight(z);
-        const float velocity = juce::jlimit(0.15f, 0.92f, 0.34f + 0.04f * static_cast<float>(z - zStart));
+        const float velocity = juce::jlimit(0.12f, 0.78f, 0.28f + 0.032f * static_cast<float>(z - zStart));
         synth.noteOn(1, midiNote, velocity);
         pendingNoteOffs.push_back({ midiNote, 0.16f });
         ++triggered;
@@ -3627,7 +3979,7 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
 void MainComponent::addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples)
 {
     const int onOffset = juce::jlimit(0, juce::jmax(0, blockSamples - 1), sampleOffset);
-    buffer.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity)), onOffset);
+    buffer.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.86f)), onOffset);
 
     const float noteLengthSeconds = midiNote == 120 ? 0.12f : midiNote == 121 ? 0.09f : midiNote == 122 ? 0.03f : 0.05f;
     pendingBeatNoteOffs.push_back({ midiNote, noteLengthSeconds });
