@@ -598,6 +598,21 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
             return;
         }
 
+        if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+        {
+            auto bounds = getLocalBounds().toFloat();
+            bounds.removeFromTop(112.0f);
+            const auto nextCell = performanceCellAtPosition(event.position, bounds.reduced(12.0f));
+            if (nextCell != automataHoverCell)
+            {
+                automataHoverCell = nextCell;
+                if (automataHoverCell.has_value())
+                    editCursor = { automataHoverCell->x, automataHoverCell->y, slabZStart(isolatedSlab) + automataBuildLayer, true };
+                repaint();
+            }
+            return;
+        }
+
         if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
         {
             auto bounds = getLocalBounds().toFloat();
@@ -773,6 +788,19 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
             }
         }
 
+        if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+        {
+            const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
+            if (clickedCell.has_value())
+            {
+                automataHoverCell = clickedCell;
+                const bool remove = event.mods.isRightButtonDown() || event.mods.isCtrlDown();
+                toggleAutomataCell(*clickedCell, ! remove);
+                repaint();
+                return;
+            }
+        }
+
         if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
         {
             const auto clickedCell = performanceCellAtPosition(event.position, gridArea);
@@ -853,9 +881,11 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         hoveredSlab = slab;
         resetEditCursor();
         editPlacementHeight = 1;
-        editChordType = EditChordType::single;
+       editChordType = EditChordType::single;
         isolatedBuildMode = slabNumber(slab) >= 5 && slabNumber(slab) <= 8
                               ? IsolatedBuildMode::cursor3D
+                              : slabNumber(slab) >= 9 && slabNumber(slab) <= 12
+                                  ? IsolatedBuildMode::cellularAutomataTopDown
                               : slabNumber(slab) == 4
                               ? IsolatedBuildMode::cursor3D
                               : slabNumber(slab) <= 4
@@ -874,6 +904,8 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         tetrisGravityFrames = 20;
         rouletteMirrorPlacement = false;
         rouletteRotatePerLayer = false;
+        automataBuildLayer = 0;
+        automataHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
         rebuildStampLibrary();
         stampCaptureMode = false;
         stampCaptureAnchor.reset();
@@ -893,6 +925,8 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         applyPerformancePresetForSlab(slab);
         if (isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
             stampHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
+        if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+            editCursor.z = slabZStart(isolatedSlab) + automataBuildLayer;
         repaint();
     }
 }
@@ -923,6 +957,11 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                                && isolatedBuildMode == IsolatedBuildMode::cursor3D
                                && activeSlabNumber >= 1
                                && activeSlabNumber <= 4;
+    const bool automataBuildMode = isolatedSlab.isValid()
+                                && ! performanceMode
+                                && isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                                && activeSlabNumber >= 9
+                                && activeSlabNumber <= 12;
 
     double localTime = 0.0;
     while (localTime < blockSeconds)
@@ -1355,6 +1394,150 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
             }
         }
 
+        if (automataBuildMode)
+        {
+            auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
+            {
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.82f)),
+                              juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
+                pendingNoteOffs.push_back({ midiNote, lengthSeconds });
+            };
+
+            static constexpr std::array<int, 16> lifeLead {
+                72, -1, -1, 76, -1, -1, 79, -1,
+                76, -1, -1, 74, -1, -1, 71, -1
+            };
+            static constexpr std::array<int, 16> lifeBass {
+                43, -1, -1, -1, 50, -1, -1, -1,
+                47, -1, -1, -1, 45, -1, -1, -1
+            };
+            static constexpr std::array<int, 8> lifePulse { 84, 79, 76, 79, 83, 79, 74, 79 };
+
+            static constexpr std::array<int, 16> coralLead {
+                67, -1, 71, -1, 74, -1, 76, -1,
+                79, -1, 76, -1, 74, -1, 71, -1
+            };
+            static constexpr std::array<int, 16> coralBass {
+                36, -1, -1, -1, 43, -1, -1, -1,
+                41, -1, -1, -1, 38, -1, -1, -1
+            };
+            static constexpr std::array<int, 8> coralPulse { 79, 83, 86, 83, 88, 84, 81, 84 };
+
+            static constexpr std::array<int, 16> fredkinLead {
+                79, 74, -1, 71, 76, -1, 72, 67,
+                -1, 74, 79, -1, 83, 76, -1, 72
+            };
+            static constexpr std::array<int, 16> fredkinBass {
+                31, -1, 43, -1, 36, -1, 48, -1,
+                33, -1, 45, -1, 38, -1, 50, -1
+            };
+            static constexpr std::array<int, 8> fredkinPulse { 91, 84, 79, 84, 88, 81, 76, 81 };
+
+            static constexpr std::array<int, 16> dayNightLead {
+                71, -1, 74, 76, -1, 79, -1, 83,
+                81, -1, 78, 76, -1, 74, -1, 71
+            };
+            static constexpr std::array<int, 16> dayNightBass {
+                38, -1, -1, 45, -1, -1, 50, -1,
+                43, -1, -1, 47, -1, -1, 52, -1
+            };
+            static constexpr std::array<int, 8> dayNightPulse { 86, 83, 79, 83, 90, 86, 81, 86 };
+
+            const auto variant = automataVariantForSlab(isolatedSlab);
+            const int processPhase = beatBarIndex % 8;
+            const int leadShift = processPhase % 4;
+            const int bassShift = (beatBarIndex / 2) % 4;
+            const int additiveWindow = 4 + processPhase;
+            const bool phaseEcho = processPhase >= 3;
+            const bool highPulse = processPhase >= 5;
+            const bool lowPedal = processPhase >= 6;
+
+            const std::array<int, 16>* leadPattern = &lifeLead;
+            const std::array<int, 16>* bassPattern = &lifeBass;
+            const std::array<int, 8>* pulsePattern = &lifePulse;
+            float leadVelocity = 0.18f;
+            float bassVelocity = 0.13f;
+            float pulseVelocity = 0.07f;
+            float leadLength = 0.16f;
+            float bassLength = 0.34f;
+            float pulseLength = 0.08f;
+            int pedalNote = 31;
+
+            switch (variant)
+            {
+                case AutomataVariant::coral:
+                    leadPattern = &coralLead;
+                    bassPattern = &coralBass;
+                    pulsePattern = &coralPulse;
+                    leadVelocity = 0.15f;
+                    bassVelocity = 0.14f;
+                    pulseVelocity = 0.06f;
+                    leadLength = 0.22f;
+                    bassLength = 0.42f;
+                    pulseLength = 0.10f;
+                    pedalNote = 29;
+                    break;
+                case AutomataVariant::fredkin:
+                    leadPattern = &fredkinLead;
+                    bassPattern = &fredkinBass;
+                    pulsePattern = &fredkinPulse;
+                    leadVelocity = 0.20f;
+                    bassVelocity = 0.12f;
+                    pulseVelocity = 0.06f;
+                    leadLength = 0.10f;
+                    bassLength = 0.24f;
+                    pulseLength = 0.06f;
+                    pedalNote = 26;
+                    break;
+                case AutomataVariant::dayNight:
+                    leadPattern = &dayNightLead;
+                    bassPattern = &dayNightBass;
+                    pulsePattern = &dayNightPulse;
+                    leadVelocity = 0.17f;
+                    bassVelocity = 0.14f;
+                    pulseVelocity = 0.08f;
+                    leadLength = 0.18f;
+                    bassLength = 0.36f;
+                    pulseLength = 0.09f;
+                    pedalNote = 33;
+                    break;
+                case AutomataVariant::life:
+                case AutomataVariant::none:
+                default:
+                    break;
+            }
+
+            const int leadIndex = (step + leadShift) % 16;
+            if (step < additiveWindow)
+            {
+                if (const int leadNote = (*leadPattern)[static_cast<size_t>(leadIndex)]; leadNote >= 0)
+                    addSynthEvent(leadNote, leadVelocity, leadLength);
+            }
+
+            const int bassIndex = (step + bassShift) % 16;
+            if ((step % 4) == 0 || variant == AutomataVariant::fredkin)
+            {
+                if (const int bassNote = (*bassPattern)[static_cast<size_t>(bassIndex)]; bassNote >= 0)
+                    addSynthEvent(bassNote, bassVelocity, bassLength);
+            }
+
+            if ((step % 2) == 0 || highPulse)
+            {
+                const int pulseIndex = (step / 2 + beatBarIndex + leadShift) % static_cast<int>(pulsePattern->size());
+                addSynthEvent((*pulsePattern)[static_cast<size_t>(pulseIndex)], pulseVelocity, pulseLength);
+            }
+
+            if (phaseEcho && (step == 6 || step == 14))
+            {
+                const int echoIndex = (leadIndex + 1) % 16;
+                if (const int echoNote = (*leadPattern)[static_cast<size_t>(echoIndex)]; echoNote >= 0)
+                    addSynthEvent(echoNote - 12, pulseVelocity, 0.12f);
+            }
+
+            if (lowPedal && step == 0)
+                addSynthEvent(pedalNote, 0.05f, variant == AutomataVariant::coral ? 0.92f : 0.72f);
+        }
+
         ++beatStepIndex;
         visualStepCounter.store(beatStepIndex, std::memory_order_relaxed);
         if (beatStepIndex % 16 == 0)
@@ -1393,12 +1576,12 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     }
 
     const auto previousSynthEngine = synthEngine;
-    if (tetrisChiptuneMode || simCityBuildMode)
+    if (tetrisChiptuneMode || simCityBuildMode || automataBuildMode)
         synthEngine = SynthEngine::chipPulse;
 
     synth.renderNextBlock(*bufferToFill.buffer, midi, bufferToFill.startSample, bufferToFill.numSamples);
 
-    if (tetrisChiptuneMode || simCityBuildMode)
+    if (tetrisChiptuneMode || simCityBuildMode || automataBuildMode)
         synthEngine = previousSynthEngine;
 
     beatSynth.renderNextBlock(*bufferToFill.buffer, beatMidi, bufferToFill.startSample, bufferToFill.numSamples);
@@ -1474,6 +1657,10 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 else
                     spawnTetrisPiece(true);
             }
+            else if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown && ! performanceMode)
+            {
+                advanceAutomataLayer();
+            }
             else
             {
                 performanceMode = ! performanceMode;
@@ -1489,6 +1676,8 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
                                       ? IsolatedBuildMode::cursor3D
                                       : IsolatedBuildMode::tetrisTopDown;
+            else if (slabNumber(isolatedSlab) >= 9 && slabNumber(isolatedSlab) <= 12)
+                isolatedBuildMode = IsolatedBuildMode::cellularAutomataTopDown;
             else if (slabNumber(isolatedSlab) == 4)
                 isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                                       ? IsolatedBuildMode::cursor3D
@@ -1518,10 +1707,16 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 rebuildStampLibrary();
                 stampHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
             }
+            else if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+            {
+                automataBuildLayer = 0;
+                automataHoverCell = juce::Point<int>(editCursor.x, editCursor.y);
+                editCursor.z = slabZStart(isolatedSlab) + automataBuildLayer;
+            }
             repaint();
             return true;
         }
-        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; isolatedBuildMode = IsolatedBuildMode::cursor3D; tetrisPiece = {}; nextTetrisType = TetrominoType::L; tetrisBuildLayer = 0; tetrisRotatePerLayerSession = false; tetrisGravityTick = 0; tetrisGravityFrames = 20; rouletteMirrorPlacement = false; rouletteRotatePerLayer = false; stampLibrary.clear(); stampLibraryIndex = 0; stampRotation = 0; stampBaseLayer = 0; stampHoverCell.reset(); stampCaptureMode = false; stampCaptureAnchor.reset(); performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
+        if (key == juce::KeyPress::escapeKey) { isolatedSlab = {}; hoveredSlab = {}; editCursor = {}; isolatedBuildMode = IsolatedBuildMode::cursor3D; tetrisPiece = {}; nextTetrisType = TetrominoType::L; tetrisBuildLayer = 0; tetrisRotatePerLayerSession = false; tetrisGravityTick = 0; tetrisGravityFrames = 20; rouletteMirrorPlacement = false; rouletteRotatePerLayer = false; stampLibrary.clear(); stampLibraryIndex = 0; stampRotation = 0; stampBaseLayer = 0; stampHoverCell.reset(); stampCaptureMode = false; stampCaptureAnchor.reset(); automataBuildLayer = 0; automataHoverCell.reset(); performanceMode = false; performanceRegionMode = 2; performanceSnakes.clear(); performanceDiscs.clear(); performanceTracks.clear(); performanceOrbitCenters.clear(); performanceAutomataCells.clear(); performanceFlashes.clear(); performanceHoverCell.reset(); performanceSelection = {}; performancePlacementMode = PerformancePlacementMode::selectOnly; repaint(); return true; }
 
         if (performanceMode)
         {
@@ -1693,6 +1888,21 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
             if (key == juce::KeyPress('p') && stampHoverCell.has_value() && ! stampLibrary.empty()) { applyStampAtCell(stampLibrary[static_cast<size_t>(stampLibraryIndex)], *stampHoverCell, slabZStart(isolatedSlab) + stampBaseLayer, stampRotation, true); repaint(); return true; }
             if ((key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x')) && stampHoverCell.has_value() && ! stampLibrary.empty()) { applyStampAtCell(stampLibrary[static_cast<size_t>(stampLibraryIndex)], *stampHoverCell, slabZStart(isolatedSlab) + stampBaseLayer, stampRotation, false); repaint(); return true; }
             if (key == juce::KeyPress('c')) { clearIsolatedSlab(); repaint(); return true; }
+            return true;
+        }
+
+        if (isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+        {
+            if (key == juce::KeyPress::leftKey && automataHoverCell.has_value()) { automataHoverCell = juce::Point<int>(automataHoverCell->x - 1, automataHoverCell->y); repaint(); return true; }
+            if (key == juce::KeyPress::rightKey && automataHoverCell.has_value()) { automataHoverCell = juce::Point<int>(automataHoverCell->x + 1, automataHoverCell->y); repaint(); return true; }
+            if (key == juce::KeyPress::upKey && automataHoverCell.has_value()) { automataHoverCell = juce::Point<int>(automataHoverCell->x, automataHoverCell->y - 1); repaint(); return true; }
+            if (key == juce::KeyPress::downKey && automataHoverCell.has_value()) { automataHoverCell = juce::Point<int>(automataHoverCell->x, automataHoverCell->y + 1); repaint(); return true; }
+            if (key == juce::KeyPress::pageUpKey || key == juce::KeyPress(']')) { automataBuildLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer + 1); if (automataHoverCell.has_value()) editCursor = { automataHoverCell->x, automataHoverCell->y, slabZStart(isolatedSlab) + automataBuildLayer, true }; repaint(); return true; }
+            if (key == juce::KeyPress::pageDownKey || key == juce::KeyPress('[')) { automataBuildLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer - 1); if (automataHoverCell.has_value()) editCursor = { automataHoverCell->x, automataHoverCell->y, slabZStart(isolatedSlab) + automataBuildLayer, true }; repaint(); return true; }
+            if (key == juce::KeyPress('n')) { randomiseAutomataSeed(); repaint(); return true; }
+            if (key == juce::KeyPress('p') && automataHoverCell.has_value()) { toggleAutomataCell(*automataHoverCell, true); repaint(); return true; }
+            if ((key == juce::KeyPress::deleteKey || key == juce::KeyPress::backspaceKey || key == juce::KeyPress('x')) && automataHoverCell.has_value()) { toggleAutomataCell(*automataHoverCell, false); repaint(); return true; }
+            if (key == juce::KeyPress('c')) { clearIsolatedSlab(); automataBuildLayer = 0; repaint(); return true; }
             return true;
         }
 
@@ -2675,6 +2885,31 @@ juce::String MainComponent::tetrisVariantName(TetrisVariant variant) const
     return "Tetris";
 }
 
+MainComponent::AutomataVariant MainComponent::automataVariantForSlab(const SlabSelection& slab) const
+{
+    switch (slabNumber(slab))
+    {
+        case 9: return AutomataVariant::life;
+        case 10: return AutomataVariant::coral;
+        case 11: return AutomataVariant::fredkin;
+        case 12: return AutomataVariant::dayNight;
+        default: return AutomataVariant::none;
+    }
+}
+
+juce::String MainComponent::automataVariantName(AutomataVariant variant) const
+{
+    switch (variant)
+    {
+        case AutomataVariant::life: return "Life Build";
+        case AutomataVariant::coral: return "Coral Build";
+        case AutomataVariant::fredkin: return "Fredkin Build";
+        case AutomataVariant::dayNight: return "Day & Night Build";
+        case AutomataVariant::none:
+        default: return "Automata Build";
+    }
+}
+
 juce::Point<int> MainComponent::canonicalBuildCellForSlab(juce::Point<int> cell, const SlabSelection& slab) const
 {
     if (! slab.isValid())
@@ -2893,6 +3128,8 @@ juce::String MainComponent::isolatedBuildModeName() const
         case IsolatedBuildMode::tetrisTopDown:
             return isolatedSlab.isValid() ? tetrisVariantName(tetrisVariantForSlab(isolatedSlab)) : "Tetris Topdown";
         case IsolatedBuildMode::stampLibraryTopDown: return "Stamp Library";
+        case IsolatedBuildMode::cellularAutomataTopDown:
+            return isolatedSlab.isValid() ? automataVariantName(automataVariantForSlab(isolatedSlab)) : "Automata Build";
     }
 
     return "3D Cursor";
@@ -3353,6 +3590,132 @@ void MainComponent::hardDropTetrisPiece()
         placeTetrisPiece(true);
 }
 
+void MainComponent::toggleAutomataCell(juce::Point<int> cell, bool filled)
+{
+    if (! isolatedSlab.isValid() || ! cellInSelectedSlab(cell.x, cell.y, isolatedSlab))
+        return;
+
+    const int z = slabZStart(isolatedSlab) + juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer);
+    applyEditPlacementAtCell(cell.x, cell.y, z, filled);
+    automataHoverCell = cell;
+    editCursor = { cell.x, cell.y, z, true };
+}
+
+int MainComponent::automataNeighbourCount(const std::vector<juce::Point<int>>& aliveCells, juce::Point<int> cell) const
+{
+    int count = 0;
+    for (int dy = -1; dy <= 1; ++dy)
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            if (dx == 0 && dy == 0)
+                continue;
+            if (std::find(aliveCells.begin(), aliveCells.end(), juce::Point<int>(cell.x + dx, cell.y + dy)) != aliveCells.end())
+                ++count;
+        }
+    return count;
+}
+
+void MainComponent::randomiseAutomataSeed()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const int z = slabZStart(isolatedSlab) + juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer);
+    float density = 0.22f;
+    switch (automataVariantForSlab(isolatedSlab))
+    {
+        case AutomataVariant::life:
+            density = 0.22f;
+            break;
+        case AutomataVariant::coral:
+            density = 0.34f;
+            break;
+        case AutomataVariant::fredkin:
+            density = 0.16f;
+            break;
+        case AutomataVariant::dayNight:
+            density = 0.28f;
+            break;
+        case AutomataVariant::none:
+        default:
+            density = 0.22f;
+            break;
+    }
+
+    for (int y = y0; y < y1; ++y)
+        for (int x = x0; x < x1; ++x)
+            setVoxel(x, y, z, juce::Random::getSystemRandom().nextFloat() < density);
+    rebuildFilledVoxelCache();
+}
+
+void MainComponent::advanceAutomataLayer()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int currentLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer);
+    if (currentLayer >= isolatedBuildMaxHeight - 1)
+        return;
+
+    const int zCurrent = slabZStart(isolatedSlab) + currentLayer;
+    const int zNext = slabZStart(isolatedSlab) + currentLayer + 1;
+    std::vector<juce::Point<int>> aliveCells;
+    for (int y = y0; y < y1; ++y)
+        for (int x = x0; x < x1; ++x)
+            if (hasVoxel(x, y, zCurrent))
+                aliveCells.push_back({ x, y });
+
+    for (int y = y0; y < y1; ++y)
+        for (int x = x0; x < x1; ++x)
+            setVoxel(x, y, zNext, false);
+
+    const auto variant = automataVariantForSlab(isolatedSlab);
+    for (int y = y0; y < y1; ++y)
+    {
+        for (int x = x0; x < x1; ++x)
+        {
+            const auto cell = juce::Point<int>(x, y);
+            const bool alive = std::find(aliveCells.begin(), aliveCells.end(), cell) != aliveCells.end();
+            const int neighbours = automataNeighbourCount(aliveCells, cell);
+
+            bool nextAlive = false;
+            switch (variant)
+            {
+                case AutomataVariant::life:
+                    nextAlive = neighbours == 3 || (alive && neighbours == 2);
+                    break;
+                case AutomataVariant::coral:
+                    nextAlive = neighbours == 3 || (alive && neighbours >= 4 && neighbours <= 8);
+                    break;
+                case AutomataVariant::fredkin:
+                    nextAlive = (neighbours % 2) == 1;
+                    break;
+                case AutomataVariant::dayNight:
+                    nextAlive = neighbours == 3 || neighbours == 6 || neighbours == 7 || neighbours == 8
+                             || (alive && (neighbours == 3 || neighbours == 4 || neighbours == 6 || neighbours == 7 || neighbours == 8));
+                    break;
+                case AutomataVariant::none:
+                default:
+                    nextAlive = neighbours == 3 || (alive && neighbours == 2);
+                    break;
+            }
+
+            if (nextAlive)
+                setVoxel(x, y, zNext, true);
+        }
+    }
+
+    rebuildFilledVoxelCache();
+    automataBuildLayer = currentLayer + 1;
+    if (automataHoverCell.has_value())
+        editCursor = { automataHoverCell->x, automataHoverCell->y, zNext, true };
+}
+
 void MainComponent::rotateIsolatedSlabQuarterTurn()
 {
     if (! isolatedSlab.isValid())
@@ -3517,6 +3880,7 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
     stateXml->setAttribute("stampRotation", stampRotation);
     stateXml->setAttribute("stampBaseLayer", stampBaseLayer);
     stateXml->setAttribute("stampCaptureMode", boolToInt(stampCaptureMode));
+    stateXml->setAttribute("automataBuildLayer", automataBuildLayer);
     stateXml->setAttribute("bpm", bpm);
     stateXml->setAttribute("beatStepAccumulator", beatStepAccumulator);
     stateXml->setAttribute("beatStepIndex", beatStepIndex);
@@ -3664,7 +4028,7 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         quantizeToScale = stateXml->getBoolAttribute("quantizeToScale", true);
         editPlacementHeight = juce::jlimit(1, 4, stateXml->getIntAttribute("editPlacementHeight", 1));
         editChordType = static_cast<EditChordType>(juce::jlimit(0, 7, stateXml->getIntAttribute("editChordType", 0)));
-        isolatedBuildMode = static_cast<IsolatedBuildMode>(juce::jlimit(0, 2, stateXml->getIntAttribute("isolatedBuildMode", 0)));
+        isolatedBuildMode = static_cast<IsolatedBuildMode>(juce::jlimit(0, 3, stateXml->getIntAttribute("isolatedBuildMode", 0)));
         nextTetrisType = static_cast<TetrominoType>(juce::jlimit(0, tetrominoTypeCount() - 1, stateXml->getIntAttribute("nextTetrisType", static_cast<int>(TetrominoType::L))));
         tetrisBuildLayer = juce::jlimit(0, tetrisLayerCount - 1, stateXml->getIntAttribute("tetrisBuildLayer", 0));
         tetrisGravityTick = juce::jmax(0, stateXml->getIntAttribute("tetrisGravityTick", 0));
@@ -3675,6 +4039,7 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         stampRotation = ((stateXml->getIntAttribute("stampRotation", 0) % 4) + 4) % 4;
         stampBaseLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stateXml->getIntAttribute("stampBaseLayer", 0));
         stampCaptureMode = stateXml->getBoolAttribute("stampCaptureMode", false);
+        automataBuildLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, stateXml->getIntAttribute("automataBuildLayer", 0));
         bpm = juce::jlimit(60.0, 220.0, stateXml->getDoubleAttribute("bpm", 168.0));
         beatStepAccumulator = stateXml->getDoubleAttribute("beatStepAccumulator", 0.0);
         beatStepIndex = stateXml->getIntAttribute("beatStepIndex", 0);
@@ -5526,6 +5891,105 @@ void MainComponent::drawStampLibraryBuildView(juce::Graphics& g, juce::Rectangle
                      infoTag.toNearestInt(), juce::Justification::centred, 1);
 }
 
+void MainComponent::drawAutomataBuildView(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+
+    const int slabWidth = x1 - x0;
+    const int slabHeight = y1 - y0;
+    const auto board = performanceBoardBounds(area);
+    const float tileSize = board.getWidth() / static_cast<float>(slabWidth);
+    const float pulse = 0.5f + 0.5f * static_cast<float>(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.0032));
+    const int zStart = slabZStart(isolatedSlab);
+    const int zEnd = slabZEndExclusive(isolatedSlab);
+    const int activeLayer = juce::jlimit(0, isolatedBuildMaxHeight - 1, automataBuildLayer);
+    const int activeLayerZ = zStart + activeLayer;
+
+    g.setColour(juce::Colour::fromRGBA(6, 11, 30, 236));
+    g.fillRoundedRectangle(board.expanded(26.0f), 28.0f);
+    g.setColour(juce::Colour::fromRGBA(74, 144, 255, 72));
+    g.drawRoundedRectangle(board.expanded(26.0f), 28.0f, 1.8f);
+
+    juce::ColourGradient boardGlow(juce::Colour::fromRGBA(42, 102, 212, 102),
+                                   board.getCentreX(), board.getCentreY(),
+                                   juce::Colour::fromRGBA(8, 13, 36, 0),
+                                   board.getCentreX(), board.getBottom() + 80.0f,
+                                   true);
+    g.setGradientFill(boardGlow);
+    g.fillEllipse(board.expanded(96.0f, 82.0f));
+
+    for (int localY = 0; localY < slabHeight; ++localY)
+    {
+        for (int localX = 0; localX < slabWidth; ++localX)
+        {
+            const int worldX = x0 + localX;
+            const int worldY = y0 + localY;
+            auto cell = juce::Rectangle<float>(board.getX() + static_cast<float>(localX) * tileSize,
+                                               board.getY() + static_cast<float>(localY) * tileSize,
+                                               tileSize,
+                                               tileSize);
+            g.setColour(juce::Colour::fromRGBA(8, 14, 34, 214));
+            g.fillRect(cell);
+
+            const bool activeFilled = hasVoxel(worldX, worldY, activeLayerZ);
+            int otherLayerCount = 0;
+            for (int z = zStart; z < zEnd; ++z)
+                if (z != activeLayerZ && hasVoxel(worldX, worldY, z))
+                    ++otherLayerCount;
+
+            auto innerCell = cell.reduced(2.0f);
+            if (otherLayerCount > 0)
+            {
+                const float dimInset = juce::jmin(5.0f, 1.6f + 0.4f * static_cast<float>(otherLayerCount - 1));
+                auto dimmedCell = innerCell.reduced(dimInset);
+                g.setColour(juce::Colour::fromRGBA(130, 144, 176, static_cast<uint8_t>(46 + juce::jmin(otherLayerCount, 4) * 20)));
+                g.fillRoundedRectangle(dimmedCell, 5.0f);
+                g.setColour(juce::Colour::fromRGBA(196, 208, 236, static_cast<uint8_t>(18 + juce::jmin(otherLayerCount, 4) * 10)));
+                g.drawRoundedRectangle(dimmedCell, 5.0f, 1.0f);
+            }
+
+            if (activeFilled)
+            {
+                const auto activeColour = colourForHeight(activeLayerZ).withMultipliedBrightness(1.1f);
+                g.setColour(activeColour.withAlpha(0.22f + 0.08f * pulse));
+                g.fillRoundedRectangle(innerCell.expanded(3.0f), 7.0f);
+                g.setColour(activeColour);
+                g.fillRoundedRectangle(innerCell, 5.0f);
+                g.setColour(juce::Colours::white.withAlpha(0.30f));
+                g.drawRoundedRectangle(innerCell, 5.0f, 1.2f);
+            }
+
+            if (automataHoverCell.has_value() && automataHoverCell->x == worldX && automataHoverCell->y == worldY)
+            {
+                auto hoverCell = cell.reduced(1.4f);
+                g.setColour(juce::Colour::fromRGBA(84, 238, 255, static_cast<uint8_t>(38 + 24 * pulse)));
+                g.fillRoundedRectangle(hoverCell.expanded(4.0f), 7.0f);
+                g.setColour(juce::Colour::fromRGBA(84, 238, 255, 220));
+                g.drawRoundedRectangle(hoverCell, 7.0f, 2.2f);
+            }
+
+            g.setColour(juce::Colour::fromRGBA(88, 122, 214, 32));
+            g.drawRect(cell, 1.0f);
+        }
+    }
+
+    auto infoTag = juce::Rectangle<float>(248.0f, 28.0f).withCentre({ board.getCentreX(), board.getY() - 24.0f });
+    g.setColour(juce::Colour::fromRGBA(8, 14, 34, 228));
+    g.fillRoundedRectangle(infoTag, 8.0f);
+    g.setColour(juce::Colour::fromRGBA(84, 238, 255, 160));
+    g.drawRoundedRectangle(infoTag, 8.0f, 1.5f);
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::FontOptions(13.0f));
+    g.drawFittedText(automataVariantName(automataVariantForSlab(isolatedSlab)) + "  layer " + juce::String(activeLayer),
+                     infoTag.toNearestInt(),
+                     juce::Justification::centred,
+                     1);
+}
+
 void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> area)
 {
     if (isolatedSlab.isValid() && performanceMode)
@@ -5543,6 +6007,12 @@ void MainComponent::drawWireframeGrid(juce::Graphics& g, juce::Rectangle<float> 
     if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown)
     {
         drawStampLibraryBuildView(g, area);
+        return;
+    }
+
+    if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown)
+    {
+        drawAutomataBuildView(g, area);
         return;
     }
 
@@ -6208,6 +6678,7 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     const auto modeLabel = isolatedSlab.isValid() ? (performanceMode ? "PERFORMANCE"
                                                                      : (isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? "TETRIS BUILD"
                                                                                                                                : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? "STAMP LIBRARY"
+                                                                                                                                 : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown ? "AUTOMATA BUILD"
                                                                                                                                                                                      : "EDIT VIEW"))
                                                   : "BUILD MODE";
     if (! isolatedSlab.isValid())
@@ -6333,6 +6804,8 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                                          : tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette
                                              ? "Every new piece mutates gravity, scale, or mirroring   Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back"
                                              : "Enter next layer   Mouse aim   Arrows move   S drop   Space hard drop   R rotate   [ ] layer   1-4 layers   V chord type   N reroll   Esc back")
+                              : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                                  ? "Click seed/erase   Arrows move   Enter evolve   [ ] layer   N random seed   P seed   X delete   C clear   Esc back"
                               : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                                   ? "Tab 3D mode   S capture source   Click twice to mark source   Click stamp/remove   N/B motif   R rotate   [ ] layer   P stamp   C clear   Esc back"
                               : readOnlyTetrisPreview
@@ -6356,7 +6829,10 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     const float statWidth = (statRow.getWidth() - statGap * 4.0f) / 5.0f;
     drawStat(statRow.removeFromLeft(statWidth), "BUILD", isolatedBuildModeName());
     statRow.removeFromLeft(statGap);
-    drawStat(statRow.removeFromLeft(statWidth), "PLACE", editChordTypeName());
+    drawStat(statRow.removeFromLeft(statWidth),
+             isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown ? "RULE" : "PLACE",
+             isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown ? automataVariantName(automataVariantForSlab(isolatedSlab))
+                                                                             : editChordTypeName());
     statRow.removeFromLeft(statGap);
     drawStat(statRow.removeFromLeft(statWidth), "KEY", keyName());
     statRow.removeFromLeft(statGap);
@@ -6365,6 +6841,7 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     drawStat(statRow.removeFromLeft(statWidth),
              isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? "PIECE"
                  : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? "STAMP"
+                 : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown ? "SYNTH"
                  : "SYNTH",
              isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? tetrominoTypeName(tetrisPiece.type)
                  : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
@@ -6437,11 +6914,14 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
     const int slabBaseZ = slabZStart(isolatedSlab);
     const int displayZ = isolatedBuildMode == IsolatedBuildMode::tetrisTopDown ? (slabBaseZ + tetrisBuildLayer)
                        : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown ? (slabBaseZ + stampBaseLayer)
+                       : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown ? (slabBaseZ + automataBuildLayer)
                        : editCursor.z;
     const int localCursorZ = displayZ - slabBaseZ;
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
                  isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
                      ? ("Piece  x" + juce::String(tetrisPiece.anchor.x) + "  y" + juce::String(tetrisPiece.anchor.y) + "  layer " + juce::String(localCursorZ))
+                     : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                         ? ("Seed  " + (automataHoverCell.has_value() ? ("x" + juce::String(automataHoverCell->x) + "  y" + juce::String(automataHoverCell->y)) : juce::String("hover board")) + "  layer " + juce::String(localCursorZ))
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? ("Stamp  " + (stampHoverCell.has_value() ? ("x" + juce::String(stampHoverCell->x) + "  y" + juce::String(stampHoverCell->y)) : juce::String("hover board")) + "  layer " + juce::String(localCursorZ))
                      : ("Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(localCursorZ)));
@@ -6450,11 +6930,15 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                  "Root  " + pitchClassName(localCursorZ));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
-                 "Layers  " + juce::String(editPlacementHeight) + " octaves");
+                 isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                     ? ("Born  " + automataVariantName(automataVariantForSlab(isolatedSlab)))
+                     : ("Layers  " + juce::String(editPlacementHeight) + " octaves"));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
                  isolatedBuildMode == IsolatedBuildMode::tetrisTopDown
                      ? ("Next  " + tetrominoTypeName(nextTetrisType) + "   " + currentEditChordName() + (tetrisPieceFits(tetrisPiece) ? "" : "  blocked"))
+                     : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                         ? ("Next  evolve to z" + juce::String(juce::jmin(isolatedBuildMaxHeight - 1, localCursorZ + 1)) + "   " + currentEditChordName())
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? (stampCaptureMode
                                ? (stampCaptureAnchor.has_value() ? "Capture  choose opposite corner" : "Capture  click first corner")
@@ -6470,6 +6954,8 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                      ? (tetrisVariantForSlab(isolatedSlab) == TetrisVariant::roulette
                             ? ("P place now   X delete   S soft drop   Space hard drop   grav " + juce::String(tetrisGravityFrames) + "   " + (rouletteMirrorPlacement ? "mirror on" : "mirror off"))
                             : "P place now   X delete   S soft drop   Space hard drop   M/B/K/L/U sound")
+                     : isolatedBuildMode == IsolatedBuildMode::cellularAutomataTopDown
+                         ? "Click seed   X delete   N randomise   Enter evolve next layer   M/B/K/L/U sound"
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? "S capture   P stamp   X delete stamp   N/B browse   R rotate   M/B/K/L/U sound"
                          : readOnlyTetrisPreview

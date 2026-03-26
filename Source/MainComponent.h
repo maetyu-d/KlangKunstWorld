@@ -96,7 +96,8 @@ public:
     {
         cursor3D,
         tetrisTopDown,
-        stampLibraryTopDown
+        stampLibraryTopDown,
+        cellularAutomataTopDown
     };
 
     enum class IsolatedBuildRule
@@ -114,6 +115,15 @@ public:
         destruct,
         fracture,
         roulette
+    };
+
+    enum class AutomataVariant
+    {
+        none,
+        life,
+        coral,
+        fredkin,
+        dayNight
     };
 
 private:
@@ -335,6 +345,8 @@ private:
     juce::String buildRuleName(IsolatedBuildRule rule) const;
     TetrisVariant tetrisVariantForSlab(const SlabSelection& slab) const;
     juce::String tetrisVariantName(TetrisVariant variant) const;
+    AutomataVariant automataVariantForSlab(const SlabSelection& slab) const;
+    juce::String automataVariantName(AutomataVariant variant) const;
     std::vector<juce::Point<int>> tetrisPlacementCells(const TetrisPiece& piece) const;
     bool shouldTetrisPieceDestroy(const TetrisPiece& piece) const;
     void applyFractureToCurrentLayer();
@@ -358,6 +370,10 @@ private:
     void advanceTetrisGravity();
     void softDropTetrisPiece();
     void hardDropTetrisPiece();
+    void advanceAutomataLayer();
+    void randomiseAutomataSeed();
+    void toggleAutomataCell(juce::Point<int> cell, bool filled);
+    int automataNeighbourCount(const std::vector<juce::Point<int>>& aliveCells, juce::Point<int> cell) const;
     TetrominoType randomTetrominoType() const;
     void rotateIsolatedSlabQuarterTurn();
     void drawTetrisBuildView(juce::Graphics& g, juce::Rectangle<float> area);
@@ -367,6 +383,7 @@ private:
     bool stampFitsAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation) const;
     void applyStampAtCell(const StampMotif& motif, juce::Point<int> cell, int baseZ, int rotation, bool filled);
     void drawStampLibraryBuildView(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawAutomataBuildView(juce::Graphics& g, juce::Rectangle<float> area);
     void rebuildFilledVoxelCache();
     bool saveStateToFile(const juce::File& file);
     bool loadStateFromFile(const juce::File& file);
@@ -453,6 +470,8 @@ private:
     std::optional<juce::Point<int>> stampHoverCell;
     bool stampCaptureMode = false;
     std::optional<juce::Point<int>> stampCaptureAnchor;
+    int automataBuildLayer = 0;
+    std::optional<juce::Point<int>> automataHoverCell;
     bool performanceMode = false;
     int performanceRegionMode = 2;
     int performanceAgentCount = 1;
