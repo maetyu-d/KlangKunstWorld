@@ -105,7 +105,8 @@ public:
         standard,
         mirror,
         kaleidoscope,
-        stampClone
+        stampClone,
+        sculpt
     };
 
     enum class TetrisVariant
@@ -161,8 +162,9 @@ private:
     {
         int quadrant = -1;
         int floor = -1;
+        bool bonus = false;
 
-        bool isValid() const { return quadrant >= 0 && floor >= 0; }
+        bool isValid() const { return bonus || (quadrant >= 0 && floor >= 0); }
     };
 
     struct EditCursor
@@ -339,10 +341,12 @@ private:
     void resetEditCursor();
     void moveEditCursor(int dx, int dy, int dz);
     void clearIsolatedSlab();
+    void fillIsolatedSlabSolid();
     void applyEditPlacement(bool filled);
     void applyEditPlacementAtCell(int x, int y, int z, bool filled);
     IsolatedBuildRule buildRuleForSlab(const SlabSelection& slab) const;
     juce::String buildRuleName(IsolatedBuildRule rule) const;
+    bool isDestructiveSculptSlab(const SlabSelection& slab) const;
     TetrisVariant tetrisVariantForSlab(const SlabSelection& slab) const;
     juce::String tetrisVariantName(TetrisVariant variant) const;
     AutomataVariant automataVariantForSlab(const SlabSelection& slab) const;
@@ -396,6 +400,12 @@ private:
     float hoverLiftForSlab(const SlabSelection& slab) const;
     int slabNumber(const SlabSelection& slab) const;
     juce::String labelForSlab(const SlabSelection& slab) const;
+    juce::Rectangle<float> bonusIslandPortalBounds(juce::Rectangle<float> area) const;
+    void markCurrentSlabBuilt();
+    void markCurrentSlabPerformed();
+    void checkForBonusIslandUnlock();
+    void enterBonusIsland();
+    void leaveBonusIsland(bool persistChanges);
     juce::Rectangle<int> performanceRegionBounds() const;
     juce::Rectangle<float> performanceBoardBounds(juce::Rectangle<float> area) const;
     std::optional<juce::Point<int>> performanceCellAtPosition(juce::Point<float> position, juce::Rectangle<float> area) const;
@@ -451,6 +461,7 @@ private:
     LayoutMode layoutMode = LayoutMode::OneBoard;
     SlabSelection hoveredSlab;
     SlabSelection isolatedSlab;
+    bool hoveredBonusPortal = false;
     EditCursor editCursor;
     int editPlacementHeight = 1;
     EditChordType editChordType = EditChordType::single;
@@ -478,6 +489,11 @@ private:
     PerformanceAgentMode performanceAgentMode = PerformanceAgentMode::snakes;
     std::array<PerformanceAgentMode, 16> slabPerformanceModes {};
     std::array<double, 16> slabStartingTempos {};
+    std::array<bool, 16> slabBuiltProgress {};
+    std::array<bool, 16> slabPerformedProgress {};
+    bool bonusIslandUnlocked = false;
+    std::vector<uint8_t> bonusIslandVoxels;
+    std::vector<uint8_t> bonusIslandProxyBackup;
     std::vector<Snake> performanceSnakes;
     std::vector<ReflectorDisc> performanceDiscs;
     std::vector<TrackPiece> performanceTracks;

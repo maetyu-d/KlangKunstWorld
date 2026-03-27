@@ -129,6 +129,26 @@ IslandThemePalette nightThemePalette()
     };
 }
 
+IslandThemePalette finalSunThemePalette()
+{
+    return {
+        juce::Colour::fromRGB(18, 8, 18),
+        juce::Colour::fromRGB(116, 40, 22),
+        juce::Colour::fromRGBA(255, 184, 40, 110),
+        juce::Colour::fromRGBA(255, 236, 140, 92),
+        juce::Colour::fromRGBA(255, 216, 108, 72),
+        juce::Colour::fromRGBA(255, 212, 132, 18),
+        juce::Colour::fromRGBA(255, 232, 172, 34),
+        juce::Colour::fromRGBA(32, 14, 16, 226),
+        juce::Colour::fromRGBA(255, 202, 116, 94),
+        juce::Colour::fromRGBA(255, 154, 52, 164),
+        juce::Colour::fromRGBA(52, 18, 12, 0),
+        juce::Colour::fromRGBA(28, 12, 18, 242),
+        juce::Colour::fromRGBA(255, 186, 92, 76),
+        juce::Colour::fromRGBA(255, 156, 56, 148)
+    };
+}
+
 IslandThemePalette paletteForSlabTheme(int slabNumber)
 {
     if (slabNumber <= 0)
@@ -136,6 +156,8 @@ IslandThemePalette paletteForSlabTheme(int slabNumber)
 
     switch (slabNumber)
     {
+        case 17:
+            return finalSunThemePalette();
         case 1:
         case 5:
         case 9:
@@ -144,7 +166,6 @@ IslandThemePalette paletteForSlabTheme(int slabNumber)
         case 4:
         case 8:
         case 12:
-        case 16:
             return nightThemePalette();
         default:
             return middayThemePalette();
@@ -761,6 +782,25 @@ void MainComponent::mouseMove(const juce::MouseEvent& event)
             hoveredSlab = {};
             repaint();
         }
+        if (hoveredBonusPortal)
+        {
+            hoveredBonusPortal = false;
+            repaint();
+        }
+        return;
+    }
+
+    auto hudArea = getLocalBounds().toFloat().removeFromTop(112.0f);
+    const bool nextPortalHover = bonusIslandUnlocked && bonusIslandPortalBounds(hudArea).contains(event.position);
+    if (nextPortalHover != hoveredBonusPortal)
+    {
+        hoveredBonusPortal = nextPortalHover;
+        repaint();
+    }
+    if (hoveredBonusPortal)
+    {
+        if (hoveredSlab.isValid())
+            hoveredSlab = {};
         return;
     }
 
@@ -793,6 +833,12 @@ void MainComponent::mouseExit(const juce::MouseEvent&)
         hoveredSlab = {};
         repaint();
     }
+
+    if (hoveredBonusPortal)
+    {
+        hoveredBonusPortal = false;
+        repaint();
+    }
 }
 
 void MainComponent::mouseUp(const juce::MouseEvent& event)
@@ -809,10 +855,19 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
         return;
     }
 
+    auto bounds = getLocalBounds().toFloat();
+    auto hudArea = bounds.removeFromTop(112.0f);
+    if (! isolatedSlab.isValid() && layoutMode == LayoutMode::FourIslandsFourFloors
+        && bonusIslandUnlocked && bonusIslandPortalBounds(hudArea).contains(event.position))
+    {
+        enterBonusIsland();
+        repaint();
+        return;
+    }
+
     if (layoutMode != LayoutMode::FourIslandsFourFloors)
         return;
 
-    auto bounds = getLocalBounds().toFloat();
     juce::Rectangle<float> gridArea;
     if (isolatedSlab.isValid() && performanceMode)
     {
@@ -822,7 +877,6 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
     }
     else
     {
-        bounds.removeFromTop(112.0f);
         gridArea = bounds.reduced(12.0f);
     }
     const auto slab = slabAtPosition(event.position, gridArea);
@@ -977,8 +1031,12 @@ void MainComponent::mouseUp(const juce::MouseEvent& event)
             return;
         }
 
+        const bool leavingBonusIsland = isolatedSlab.bonus;
+        if (leavingBonusIsland)
+            leaveBonusIsland(true);
         isolatedSlab = {};
         hoveredSlab = {};
+        hoveredBonusPortal = false;
         editCursor = {};
         isolatedBuildMode = IsolatedBuildMode::cursor3D;
         tetrisPiece = {};
@@ -1119,30 +1177,30 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                 const bool openHat = step == 6 || step == 14 || (dense && step == 11);
                 const bool glitch = (step == 9 && phrase >= 2) || (step == 15 && phrase == 1) || (frantic && (step == 5 || step == 13));
 
-                if (kick) addBeatEvent(beatMidi, 120, step == 0 ? 0.96f : 0.72f, sampleOffset, bufferToFill.numSamples);
-                if (snare) addBeatEvent(beatMidi, 121, 0.78f + 0.08f * static_cast<float>(phrase == 3), sampleOffset, bufferToFill.numSamples);
-                if (ghostSnare) addBeatEvent(beatMidi, 121, 0.28f + 0.08f * static_cast<float>(phrase), sampleOffset + bufferToFill.numSamples / 32, bufferToFill.numSamples);
-                if (hat) addBeatEvent(beatMidi, 122, (step % 2 == 0) ? 0.42f : 0.24f, sampleOffset, bufferToFill.numSamples);
-                if (openHat) addBeatEvent(beatMidi, 122, 0.30f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                if (kick) addBeatEvent(beatMidi, 120, step == 0 ? 0.82f : 0.60f, sampleOffset, bufferToFill.numSamples);
+                if (snare) addBeatEvent(beatMidi, 121, 0.62f + 0.06f * static_cast<float>(phrase == 3), sampleOffset, bufferToFill.numSamples);
+                if (ghostSnare) addBeatEvent(beatMidi, 121, 0.20f + 0.05f * static_cast<float>(phrase), sampleOffset + bufferToFill.numSamples / 32, bufferToFill.numSamples);
+                if (hat) addBeatEvent(beatMidi, 122, (step % 2 == 0) ? 0.30f : 0.18f, sampleOffset, bufferToFill.numSamples);
+                if (openHat) addBeatEvent(beatMidi, 122, 0.22f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
                 if ((step == 5 || step == 13) && (phrase >= 1 || dense))
                 {
-                    addBeatEvent(beatMidi, 122, 0.22f, sampleOffset + bufferToFill.numSamples / 48, bufferToFill.numSamples);
-                    addBeatEvent(beatMidi, 122, 0.19f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.16f, sampleOffset + bufferToFill.numSamples / 48, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.14f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
                 }
                 if (dense && (step == 7 || step == 15))
                 {
-                    addBeatEvent(beatMidi, 122, 0.16f, sampleOffset + bufferToFill.numSamples / 64, bufferToFill.numSamples);
-                    addBeatEvent(beatMidi, 122, 0.15f, sampleOffset + bufferToFill.numSamples / 40, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.12f, sampleOffset + bufferToFill.numSamples / 64, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, 122, 0.11f, sampleOffset + bufferToFill.numSamples / 40, bufferToFill.numSamples);
                     if (frantic)
-                        addBeatEvent(beatMidi, 122, 0.14f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
+                        addBeatEvent(beatMidi, 122, 0.10f, sampleOffset + bufferToFill.numSamples / 24, bufferToFill.numSamples);
                 }
-                if (glitch) addBeatEvent(beatMidi, 123, 0.34f + 0.1f * static_cast<float>(phrase), sampleOffset, bufferToFill.numSamples);
+                if (glitch) addBeatEvent(beatMidi, 123, 0.24f + 0.08f * static_cast<float>(phrase), sampleOffset, bufferToFill.numSamples);
             }
             else
             {
                 auto hit = [this, &beatMidi, sampleOffset, &bufferToFill] (int midiNote, float velocity)
                 {
-                    addBeatEvent(beatMidi, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.90f), sampleOffset, bufferToFill.numSamples);
+                    addBeatEvent(beatMidi, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.80f), sampleOffset, bufferToFill.numSamples);
                 };
 
                 switch (drumMode)
@@ -1184,7 +1242,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         {
             auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
             {
-                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.80f)),
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.66f)),
                               juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
                 pendingNoteOffs.push_back({ midiNote, lengthSeconds });
             };
@@ -1378,7 +1436,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         {
             auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
             {
-                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 1.18f)),
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.90f)),
                               juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
                 pendingNoteOffs.push_back({ midiNote, lengthSeconds });
             };
@@ -1510,108 +1568,122 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         {
             auto addSynthEvent = [this, &midi, sampleOffset, &bufferToFill] (int midiNote, float velocity, float lengthSeconds)
             {
-                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.82f)),
+                midi.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.72f)),
                               juce::jlimit(0, juce::jmax(0, bufferToFill.numSamples - 1), sampleOffset));
                 pendingNoteOffs.push_back({ midiNote, lengthSeconds });
             };
 
             static constexpr std::array<int, 16> lifeLead {
-                72, -1, -1, 76, -1, -1, 79, -1,
-                76, -1, -1, 74, -1, -1, 71, -1
+                84, 79, 76, 79, 83, 79, 76, 74,
+                79, 76, 72, 76, 81, 76, 74, 72
             };
             static constexpr std::array<int, 16> lifeBass {
-                43, -1, -1, -1, 50, -1, -1, -1,
-                47, -1, -1, -1, 45, -1, -1, -1
+                36, -1, 36, -1, 43, -1, 43, -1,
+                41, -1, 41, -1, 38, -1, 38, -1
             };
-            static constexpr std::array<int, 8> lifePulse { 84, 79, 76, 79, 83, 79, 74, 79 };
+            static constexpr std::array<int, 16> lifeCounter {
+                -1, 91, -1, 88, -1, 91, -1, 86,
+                -1, 88, -1, 84, -1, 88, -1, 83
+            };
 
             static constexpr std::array<int, 16> coralLead {
-                67, -1, 71, -1, 74, -1, 76, -1,
-                79, -1, 76, -1, 74, -1, 71, -1
+                79, 83, 86, 83, 88, 84, 81, 84,
+                86, 83, 79, 83, 84, 81, 76, 81
             };
             static constexpr std::array<int, 16> coralBass {
-                36, -1, -1, -1, 43, -1, -1, -1,
-                41, -1, -1, -1, 38, -1, -1, -1
+                33, -1, -1, 33, 40, -1, -1, 40,
+                38, -1, -1, 38, 35, -1, -1, 35
             };
-            static constexpr std::array<int, 8> coralPulse { 79, 83, 86, 83, 88, 84, 81, 84 };
+            static constexpr std::array<int, 16> coralCounter {
+                91, -1, 88, -1, 93, -1, 89, -1,
+                95, -1, 91, -1, 88, -1, 84, -1
+            };
 
             static constexpr std::array<int, 16> fredkinLead {
-                79, 74, -1, 71, 76, -1, 72, 67,
-                -1, 74, 79, -1, 83, 76, -1, 72
+                91, 84, 79, 84, 88, 81, 76, 81,
+                89, 83, 77, 83, 86, 79, 74, 79
             };
             static constexpr std::array<int, 16> fredkinBass {
                 31, -1, 43, -1, 36, -1, 48, -1,
                 33, -1, 45, -1, 38, -1, 50, -1
             };
-            static constexpr std::array<int, 8> fredkinPulse { 91, 84, 79, 84, 88, 81, 76, 81 };
+            static constexpr std::array<int, 16> fredkinCounter {
+                -1, 96, 91, -1, 93, -1, 88, 93,
+                -1, 95, 89, -1, 91, -1, 86, 91
+            };
 
             static constexpr std::array<int, 16> dayNightLead {
-                71, -1, 74, 76, -1, 79, -1, 83,
-                81, -1, 78, 76, -1, 74, -1, 71
+                83, 79, 74, 79, 86, 81, 76, 81,
+                90, 86, 81, 86, 88, 84, 79, 84
             };
             static constexpr std::array<int, 16> dayNightBass {
-                38, -1, -1, 45, -1, -1, 50, -1,
-                43, -1, -1, 47, -1, -1, 52, -1
+                38, -1, 38, -1, 45, -1, 45, -1,
+                50, -1, 50, -1, 43, -1, 43, -1
             };
-            static constexpr std::array<int, 8> dayNightPulse { 86, 83, 79, 83, 90, 86, 81, 86 };
+            static constexpr std::array<int, 16> dayNightCounter {
+                95, -1, -1, 91, -1, 95, -1, 90,
+                98, -1, -1, 93, -1, 98, -1, 91
+            };
 
             const auto variant = automataVariantForSlab(isolatedSlab);
             const int processPhase = beatBarIndex % 8;
             const int leadShift = processPhase % 4;
-            const int bassShift = (beatBarIndex / 2) % 4;
-            const int additiveWindow = 4 + processPhase;
-            const bool phaseEcho = processPhase >= 3;
-            const bool highPulse = processPhase >= 5;
-            const bool lowPedal = processPhase >= 6;
+            const int counterShift = (beatBarIndex + processPhase) % 8;
+            const int additiveWindow = 6 + processPhase;
+            const bool openFilter = processPhase >= 2;
+            const bool addCounter = processPhase >= 3;
+            const bool addOctaveBass = processPhase >= 4;
+            const bool addLeadEcho = processPhase >= 5;
+            const bool addSparkle = processPhase >= 6;
 
             const std::array<int, 16>* leadPattern = &lifeLead;
             const std::array<int, 16>* bassPattern = &lifeBass;
-            const std::array<int, 8>* pulsePattern = &lifePulse;
-            float leadVelocity = 0.18f;
+            const std::array<int, 16>* counterPattern = &lifeCounter;
+            float leadVelocity = 0.21f;
             float bassVelocity = 0.13f;
-            float pulseVelocity = 0.07f;
-            float leadLength = 0.16f;
-            float bassLength = 0.34f;
-            float pulseLength = 0.08f;
-            int pedalNote = 31;
+            float counterVelocity = 0.10f;
+            float leadLength = 0.11f;
+            float bassLength = 0.18f;
+            float counterLength = 0.08f;
+            int sparkleRoot = 96;
 
             switch (variant)
             {
                 case AutomataVariant::coral:
                     leadPattern = &coralLead;
                     bassPattern = &coralBass;
-                    pulsePattern = &coralPulse;
-                    leadVelocity = 0.15f;
+                    counterPattern = &coralCounter;
+                    leadVelocity = 0.18f;
                     bassVelocity = 0.14f;
-                    pulseVelocity = 0.06f;
-                    leadLength = 0.22f;
-                    bassLength = 0.42f;
-                    pulseLength = 0.10f;
-                    pedalNote = 29;
+                    counterVelocity = 0.09f;
+                    leadLength = 0.14f;
+                    bassLength = 0.24f;
+                    counterLength = 0.09f;
+                    sparkleRoot = 98;
                     break;
                 case AutomataVariant::fredkin:
                     leadPattern = &fredkinLead;
                     bassPattern = &fredkinBass;
-                    pulsePattern = &fredkinPulse;
-                    leadVelocity = 0.20f;
+                    counterPattern = &fredkinCounter;
+                    leadVelocity = 0.23f;
                     bassVelocity = 0.12f;
-                    pulseVelocity = 0.06f;
-                    leadLength = 0.10f;
-                    bassLength = 0.24f;
-                    pulseLength = 0.06f;
-                    pedalNote = 26;
+                    counterVelocity = 0.11f;
+                    leadLength = 0.08f;
+                    bassLength = 0.15f;
+                    counterLength = 0.06f;
+                    sparkleRoot = 101;
                     break;
                 case AutomataVariant::dayNight:
                     leadPattern = &dayNightLead;
                     bassPattern = &dayNightBass;
-                    pulsePattern = &dayNightPulse;
-                    leadVelocity = 0.17f;
-                    bassVelocity = 0.14f;
-                    pulseVelocity = 0.08f;
-                    leadLength = 0.18f;
-                    bassLength = 0.36f;
-                    pulseLength = 0.09f;
-                    pedalNote = 33;
+                    counterPattern = &dayNightCounter;
+                    leadVelocity = 0.20f;
+                    bassVelocity = 0.15f;
+                    counterVelocity = 0.10f;
+                    leadLength = 0.12f;
+                    bassLength = 0.20f;
+                    counterLength = 0.08f;
+                    sparkleRoot = 99;
                     break;
                 case AutomataVariant::life:
                 case AutomataVariant::none:
@@ -1626,28 +1698,37 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                     addSynthEvent(leadNote, leadVelocity, leadLength);
             }
 
-            const int bassIndex = (step + bassShift) % 16;
-            if ((step % 4) == 0 || variant == AutomataVariant::fredkin)
+            const int bassIndex = (step + counterShift) % 16;
+            if (const int bassNote = (*bassPattern)[static_cast<size_t>(bassIndex)]; bassNote >= 0)
             {
-                if (const int bassNote = (*bassPattern)[static_cast<size_t>(bassIndex)]; bassNote >= 0)
-                    addSynthEvent(bassNote, bassVelocity, bassLength);
+                addSynthEvent(bassNote, bassVelocity, bassLength);
+                if (addOctaveBass && (step % 4) == 0)
+                    addSynthEvent(bassNote + 12, bassVelocity * 0.55f, bassLength * 0.72f);
             }
 
-            if ((step % 2) == 0 || highPulse)
+            if (openFilter || (step % 2) == 0)
             {
-                const int pulseIndex = (step / 2 + beatBarIndex + leadShift) % static_cast<int>(pulsePattern->size());
-                addSynthEvent((*pulsePattern)[static_cast<size_t>(pulseIndex)], pulseVelocity, pulseLength);
+                const int pulseNote = (*leadPattern)[static_cast<size_t>((leadIndex + 1) % 16)];
+                if (pulseNote >= 0)
+                    addSynthEvent(pulseNote + 12, 0.055f, 0.045f);
             }
 
-            if (phaseEcho && (step == 6 || step == 14))
+            if (addCounter)
             {
-                const int echoIndex = (leadIndex + 1) % 16;
+                const int counterIndex = (step + counterShift) % 16;
+                if (const int counterNote = (*counterPattern)[static_cast<size_t>(counterIndex)]; counterNote >= 0)
+                    addSynthEvent(counterNote, counterVelocity, counterLength);
+            }
+
+            if (addLeadEcho && (step == 7 || step == 15))
+            {
+                const int echoIndex = (leadIndex + 2) % 16;
                 if (const int echoNote = (*leadPattern)[static_cast<size_t>(echoIndex)]; echoNote >= 0)
-                    addSynthEvent(echoNote - 12, pulseVelocity, 0.12f);
+                    addSynthEvent(echoNote - 12, 0.08f, 0.10f);
             }
 
-            if (lowPedal && step == 0)
-                addSynthEvent(pedalNote, 0.05f, variant == AutomataVariant::coral ? 0.92f : 0.72f);
+            if (addSparkle && (step % 8) == 0)
+                addSynthEvent(sparkleRoot + (processPhase % 3), 0.06f, 0.05f);
         }
 
         ++beatStepIndex;
@@ -1797,7 +1878,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
                 isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                                       ? IsolatedBuildMode::cursor3D
                                       : IsolatedBuildMode::stampLibraryTopDown;
-            else if (slabNumber(isolatedSlab) <= 4)
+            else if (slabNumber(isolatedSlab) <= 4 || isDestructiveSculptSlab(isolatedSlab))
                 isolatedBuildMode = IsolatedBuildMode::cursor3D;
             else
                 isolatedBuildMode = isolatedBuildMode == IsolatedBuildMode::cursor3D
@@ -2047,7 +2128,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         if (key == juce::KeyPress('c'))
         {
             if (! readOnlyTopDownPreview)
-                clearIsolatedSlab();
+            {
+                if (isDestructiveSculptSlab(isolatedSlab))
+                    fillIsolatedSlabSolid();
+                else
+                    clearIsolatedSlab();
+            }
             repaint();
             return true;
         }
@@ -2230,6 +2316,12 @@ void MainComponent::randomiseVoxels()
     visualBarPulse = 0.0f;
     visualBarSweep = 0.0f;
     performanceBeatEnergy = 0.0f;
+    slabBuiltProgress.fill(false);
+    slabPerformedProgress.fill(false);
+    bonusIslandUnlocked = false;
+    bonusIslandVoxels.clear();
+    bonusIslandProxyBackup.clear();
+    hoveredBonusPortal = false;
     voxelCount = 0;
     filledVoxels.clear();
     std::fill(voxels.begin(), voxels.end(), 0u);
@@ -2897,6 +2989,7 @@ void MainComponent::resetEditCursor()
             break;
         case IsolatedBuildRule::standard:
         case IsolatedBuildRule::stampClone:
+        case IsolatedBuildRule::sculpt:
             editCursor.x = x0 + width / 2;
             editCursor.y = y0 + height / 2;
             break;
@@ -2931,6 +3024,7 @@ void MainComponent::moveEditCursor(int dx, int dy, int dz)
             break;
         case IsolatedBuildRule::standard:
         case IsolatedBuildRule::stampClone:
+        case IsolatedBuildRule::sculpt:
             break;
     }
     editCursor.x = juce::jlimit(x0, maxX, editCursor.x + dx);
@@ -2947,11 +3041,16 @@ void MainComponent::applyEditPlacement(bool filled)
     if (! isolatedSlab.isValid() || ! editCursor.active || ! cellInSelectedSlab(editCursor.x, editCursor.y, isolatedSlab))
         return;
 
-    applyEditPlacementAtCell(editCursor.x, editCursor.y, editCursor.z, filled);
+    const bool actualFilled = isDestructiveSculptSlab(isolatedSlab) ? ! filled : filled;
+    applyEditPlacementAtCell(editCursor.x, editCursor.y, editCursor.z, actualFilled);
+    markCurrentSlabBuilt();
 }
 
 MainComponent::IsolatedBuildRule MainComponent::buildRuleForSlab(const SlabSelection& slab) const
 {
+    if (slab.bonus)
+        return IsolatedBuildRule::sculpt;
+
     switch (slabNumber(slab))
     {
         case 2: return IsolatedBuildRule::mirror;
@@ -2969,9 +3068,15 @@ juce::String MainComponent::buildRuleName(IsolatedBuildRule rule) const
         case IsolatedBuildRule::mirror: return "Mirror";
         case IsolatedBuildRule::kaleidoscope: return "Kaleidoscope";
         case IsolatedBuildRule::stampClone: return "Stamp + Clone";
+        case IsolatedBuildRule::sculpt: return "Destructive Sculpt";
     }
 
     return "Standard";
+}
+
+bool MainComponent::isDestructiveSculptSlab(const SlabSelection& slab) const
+{
+    return slab.isValid() && buildRuleForSlab(slab) == IsolatedBuildRule::sculpt;
 }
 
 MainComponent::TetrisVariant MainComponent::tetrisVariantForSlab(const SlabSelection& slab) const
@@ -3083,6 +3188,7 @@ juce::Point<int> MainComponent::canonicalBuildCellForSlab(juce::Point<int> cell,
         }
         case IsolatedBuildRule::standard:
         case IsolatedBuildRule::stampClone:
+        case IsolatedBuildRule::sculpt:
             break;
     }
 
@@ -3132,6 +3238,7 @@ std::vector<juce::Point<int>> MainComponent::placementCellsForSourceCell(juce::P
         }
         case IsolatedBuildRule::standard:
         case IsolatedBuildRule::stampClone:
+        case IsolatedBuildRule::sculpt:
             addUnique(sourceCell);
             break;
     }
@@ -3554,6 +3661,7 @@ void MainComponent::placeTetrisPiece(bool filled)
     editCursor.active = true;
     if (filled && tetrisVariantForSlab(isolatedSlab) == TetrisVariant::fracture)
         applyFractureToCurrentLayer();
+    markCurrentSlabBuilt();
     spawnTetrisPiece(true);
 }
 
@@ -3714,6 +3822,7 @@ void MainComponent::toggleAutomataCell(juce::Point<int> cell, bool filled)
     applyEditPlacementAtCell(cell.x, cell.y, z, filled);
     automataHoverCell = cell;
     editCursor = { cell.x, cell.y, z, true };
+    markCurrentSlabBuilt();
 }
 
 int MainComponent::automataNeighbourCount(const std::vector<juce::Point<int>>& aliveCells, juce::Point<int> cell) const
@@ -3763,6 +3872,7 @@ void MainComponent::randomiseAutomataSeed()
         for (int x = x0; x < x1; ++x)
             setVoxel(x, y, z, juce::Random::getSystemRandom().nextFloat() < density);
     rebuildFilledVoxelCache();
+    markCurrentSlabBuilt();
 }
 
 void MainComponent::advanceAutomataLayer()
@@ -3829,6 +3939,7 @@ void MainComponent::advanceAutomataLayer()
     automataBuildLayer = currentLayer + 1;
     if (automataHoverCell.has_value())
         editCursor = { automataHoverCell->x, automataHoverCell->y, zNext, true };
+    markCurrentSlabBuilt();
 }
 
 void MainComponent::rotateIsolatedSlabQuarterTurn()
@@ -3931,6 +4042,26 @@ void MainComponent::clearIsolatedSlab()
                 }
 
     resetEditCursor();
+    markCurrentSlabBuilt();
+}
+
+void MainComponent::fillIsolatedSlabSolid()
+{
+    if (! isolatedSlab.isValid())
+        return;
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(isolatedSlab.quadrant, x0, y0, x1, y1);
+    const int zMin = slabZStart(isolatedSlab);
+    const int zMax = slabZEndExclusive(isolatedSlab);
+
+    for (int z = zMin; z < zMax; ++z)
+        for (int y = y0; y < y1; ++y)
+            for (int x = x0; x < x1; ++x)
+                voxels[voxelIndex(x, y, z)] = 1u;
+
+    rebuildFilledVoxelCache();
+    resetEditCursor();
 }
 
 void MainComponent::rebuildFilledVoxelCache()
@@ -4002,12 +4133,23 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
     stateXml->setAttribute("beatBarIndex", beatBarIndex);
     stateXml->setAttribute("selectedDirX", performanceSelectedDirection.x);
     stateXml->setAttribute("selectedDirY", performanceSelectedDirection.y);
+    stateXml->setAttribute("bonusIslandUnlocked", boolToInt(bonusIslandUnlocked));
+    juce::String builtProgress, performedProgress;
+    for (size_t i = 0; i < slabBuiltProgress.size(); ++i)
+    {
+        builtProgress << (slabBuiltProgress[i] ? '1' : '0');
+        performedProgress << (slabPerformedProgress[i] ? '1' : '0');
+    }
+    stateXml->setAttribute("slabBuiltProgress", builtProgress);
+    stateXml->setAttribute("slabPerformedProgress", performedProgress);
 
     auto* slabXml = root->createNewChildElement("slabState");
     slabXml->setAttribute("hoveredQuadrant", hoveredSlab.quadrant);
     slabXml->setAttribute("hoveredFloor", hoveredSlab.floor);
+    slabXml->setAttribute("hoveredBonus", boolToInt(hoveredSlab.bonus));
     slabXml->setAttribute("isolatedQuadrant", isolatedSlab.quadrant);
     slabXml->setAttribute("isolatedFloor", isolatedSlab.floor);
+    slabXml->setAttribute("isolatedBonus", boolToInt(isolatedSlab.bonus));
     slabXml->setAttribute("cursorX", editCursor.x);
     slabXml->setAttribute("cursorY", editCursor.y);
     slabXml->setAttribute("cursorZ", editCursor.z);
@@ -4033,14 +4175,53 @@ bool MainComponent::saveStateToFile(const juce::File& targetFile)
         presetXml->setAttribute("tempo", slabStartingTempos[i]);
     }
 
-    auto* voxelsXml = root->createNewChildElement("voxels");
-    voxelsXml->setAttribute("count", static_cast<int>(filledVoxels.size()));
-    for (const auto& voxel : filledVoxels)
+    auto worldSaveVoxels = voxels;
+    if (isolatedSlab.bonus && ! bonusIslandProxyBackup.empty())
     {
-        auto* voxelXml = voxelsXml->createNewChildElement("voxel");
-        voxelXml->setAttribute("x", static_cast<int>(voxel.x));
-        voxelXml->setAttribute("y", static_cast<int>(voxel.y));
-        voxelXml->setAttribute("z", static_cast<int>(voxel.z));
+        int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+        quadrantBounds(3, x0, y0, x1, y1);
+        const int zStart = 3 * floorBandHeight;
+        const int zEnd = juce::jmin(gridHeight, zStart + floorBandHeight);
+        size_t i = 0;
+        for (int z = zStart; z < zEnd; ++z)
+            for (int y = y0; y < y1; ++y)
+                for (int x = x0; x < x1; ++x, ++i)
+                    worldSaveVoxels[voxelIndex(x, y, z)] = bonusIslandProxyBackup[i];
+    }
+
+    auto* voxelsXml = root->createNewChildElement("voxels");
+    int savedVoxelCount = 0;
+    for (int z = 0; z < gridHeight; ++z)
+        for (int y = 0; y < gridDepth; ++y)
+            for (int x = 0; x < gridWidth; ++x)
+                if (worldSaveVoxels[voxelIndex(x, y, z)] != 0u)
+                {
+                    auto* voxelXml = voxelsXml->createNewChildElement("voxel");
+                    voxelXml->setAttribute("x", x);
+                    voxelXml->setAttribute("y", y);
+                    voxelXml->setAttribute("z", z);
+                    ++savedVoxelCount;
+                }
+    voxelsXml->setAttribute("count", savedVoxelCount);
+
+    auto* bonusXml = root->createNewChildElement("bonusIsland");
+    bonusXml->setAttribute("count", static_cast<int>(bonusIslandVoxels.size()));
+    if (! bonusIslandVoxels.empty())
+    {
+        constexpr int bonusWidth = gridWidth / 2;
+        constexpr int bonusHeight = gridDepth / 2;
+        for (int z = 0; z < floorBandHeight; ++z)
+            for (int y = 0; y < bonusHeight; ++y)
+                for (int x = 0; x < bonusWidth; ++x)
+                {
+                    const size_t index = static_cast<size_t>((z * bonusHeight + y) * bonusWidth + x);
+                    if (bonusIslandVoxels[index] == 0u)
+                        continue;
+                    auto* voxelXml = bonusXml->createNewChildElement("voxel");
+                    voxelXml->setAttribute("x", x);
+                    voxelXml->setAttribute("y", y);
+                    voxelXml->setAttribute("z", z);
+                }
     }
 
     auto* snakesXml = root->createNewChildElement("snakes");
@@ -4114,6 +4295,12 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
     performanceFlashes.clear();
     pendingNoteOffs.clear();
     pendingBeatNoteOffs.clear();
+    slabBuiltProgress.fill(false);
+    slabPerformedProgress.fill(false);
+    bonusIslandUnlocked = false;
+    bonusIslandVoxels.clear();
+    bonusIslandProxyBackup.clear();
+    hoveredBonusPortal = false;
 
     if (auto* cameraXml = parsed->getChildByName("camera"))
     {
@@ -4161,12 +4348,24 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         beatBarIndex = stateXml->getIntAttribute("beatBarIndex", 0);
         performanceSelectedDirection = { stateXml->getIntAttribute("selectedDirX", 1),
                                          stateXml->getIntAttribute("selectedDirY", 0) };
+        bonusIslandUnlocked = stateXml->getBoolAttribute("bonusIslandUnlocked", false);
+        const auto builtProgress = stateXml->getStringAttribute("slabBuiltProgress");
+        const auto performedProgress = stateXml->getStringAttribute("slabPerformedProgress");
+        for (size_t i = 0; i < slabBuiltProgress.size(); ++i)
+        {
+            slabBuiltProgress[i] = static_cast<int>(i) < builtProgress.length() && builtProgress[static_cast<int>(i)] == '1';
+            slabPerformedProgress[i] = static_cast<int>(i) < performedProgress.length() && performedProgress[static_cast<int>(i)] == '1';
+        }
     }
 
     if (auto* slabXml = parsed->getChildByName("slabState"))
     {
-        hoveredSlab = { slabXml->getIntAttribute("hoveredQuadrant", -1), slabXml->getIntAttribute("hoveredFloor", -1) };
-        isolatedSlab = { slabXml->getIntAttribute("isolatedQuadrant", -1), slabXml->getIntAttribute("isolatedFloor", -1) };
+        hoveredSlab = { slabXml->getIntAttribute("hoveredQuadrant", -1),
+                        slabXml->getIntAttribute("hoveredFloor", -1),
+                        slabXml->getBoolAttribute("hoveredBonus", false) };
+        isolatedSlab = { slabXml->getIntAttribute("isolatedQuadrant", -1),
+                         slabXml->getIntAttribute("isolatedFloor", -1),
+                         slabXml->getBoolAttribute("isolatedBonus", false) };
         editCursor = { slabXml->getIntAttribute("cursorX", 0),
                        slabXml->getIntAttribute("cursorY", 0),
                        slabXml->getIntAttribute("cursorZ", 0),
@@ -4210,6 +4409,27 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
             const int z = voxelXml->getIntAttribute("z", -1);
             if (x >= 0 && x < gridWidth && y >= 0 && y < gridDepth && z >= 0 && z < gridHeight)
                 voxels[voxelIndex(x, y, z)] = 1u;
+        }
+    }
+
+    if (auto* bonusXml = parsed->getChildByName("bonusIsland"))
+    {
+        constexpr int bonusWidth = gridWidth / 2;
+        constexpr int bonusHeight = gridDepth / 2;
+        bonusIslandVoxels.assign(static_cast<size_t>(bonusWidth * bonusHeight * floorBandHeight), 0u);
+        for (auto* voxelXml = bonusXml->getFirstChildElement(); voxelXml != nullptr; voxelXml = voxelXml->getNextElement())
+        {
+            if (! voxelXml->hasTagName("voxel"))
+                continue;
+
+            const int x = voxelXml->getIntAttribute("x", -1);
+            const int y = voxelXml->getIntAttribute("y", -1);
+            const int z = voxelXml->getIntAttribute("z", -1);
+            if (x < 0 || x >= bonusWidth || y < 0 || y >= bonusHeight || z < 0 || z >= floorBandHeight)
+                continue;
+
+            const size_t index = static_cast<size_t>((z * bonusHeight + y) * bonusWidth + x);
+            bonusIslandVoxels[index] = 1u;
         }
     }
 
@@ -4304,6 +4524,8 @@ bool MainComponent::loadStateFromFile(const juce::File& file)
         stampCaptureAnchor.reset();
     }
     rebuildFilledVoxelCache();
+    if (isolatedSlab.bonus && bonusIslandUnlocked)
+        enterBonusIsland();
     return true;
 }
 
@@ -4475,7 +4697,7 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
             continue;
 
         const int midiNote = midiNoteForHeight(z);
-        const float velocity = juce::jlimit(0.12f, 0.78f, 0.28f + 0.032f * static_cast<float>(z - zStart));
+        const float velocity = juce::jlimit(0.10f, 0.58f, 0.20f + 0.024f * static_cast<float>(z - zStart));
         synth.noteOn(1, midiNote, velocity);
         pendingNoteOffs.push_back({ midiNote, 0.16f });
         ++triggered;
@@ -4486,6 +4708,7 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
         return;
     }
 
+    markCurrentSlabPerformed();
     performanceBeatEnergy = juce::jmin(1.0f, performanceBeatEnergy + 0.08f + 0.03f * static_cast<float>(triggered - 1));
     performanceFlashes.push_back({ cell, juce::Colour::fromRGBA(120, 220, 255, 255), juce::jmin(1.0f, 0.70f + 0.12f * static_cast<float>(triggered - 1)), false });
 }
@@ -4493,7 +4716,7 @@ void MainComponent::triggerPerformanceNotesAtCell(juce::Point<int> cell)
 void MainComponent::addBeatEvent(juce::MidiBuffer& buffer, int midiNote, float velocity, int sampleOffset, int blockSamples)
 {
     const int onOffset = juce::jlimit(0, juce::jmax(0, blockSamples - 1), sampleOffset);
-    buffer.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.86f)), onOffset);
+    buffer.addEvent(juce::MidiMessage::noteOn(1, midiNote, juce::jlimit(0.0f, 1.0f, velocity * 0.74f)), onOffset);
 
     const float noteLengthSeconds = midiNote == 120 ? 0.12f : midiNote == 121 ? 0.09f : midiNote == 122 ? 0.03f : 0.05f;
     pendingBeatNoteOffs.push_back({ midiNote, noteLengthSeconds });
@@ -4524,7 +4747,11 @@ float MainComponent::hoverLiftForSlab(const SlabSelection& slab) const
 
 int MainComponent::slabNumber(const SlabSelection& slab) const
 {
-    return slab.isValid() ? slabIndex(slab) + 1 : 0;
+    if (! slab.isValid())
+        return 0;
+    if (slab.bonus)
+        return 17;
+    return slabIndex(slab) + 1;
 }
 
 juce::String MainComponent::labelForSlab(const SlabSelection& slab) const
@@ -4533,6 +4760,161 @@ juce::String MainComponent::labelForSlab(const SlabSelection& slab) const
         return {};
 
     return "Island " + juce::String(slabNumber(slab));
+}
+
+juce::Rectangle<float> MainComponent::bonusIslandPortalBounds(juce::Rectangle<float> area) const
+{
+    auto panel = area.reduced(12.0f, 10.0f);
+    auto inner = panel.reduced(18.0f, 14.0f);
+    auto topRow = inner.removeFromTop(34.0f);
+    auto bounds = juce::Rectangle<float>(152.0f, 34.0f)
+                      .withRightX(topRow.getRight())
+                      .withY(topRow.getY());
+    return bounds;
+}
+
+void MainComponent::markCurrentSlabBuilt()
+{
+    if (! isolatedSlab.isValid() || isolatedSlab.bonus)
+        return;
+
+    const int index = slabIndex(isolatedSlab);
+    if (index < 0 || index >= static_cast<int>(slabBuiltProgress.size()))
+        return;
+
+    slabBuiltProgress[static_cast<size_t>(index)] = true;
+    checkForBonusIslandUnlock();
+}
+
+void MainComponent::markCurrentSlabPerformed()
+{
+    if (! isolatedSlab.isValid() || isolatedSlab.bonus)
+        return;
+
+    const int index = slabIndex(isolatedSlab);
+    if (index < 0 || index >= static_cast<int>(slabPerformedProgress.size()))
+        return;
+
+    slabPerformedProgress[static_cast<size_t>(index)] = true;
+    checkForBonusIslandUnlock();
+}
+
+void MainComponent::checkForBonusIslandUnlock()
+{
+    if (bonusIslandUnlocked)
+        return;
+
+    const bool allBuilt = std::all_of(slabBuiltProgress.begin(), slabBuiltProgress.end(), [] (bool value) { return value; });
+    const bool allPerformed = std::all_of(slabPerformedProgress.begin(), slabPerformedProgress.end(), [] (bool value) { return value; });
+    if (! (allBuilt && allPerformed))
+        return;
+
+    bonusIslandUnlocked = true;
+    if (bonusIslandVoxels.empty())
+        bonusIslandVoxels.assign(static_cast<size_t>(gridWidth / 2 * gridDepth / 2 * floorBandHeight), 1u);
+}
+
+void MainComponent::enterBonusIsland()
+{
+    if (! bonusIslandUnlocked)
+        return;
+
+    constexpr int proxyQuadrant = 3;
+    constexpr int proxyFloor = 3;
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(proxyQuadrant, x0, y0, x1, y1);
+    const int zStart = proxyFloor * floorBandHeight;
+    const int zEnd = juce::jmin(gridHeight, zStart + floorBandHeight);
+    const int width = x1 - x0;
+    const int height = y1 - y0;
+    const size_t bonusSize = static_cast<size_t>(width * height * (zEnd - zStart));
+
+    if (bonusIslandVoxels.size() != bonusSize)
+        bonusIslandVoxels.assign(bonusSize, 1u);
+
+    bonusIslandProxyBackup.assign(bonusSize, 0u);
+
+    size_t i = 0;
+    for (int z = zStart; z < zEnd; ++z)
+        for (int y = y0; y < y1; ++y)
+            for (int x = x0; x < x1; ++x, ++i)
+            {
+                bonusIslandProxyBackup[i] = voxels[voxelIndex(x, y, z)];
+                voxels[voxelIndex(x, y, z)] = bonusIslandVoxels[i];
+            }
+
+    rebuildFilledVoxelCache();
+
+    isolatedSlab = { proxyQuadrant, proxyFloor, true };
+    hoveredSlab = isolatedSlab;
+    editPlacementHeight = 1;
+    editChordType = EditChordType::single;
+    isolatedBuildMode = IsolatedBuildMode::cursor3D;
+    performanceMode = false;
+    tetrisPiece = {};
+    nextTetrisType = TetrominoType::L;
+    tetrisBuildLayer = 0;
+    tetrisRotatePerLayerSession = false;
+    tetrisGravityTick = 0;
+    stampLibrary.clear();
+    stampLibraryIndex = 0;
+    stampRotation = 0;
+    stampBaseLayer = 0;
+    stampHoverCell.reset();
+    stampCaptureMode = false;
+    stampCaptureAnchor.reset();
+    automataBuildLayer = 0;
+    automataHoverCell.reset();
+    performanceRegionMode = 2;
+    performanceDiscs.clear();
+    performanceTracks.clear();
+    performanceOrbitCenters.clear();
+    performanceAutomataCells.clear();
+    performanceFlashes.clear();
+    performanceHoverCell.reset();
+    performanceSelectedDirection = { 1, 0 };
+    performanceTrackHorizontal = true;
+    performancePlacementMode = PerformancePlacementMode::selectOnly;
+    performanceSelection = {};
+    performanceTick = 0;
+    performanceBeatEnergy = 0.0f;
+    performanceAgentMode = PerformanceAgentMode::snakes;
+    bpm = 132.0;
+    resetEditCursor();
+}
+
+void MainComponent::leaveBonusIsland(bool persistChanges)
+{
+    if (! isolatedSlab.bonus)
+        return;
+
+    constexpr int proxyQuadrant = 3;
+    constexpr int proxyFloor = 3;
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    quadrantBounds(proxyQuadrant, x0, y0, x1, y1);
+    const int zStart = proxyFloor * floorBandHeight;
+    const int zEnd = juce::jmin(gridHeight, zStart + floorBandHeight);
+
+    if (persistChanges && ! bonusIslandVoxels.empty())
+    {
+        size_t i = 0;
+        for (int z = zStart; z < zEnd; ++z)
+            for (int y = y0; y < y1; ++y)
+                for (int x = x0; x < x1; ++x, ++i)
+                    bonusIslandVoxels[i] = voxels[voxelIndex(x, y, z)];
+    }
+
+    if (! bonusIslandProxyBackup.empty())
+    {
+        size_t i = 0;
+        for (int z = zStart; z < zEnd; ++z)
+            for (int y = y0; y < y1; ++y)
+                for (int x = x0; x < x1; ++x, ++i)
+                    voxels[voxelIndex(x, y, z)] = bonusIslandProxyBackup[i];
+    }
+
+    bonusIslandProxyBackup.clear();
+    rebuildFilledVoxelCache();
 }
 
 juce::Rectangle<int> MainComponent::performanceRegionBounds() const
@@ -5907,6 +6289,7 @@ void MainComponent::applyStampAtCell(const StampMotif& motif, juce::Point<int> c
     const auto rotated = rotatedStampVoxels(motif, rotation, width, height);
     for (const auto& voxel : rotated)
         setVoxel(cell.x + voxel.dx, cell.y + voxel.dy, baseZ + voxel.dz, filled);
+    markCurrentSlabBuilt();
 }
 
 void MainComponent::drawStampLibraryBuildView(juce::Graphics& g, juce::Rectangle<float> area)
@@ -6840,6 +7223,12 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
         topRow.removeFromLeft(12.0f);
 
         auto controlsCapsule = topRow.withTrimmedLeft(0.0f);
+        juce::Rectangle<float> bonusPortal;
+        if (bonusIslandUnlocked && layoutMode == LayoutMode::FourIslandsFourFloors)
+        {
+            bonusPortal = controlsCapsule.removeFromRight(152.0f);
+            controlsCapsule.removeFromRight(10.0f);
+        }
         g.setColour(juce::Colour::fromRGBA(8, 16, 38, 214));
         g.fillRoundedRectangle(controlsCapsule, 17.0f);
         g.setColour(juce::Colour::fromRGBA(110, 212, 255, 64));
@@ -6861,6 +7250,24 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                          controlsCapsule.reduced(16.0f, 0.0f).toNearestInt(),
                          juce::Justification::centredLeft,
                          1);
+
+        if (! bonusPortal.isEmpty())
+        {
+            juce::ColourGradient portalFill(juce::Colour::fromRGBA(255, 242, 146, hoveredBonusPortal ? 250 : 222),
+                                            bonusPortal.getX(), bonusPortal.getY(),
+                                            juce::Colour::fromRGBA(255, 150, 42, hoveredBonusPortal ? 255 : 232),
+                                            bonusPortal.getRight(), bonusPortal.getBottom(),
+                                            false);
+            g.setGradientFill(portalFill);
+            g.fillRoundedRectangle(bonusPortal, 17.0f);
+            g.setColour(juce::Colour::fromRGBA(255, 250, 210, hoveredBonusPortal ? 230 : 180));
+            g.drawRoundedRectangle(bonusPortal, 17.0f, hoveredBonusPortal ? 1.9f : 1.4f);
+            g.setColour(juce::Colour::fromRGBA(255, 255, 255, 74));
+            g.fillRoundedRectangle(bonusPortal.withHeight(10.0f).reduced(8.0f, 1.0f), 8.0f);
+            g.setColour(juce::Colour::fromRGB(76, 28, 8));
+            g.setFont(juce::FontOptions(14.5f));
+            g.drawText("ISLAND 17", bonusPortal.toNearestInt(), juce::Justification::centred);
+        }
 
         inner.removeFromTop(12.0f);
 
@@ -6963,6 +7370,8 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                                   ? (automataVariantForSlab(isolatedSlab) != AutomataVariant::none
                                          ? "Read-only isometric preview   Tab enter automata build   Enter performance   WASD pan   Wheel zoom   Arrows inspect   [ ] height   Esc back"
                                          : "Read-only isometric preview   Tab enter topdown tetris   Enter performance   WASD pan   Wheel zoom   Arrows inspect   [ ] height   Esc back")
+                                  : currentRule == IsolatedBuildRule::sculpt
+                                      ? "Carve from a solid slab   Left click carves   Right-click restores   Enter performance   WASD pan   Wheel zoom   Mouse snap   Arrows move   [ ] height   1-4 layers   V chord type   C reset solid   Esc back"
                                   : currentRule == IsolatedBuildRule::mirror
                                       ? "Build in the left half   Right half mirrors live   Enter performance   WASD pan   Wheel zoom   Mouse snap   Click place/remove   Arrows move   [ ] height   1-4 layers   V chord type   C clear   Esc back"
                                   : currentRule == IsolatedBuildRule::kaleidoscope
@@ -7077,7 +7486,10 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                          ? ("Seed  " + (automataHoverCell.has_value() ? ("x" + juce::String(automataHoverCell->x) + "  y" + juce::String(automataHoverCell->y)) : juce::String("hover board")) + "  layer " + juce::String(localCursorZ))
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? ("Stamp  " + (stampHoverCell.has_value() ? ("x" + juce::String(stampHoverCell->x) + "  y" + juce::String(stampHoverCell->y)) : juce::String("hover board")) + "  layer " + juce::String(localCursorZ))
-                     : ("Cursor  x" + juce::String(editCursor.x) + "  y" + juce::String(editCursor.y) + "  z" + juce::String(localCursorZ)));
+                     : ((currentRule == IsolatedBuildRule::sculpt ? "Carve" : "Cursor")
+                        + juce::String("  x") + juce::String(editCursor.x)
+                        + "  y" + juce::String(editCursor.y)
+                        + "  z" + juce::String(localCursorZ)));
     infoRow.removeFromLeft(infoGap);
     drawInfoChip(infoRow.removeFromLeft(infoWidth),
                  "Root  " + pitchClassName(localCursorZ));
@@ -7096,6 +7508,8 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                          ? (stampCaptureMode
                                ? (stampCaptureAnchor.has_value() ? "Capture  choose opposite corner" : "Capture  click first corner")
                                : ("Next  " + juce::String(stampLibraryIndex + 1) + "/" + juce::String(static_cast<int>(stampLibrary.size())) + "   " + currentEditChordName()))
+                        : currentRule == IsolatedBuildRule::sculpt
+                            ? ("Next  carve as " + currentEditChordName())
                          : readOnlyTopDownPreview
                              ? ("Mode  " + (automataVariantForSlab(isolatedSlab) != AutomataVariant::none
                                                ? automataVariantName(automataVariantForSlab(isolatedSlab))
@@ -7113,6 +7527,8 @@ void MainComponent::drawHud(juce::Graphics& g, juce::Rectangle<float> area)
                          ? "Click seed   X delete   N randomise   Enter evolve next layer   M/B/K/L/U sound"
                      : isolatedBuildMode == IsolatedBuildMode::stampLibraryTopDown
                          ? "S capture   P stamp   X delete stamp   N/B browse   R rotate   M/B/K/L/U sound"
+                        : currentRule == IsolatedBuildRule::sculpt
+                            ? "Left carve   Right restore   P restore chord   X carve chord   M/B/K/L/U sound"
                          : readOnlyTopDownPreview
                              ? (automataVariantForSlab(isolatedSlab) != AutomataVariant::none
                                     ? "Tab enter automata   Enter performance   Read-only 3D preview"
@@ -7164,6 +7580,7 @@ void MainComponent::enterWorldFromTitle(bool regenerateWorld)
 
     screenMode = ScreenMode::world;
     hoveredTitleAction = TitleAction::none;
+    hoveredBonusPortal = false;
     if (isolatedSlab.isValid() && isolatedBuildMode == IsolatedBuildMode::tetrisTopDown && ! tetrisPiece.active)
         spawnTetrisPiece(false);
     repaint();
@@ -7235,7 +7652,7 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
 
     g.setColour(juce::Colour::fromRGBA(96, 60, 44, 236));
     g.setFont(juce::FontOptions(17.5f));
-    g.drawFittedText("Build a giant musical block world, split it into islands and floors, then dive into focused spaces to sculpt, play, and perform.",
+    g.drawFittedText("Part instrument, part sound toy, part architectural sandbox. Build a musical world, island by island, and explore a rich variety of ways to perform your compositions.",
                      subtitleArea.toNearestInt(),
                      juce::Justification::topLeft,
                      3);
@@ -7484,8 +7901,46 @@ void MainComponent::drawBackdrop(juce::Graphics& g, juce::Rectangle<float> area)
     g.fillEllipse(area.withSizeKeepingCentre(area.getWidth() * 0.46f, area.getHeight() * 0.30f)
                       .translated(area.getWidth() * 0.10f, -area.getHeight() * 0.08f));
 
-    juce::Path rings;
     const auto centre = area.getCentre();
+
+    if (isolatedSlab.isValid() && slabNumber(isolatedSlab) == 17)
+    {
+        const auto sunCentre = juce::Point<float>(centre.x + area.getWidth() * 0.08f,
+                                                  centre.y - area.getHeight() * 0.10f);
+
+        juce::ColourGradient sunCore(juce::Colour::fromRGBA(255, 250, 214, 244),
+                                     sunCentre.x, sunCentre.y,
+                                     juce::Colour::fromRGBA(255, 176, 34, 0),
+                                     sunCentre.x, sunCentre.y + area.getHeight() * 0.22f,
+                                     true);
+        g.setGradientFill(sunCore);
+        g.fillEllipse(juce::Rectangle<float>(area.getWidth() * (0.26f + 0.02f * barPulse),
+                                             area.getHeight() * (0.18f + 0.02f * beatPulse))
+                          .withCentre(sunCentre));
+
+        juce::Path burst;
+        constexpr int rays = 18;
+        for (int i = 0; i < rays; ++i)
+        {
+            const float angle = juce::MathConstants<float>::twoPi * static_cast<float>(i) / static_cast<float>(rays)
+                              + pulse * 0.18f;
+            const float inner = area.getHeight() * 0.07f;
+            const float outer = area.getHeight() * (0.18f + 0.03f * std::sin(pulse * 6.0f + static_cast<float>(i)));
+            const auto innerPoint = sunCentre + juce::Point<float>(std::cos(angle) * inner, std::sin(angle) * inner);
+            const auto outerPoint = sunCentre + juce::Point<float>(std::cos(angle) * outer, std::sin(angle) * outer);
+            burst.startNewSubPath(innerPoint);
+            burst.lineTo(outerPoint);
+        }
+
+        g.setColour(juce::Colour::fromRGBA(255, 212, 92, static_cast<uint8_t>(70 + 40 * barPulse)));
+        g.strokePath(burst, juce::PathStrokeType(2.4f + 0.9f * beatPulse));
+
+        g.setColour(juce::Colour::fromRGBA(255, 242, 178, static_cast<uint8_t>(26 + 18 * pulse)));
+        g.fillEllipse(juce::Rectangle<float>(area.getWidth() * 0.62f, area.getHeight() * 0.10f)
+                          .withCentre({ sunCentre.x, sunCentre.y + area.getHeight() * 0.22f }));
+    }
+
+    juce::Path rings;
     for (int i = 0; i < 6; ++i)
     {
         const float w = area.getWidth() * (0.20f + i * 0.12f);
