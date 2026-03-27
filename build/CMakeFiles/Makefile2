@@ -63,12 +63,12 @@ CMAKE_BINARY_DIR = /Users/md/Downloads/KlangKunstWorld/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/KlangKunstWorldWireframe.dir/all
+all: CMakeFiles/KlangKunstWorld.dir/all
 all: JUCE/all
 .PHONY : all
 
 # The main recursive "codegen" target.
-codegen: CMakeFiles/KlangKunstWorldWireframe.dir/codegen
+codegen: CMakeFiles/KlangKunstWorld.dir/codegen
 codegen: JUCE/codegen
 .PHONY : codegen
 
@@ -77,7 +77,7 @@ preinstall: JUCE/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/KlangKunstWorldWireframe.dir/clean
+clean: CMakeFiles/KlangKunstWorld.dir/clean
 clean: JUCE/clean
 .PHONY : clean
 
@@ -162,36 +162,36 @@ JUCE/modules/clean:
 .PHONY : JUCE/modules/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/KlangKunstWorldWireframe.dir
+# Target rules for target CMakeFiles/KlangKunstWorld.dir
 
 # All Build rule for target.
-CMakeFiles/KlangKunstWorldWireframe.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 "Built target KlangKunstWorldWireframe"
-.PHONY : CMakeFiles/KlangKunstWorldWireframe.dir/all
+CMakeFiles/KlangKunstWorld.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorld.dir/build.make CMakeFiles/KlangKunstWorld.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorld.dir/build.make CMakeFiles/KlangKunstWorld.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 "Built target KlangKunstWorld"
+.PHONY : CMakeFiles/KlangKunstWorld.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/KlangKunstWorldWireframe.dir/rule: cmake_check_build_system
+CMakeFiles/KlangKunstWorld.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/md/Downloads/KlangKunstWorld/build/CMakeFiles 22
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/KlangKunstWorldWireframe.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/KlangKunstWorld.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/md/Downloads/KlangKunstWorld/build/CMakeFiles 0
-.PHONY : CMakeFiles/KlangKunstWorldWireframe.dir/rule
+.PHONY : CMakeFiles/KlangKunstWorld.dir/rule
 
 # Convenience name for target.
-KlangKunstWorldWireframe: CMakeFiles/KlangKunstWorldWireframe.dir/rule
-.PHONY : KlangKunstWorldWireframe
+KlangKunstWorld: CMakeFiles/KlangKunstWorld.dir/rule
+.PHONY : KlangKunstWorld
 
 # codegen rule for target.
-CMakeFiles/KlangKunstWorldWireframe.dir/codegen:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 "Finished codegen for target KlangKunstWorldWireframe"
-.PHONY : CMakeFiles/KlangKunstWorldWireframe.dir/codegen
+CMakeFiles/KlangKunstWorld.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorld.dir/build.make CMakeFiles/KlangKunstWorld.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/md/Downloads/KlangKunstWorld/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 "Finished codegen for target KlangKunstWorld"
+.PHONY : CMakeFiles/KlangKunstWorld.dir/codegen
 
 # clean rule for target.
-CMakeFiles/KlangKunstWorldWireframe.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorldWireframe.dir/build.make CMakeFiles/KlangKunstWorldWireframe.dir/clean
-.PHONY : CMakeFiles/KlangKunstWorldWireframe.dir/clean
+CMakeFiles/KlangKunstWorld.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KlangKunstWorld.dir/build.make CMakeFiles/KlangKunstWorld.dir/clean
+.PHONY : CMakeFiles/KlangKunstWorld.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

@@ -149,7 +149,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=KlangKunstWorldWireframe
+CMAKE_PROJECT_NAME:STATIC=KlangKunstWorld
 
 //Value Computed by CMake
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
@@ -272,13 +272,13 @@ JUCE_TOOL_INSTALL_DIR:STRING=bin/JUCE-8.0.12
 JUCE_WEBVIEW2_PACKAGE_LOCATION:BOOL=OFF
 
 //Value Computed by CMake
-KlangKunstWorldWireframe_BINARY_DIR:STATIC=/Users/md/Downloads/KlangKunstWorld/build
+KlangKunstWorld_BINARY_DIR:STATIC=/Users/md/Downloads/KlangKunstWorld/build
 
 //Value Computed by CMake
-KlangKunstWorldWireframe_IS_TOP_LEVEL:STATIC=ON
+KlangKunstWorld_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-KlangKunstWorldWireframe_SOURCE_DIR:STATIC=/Users/md/Downloads/KlangKunstWorld
+KlangKunstWorld_SOURCE_DIR:STATIC=/Users/md/Downloads/KlangKunstWorld
 
 //Path to a library.
 juce_found_AVFoundation:FILEPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/AVFoundation.framework

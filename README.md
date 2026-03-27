@@ -1,6 +1,6 @@
-# KlangKunstWorldWireframe
+# KlangKunstWorld
 
-A minimal JUCE desktop app that renders a `128 x 128 x 48` cube wireframe lattice in isometric view.
+A JUCE desktop music game built around an isometric block world that can be explored, split into islands, edited in multiple build modes, and performed as musical spaces.
 
 ## Build
 
@@ -13,11 +13,5 @@ cmake --build build -j 4
 ## Run
 
 ```bash
-open /Users/md/Downloads/KlangKunstWorld/build/KlangKunstWorldWireframe_artefacts/KlangKunstWorldWireframe.app
+open /Users/md/Downloads/KlangKunstWorld/build/KlangKunstWorld_artefacts/KlangKunstWorld.app
 ```
-
-## Controls
-
-- `Q / E`: rotate the isometric camera
-- `W / S`: zoom in / out
-- `A / D`: reduce / increase vertical exaggeration

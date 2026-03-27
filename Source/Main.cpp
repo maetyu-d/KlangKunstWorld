@@ -1,10 +1,10 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
-class WireframeGridApplication final : public juce::JUCEApplication
+class KlangKunstWorldApplication final : public juce::JUCEApplication
 {
 public:
-    const juce::String getApplicationName() override { return "KlangKunstWorldWireframe"; }
+    const juce::String getApplicationName() override { return "KlangKunstWorld"; }
     const juce::String getApplicationVersion() override { return "0.1.0"; }
     bool moreThanOneInstanceAllowed() override { return true; }
 
@@ -50,4 +50,4 @@ private:
     std::unique_ptr<MainWindow> mainWindow;
 };
 
-START_JUCE_APPLICATION(WireframeGridApplication)
+START_JUCE_APPLICATION(KlangKunstWorldApplication)

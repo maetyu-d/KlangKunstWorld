@@ -7597,6 +7597,13 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
                              false);
     g.setGradientFill(sky);
     g.fillRoundedRectangle(card.expanded(30.0f, 24.0f), 44.0f);
+    juce::ColourGradient skyGloss(juce::Colour::fromRGBA(255, 255, 255, 118),
+                                  card.getCentreX(), card.getY() - 12.0f,
+                                  juce::Colour::fromRGBA(255, 255, 255, 0),
+                                  card.getCentreX(), card.getY() + 150.0f,
+                                  false);
+    g.setGradientFill(skyGloss);
+    g.fillRoundedRectangle(card.expanded(30.0f, 24.0f).withHeight(174.0f), 44.0f);
 
     auto drawCloud = [&] (juce::Point<float> centre, float cloudScale)
     {
@@ -7613,6 +7620,8 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
 
     g.setColour(juce::Colour::fromRGBA(255, 255, 255, 28));
     g.fillRoundedRectangle(card.expanded(24.0f, 18.0f), 40.0f);
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 72));
+    g.fillRoundedRectangle(card.expanded(10.0f, 8.0f).withHeight(32.0f).translated(0.0f, 6.0f), 18.0f);
 
     juce::ColourGradient fill(juce::Colour::fromRGBA(255, 244, 220, 244),
                               card.getCentreX(), card.getY(),
@@ -7623,6 +7632,21 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
     g.fillRoundedRectangle(card, 32.0f);
     g.setColour(juce::Colour::fromRGBA(142, 76, 38, 210));
     g.drawRoundedRectangle(card, 32.0f, 2.4f);
+    juce::ColourGradient cardGloss(juce::Colour::fromRGBA(255, 255, 255, 126),
+                                   card.getCentreX(), card.getY() + 6.0f,
+                                   juce::Colour::fromRGBA(255, 255, 255, 0),
+                                   card.getCentreX(), card.getY() + 190.0f,
+                                   false);
+    g.setGradientFill(cardGloss);
+    g.fillRoundedRectangle(card.withHeight(198.0f).reduced(8.0f, 8.0f), 24.0f);
+    juce::Path diagonalSheen;
+    diagonalSheen.startNewSubPath(card.getX() + 34.0f, card.getY() + 34.0f);
+    diagonalSheen.lineTo(card.getX() + 240.0f, card.getY() + 34.0f);
+    diagonalSheen.lineTo(card.getX() + 84.0f, card.getY() + 214.0f);
+    diagonalSheen.lineTo(card.getX() + 12.0f, card.getY() + 214.0f);
+    diagonalSheen.closeSubPath();
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 46));
+    g.fillPath(diagonalSheen);
 
     auto inner = card.reduced(34.0f, 28.0f);
     auto topRow = inner.removeFromTop(156.0f);
@@ -7649,6 +7673,10 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
     g.setColour(juce::Colour::fromRGBA(255, 238, 214, 120));
     g.fillRoundedRectangle(titleArea.withHeight(16.0f).withTrimmedLeft(8.0f).withTrimmedRight(titleArea.getWidth() * 0.34f),
                            8.0f);
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 104));
+    g.fillRoundedRectangle(titleArea.withHeight(10.0f).withTrimmedLeft(26.0f).withTrimmedRight(titleArea.getWidth() * 0.48f)
+                               .translated(0.0f, 8.0f),
+                           6.0f);
 
     g.setColour(juce::Colour::fromRGBA(96, 60, 44, 236));
     g.setFont(juce::FontOptions(17.5f));
@@ -7673,6 +7701,8 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
     g.drawRoundedRectangle(rightStory, 22.0f, 1.8f);
     g.setColour(juce::Colour::fromRGBA(255, 255, 255, 42));
     g.fillRoundedRectangle(rightStory.withHeight(18.0f).reduced(10.0f, 2.0f), 10.0f);
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 34));
+    g.fillRoundedRectangle(rightStory.reduced(10.0f, 12.0f).withHeight(44.0f), 18.0f);
 
     auto storyInner = rightStory.reduced(18.0f, 16.0f);
     auto boardArea = storyInner.removeFromTop(96.0f);
@@ -7681,6 +7711,8 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
 
     g.setColour(juce::Colour::fromRGBA(255, 255, 255, 54));
     g.fillEllipse(boardArea.expanded(0.0f, 22.0f));
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 26));
+    g.fillEllipse(boardArea.expanded(-24.0f, 2.0f).translated(0.0f, -6.0f));
 
     auto boardRect = boardArea.withSizeKeepingCentre(186.0f, 96.0f);
     juce::Path isoBoard;
@@ -7705,6 +7737,14 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
     boardSheen.closeSubPath();
     g.setColour(juce::Colour::fromRGBA(255, 255, 255, 58));
     g.fillPath(boardSheen);
+    juce::Path boardGloss;
+    boardGloss.startNewSubPath(boardRect.getCentreX() - boardRect.getWidth() * 0.20f, boardRect.getY() + 16.0f);
+    boardGloss.lineTo(boardRect.getCentreX() + boardRect.getWidth() * 0.04f, boardRect.getY() + 16.0f);
+    boardGloss.lineTo(boardRect.getCentreX() - boardRect.getWidth() * 0.10f, boardRect.getCentreY() - 4.0f);
+    boardGloss.lineTo(boardRect.getCentreX() - boardRect.getWidth() * 0.28f, boardRect.getCentreY() - 4.0f);
+    boardGloss.closeSubPath();
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 72));
+    g.fillPath(boardGloss);
 
     for (int i = 1; i <= 3; ++i)
     {
@@ -7752,6 +7792,10 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
         g.strokePath(top, juce::PathStrokeType(1.0f));
         g.setColour(juce::Colour::fromRGBA(255, 255, 255, 72));
         g.fillEllipse(juce::Rectangle<float>(5.0f, 5.0f).withCentre({ centre.x - 3.0f, centre.y - rise + 7.0f }));
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 88));
+        g.fillRoundedRectangle(juce::Rectangle<float>(w * 0.28f, 4.0f)
+                                   .withCentre({ centre.x - 2.0f, centre.y - rise + 8.0f }),
+                               2.0f);
     };
 
     drawMiniBlock({ boardRect.getCentreX() - 42.0f, boardRect.getCentreY() + 24.0f }, juce::Colour::fromRGB(255, 204, 78));
@@ -7779,12 +7823,16 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
         g.fillRoundedRectangle(bounds, 16.0f);
         g.setColour(juce::Colour::fromRGBA(144, 86, 44, 122));
         g.drawRoundedRectangle(bounds, 16.0f, 1.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 68));
+        g.fillRoundedRectangle(bounds.reduced(8.0f, 6.0f).withHeight(16.0f), 8.0f);
 
         auto numBubble = bounds.removeFromLeft(44.0f).reduced(4.0f);
         g.setColour(juce::Colour::fromRGBA(255, 92, 74, 220));
         g.fillRoundedRectangle(numBubble, 12.0f);
         g.setColour(juce::Colour::fromRGBA(124, 42, 30, 150));
         g.drawRoundedRectangle(numBubble, 12.0f, 1.2f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 88));
+        g.fillRoundedRectangle(numBubble.reduced(5.0f, 4.0f).withHeight(8.0f), 6.0f);
         g.setColour(juce::Colours::white);
         g.setFont(juce::FontOptions(16.0f));
         g.drawText(num, numBubble.toNearestInt(), juce::Justification::centred);
@@ -7828,6 +7876,8 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
 
         g.setColour(juce::Colour::fromRGBA(112, 56, 36, hovered ? 118 : 74));
         g.fillRoundedRectangle(button.translated(0.0f, 6.0f), 22.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, hovered ? 44 : 28));
+        g.fillRoundedRectangle(button.translated(0.0f, 2.0f), 22.0f);
 
         juce::ColourGradient buttonFill(hovered ? juce::Colour::fromRGBA(255, 120, 86, 248)
                                                 : juce::Colour::fromRGBA(232, 86, 68, 234),
@@ -7846,6 +7896,16 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
         g.fillRoundedRectangle(button.reduced(5.0f, 5.0f), 18.0f);
         g.setColour(juce::Colour::fromRGBA(255, 255, 255, hovered ? 78 : 52));
         g.fillRoundedRectangle(button.withHeight(18.0f).reduced(12.0f, 4.0f), 10.0f);
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, hovered ? 122 : 84));
+        g.fillRoundedRectangle(button.reduced(16.0f, 12.0f).withHeight(14.0f), 7.0f);
+        juce::Path buttonSweep;
+        buttonSweep.startNewSubPath(button.getX() + 18.0f, button.getY() + 20.0f);
+        buttonSweep.lineTo(button.getX() + button.getWidth() * 0.58f, button.getY() + 20.0f);
+        buttonSweep.lineTo(button.getX() + button.getWidth() * 0.38f, button.getY() + button.getHeight() - 20.0f);
+        buttonSweep.lineTo(button.getX() + 8.0f, button.getY() + button.getHeight() - 20.0f);
+        buttonSweep.closeSubPath();
+        g.setColour(juce::Colour::fromRGBA(255, 255, 255, hovered ? 56 : 34));
+        g.fillPath(buttonSweep);
 
         auto buttonInner = button.reduced(20.0f, 16.0f);
         auto topStrip = buttonInner.removeFromTop(22.0f);
@@ -7873,6 +7933,8 @@ void MainComponent::drawTitleScreen(juce::Graphics& g, juce::Rectangle<float> ar
     g.fillRoundedRectangle(footerCloud, 14.0f);
     g.setColour(juce::Colour::fromRGBA(255, 255, 255, 56));
     g.fillRoundedRectangle(footerCloud.withHeight(10.0f).reduced(14.0f, 1.0f), 8.0f);
+    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 74));
+    g.fillRoundedRectangle(footerCloud.reduced(18.0f, 6.0f).withHeight(8.0f), 6.0f);
     g.setColour(juce::Colour::fromRGBA(106, 66, 42, 220));
     g.setFont(juce::FontOptions(13.0f));
     g.drawText("Enter or N starts a new world   Cmd/Ctrl+S saves   Cmd/Ctrl+O loads",

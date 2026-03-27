@@ -31,7 +31,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -53,7 +53,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -97,7 +97,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/cc"
@@ -115,7 +115,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -160,7 +160,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -247,7 +247,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/ar"
@@ -265,7 +265,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -302,7 +302,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/ranlib"
@@ -320,7 +320,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -357,7 +357,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/strip"
@@ -375,7 +375,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -412,7 +412,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/ld"
@@ -430,7 +430,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -467,7 +467,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/nm"
@@ -485,7 +485,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -522,7 +522,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     found: "/usr/bin/objdump"
@@ -540,7 +540,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -577,7 +577,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -592,7 +592,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/objcopy"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/objcopy"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/objcopy"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/objcopy"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/objcopy"
       - "/Users/md/.lmstudio/bin/objcopy"
       - "/Applications/Codex.app/Contents/Resources/objcopy"
     found: false
@@ -610,7 +610,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -647,7 +647,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -662,7 +662,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/readelf"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/readelf"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/readelf"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/readelf"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/readelf"
       - "/Users/md/.lmstudio/bin/readelf"
       - "/Applications/Codex.app/Contents/Resources/readelf"
     found: false
@@ -680,7 +680,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -717,7 +717,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -732,7 +732,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/dlltool"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/dlltool"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/dlltool"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/dlltool"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/dlltool"
       - "/Users/md/.lmstudio/bin/dlltool"
       - "/Applications/Codex.app/Contents/Resources/dlltool"
     found: false
@@ -750,7 +750,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -787,7 +787,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -802,7 +802,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/addr2line"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/addr2line"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/addr2line"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/addr2line"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/addr2line"
       - "/Users/md/.lmstudio/bin/addr2line"
       - "/Applications/Codex.app/Contents/Resources/addr2line"
     found: false
@@ -820,7 +820,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -857,7 +857,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -872,7 +872,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/tapi"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/tapi"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/tapi"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/tapi"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/tapi"
       - "/Users/md/.lmstudio/bin/tapi"
       - "/Applications/Codex.app/Contents/Resources/tapi"
     found: false
@@ -890,7 +890,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -932,7 +932,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -977,7 +977,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1064,7 +1064,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
     searched_directories:
@@ -1086,7 +1086,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1101,8 +1101,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4"
-      binary: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4"
+      source: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8"
+      binary: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8"
     cmakeVariables:
       CMAKE_C_FLAGS: ""
       CMAKE_C_FLAGS_DEBUG: "-g"
@@ -1114,18 +1114,18 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4'
+        Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7c293/fast
-        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_7c293.dir/build.make CMakeFiles/cmTC_7c293.dir/build
-        Building C object CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o
-        /usr/bin/cc   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_be339/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_be339.dir/build.make CMakeFiles/cmTC_be339.dir/build
+        Building C object CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o
+        /usr/bin/cc   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
         Apple clang version 14.0.3 (clang-1403.0.22.14.1)
         Target: arm64-apple-darwin22.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
         clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
-         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -no-opaque-pointers -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -no-opaque-pointers -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
         clang -cc1 version 14.0.3 (clang-1403.0.22.14.1) default target arm64-apple-darwin22.6.0
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
@@ -1137,13 +1137,13 @@ events:
          /Library/Developer/CommandLineTools/usr/include
          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
         End of search list.
-        Linking C executable cmTC_7c293
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7c293.dir/link.txt --verbose=1
+        Linking C executable cmTC_be339
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_be339.dir/link.txt --verbose=1
         Apple clang version 14.0.3 (clang-1403.0.22.14.1)
         Target: arm64-apple-darwin22.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_7c293 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a
+         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_be339 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld  PROJECT:ld64-857.1
         BUILD 23:13:29 May  7 2023
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
@@ -1152,7 +1152,7 @@ events:
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
         Framework search paths:
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/
-        /usr/bin/cc  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -o cmTC_7c293
+        /usr/bin/cc  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -o cmTC_be339
         
       exitCode: 0
   -
@@ -1196,18 +1196,18 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4']
+        ignore line: [Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7c293/fast]
-        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_7c293.dir/build.make CMakeFiles/cmTC_7c293.dir/build]
-        ignore line: [Building C object CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/cc   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_be339/fast]
+        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_be339.dir/build.make CMakeFiles/cmTC_be339.dir/build]
+        ignore line: [Building C object CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/cc   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Apple clang version 14.0.3 (clang-1403.0.22.14.1)]
         ignore line: [Target: arm64-apple-darwin22.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
         ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
-        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-OFqXG4 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -no-opaque-pointers -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-7BUBK8 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -no-opaque-pointers -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [clang -cc1 version 14.0.3 (clang-1403.0.22.14.1) default target arm64-apple-darwin22.6.0]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"]
@@ -1219,13 +1219,13 @@ events:
         ignore line: [ /Library/Developer/CommandLineTools/usr/include]
         ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking C executable cmTC_7c293]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7c293.dir/link.txt --verbose=1]
+        ignore line: [Linking C executable cmTC_be339]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_be339.dir/link.txt --verbose=1]
         ignore line: [Apple clang version 14.0.3 (clang-1403.0.22.14.1)]
         ignore line: [Target: arm64-apple-darwin22.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_7c293 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_be339 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
           arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1240,12 +1240,12 @@ events:
           arg [-syslibroot] ==> ignore
           arg [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_7c293] ==> ignore
+          arg [cmTC_be339] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-search_paths_first] ==> ignore
           arg [-headerpad_max_install_names] ==> ignore
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_7c293.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [CMakeFiles/cmTC_be339.dir/CMakeCCompilerABI.c.o] ==> ignore
           arg [-lSystem] ==> lib [System]
           arg [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
         linker tool for 'C': /Library/Developer/CommandLineTools/usr/bin/ld
@@ -1286,8 +1286,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4"
-      binary: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4"
+      source: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX"
+      binary: "/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -1300,18 +1300,18 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4'
+        Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7e539/fast
-        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_7e539.dir/build.make CMakeFiles/cmTC_7e539.dir/build
-        Building CXX object CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c6b5f/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_c6b5f.dir/build.make CMakeFiles/cmTC_c6b5f.dir/build
+        Building CXX object CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/c++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Apple clang version 14.0.3 (clang-1403.0.22.14.1)
         Target: arm64-apple-darwin22.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
         clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
-         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -no-opaque-pointers -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -no-opaque-pointers -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         clang -cc1 version 14.0.3 (clang-1403.0.22.14.1) default target arm64-apple-darwin22.6.0
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
@@ -1324,13 +1324,13 @@ events:
          /Library/Developer/CommandLineTools/usr/include
          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
         End of search list.
-        Linking CXX executable cmTC_7e539
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7e539.dir/link.txt --verbose=1
+        Linking CXX executable cmTC_c6b5f
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c6b5f.dir/link.txt --verbose=1
         Apple clang version 14.0.3 (clang-1403.0.22.14.1)
         Target: arm64-apple-darwin22.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_7e539 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a
+         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_c6b5f -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld  PROJECT:ld64-857.1
         BUILD 23:13:29 May  7 2023
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
@@ -1339,7 +1339,7 @@ events:
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
         Framework search paths:
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/
-        /usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_7e539
+        /usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_c6b5f
         
       exitCode: 0
   -
@@ -1385,18 +1385,18 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4']
+        ignore line: [Change Dir: '/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_7e539/fast]
-        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_7e539.dir/build.make CMakeFiles/cmTC_7e539.dir/build]
-        ignore line: [Building CXX object CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c6b5f/fast]
+        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_c6b5f.dir/build.make CMakeFiles/cmTC_c6b5f.dir/build]
+        ignore line: [Building CXX object CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/c++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Apple clang version 14.0.3 (clang-1403.0.22.14.1)]
         ignore line: [Target: arm64-apple-darwin22.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
         ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
-        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-5ZTkT4 -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -no-opaque-pointers -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx13.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=13.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +crc -target-feature +lse -target-feature +rdm -target-feature +crypto -target-feature +dotprod -target-feature +fp-armv8 -target-feature +neon -target-feature +fp16fml -target-feature +ras -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=lldb -target-linker-version 857.1 -v -fcoverage-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3 -dependency-file CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -fdebug-compilation-dir=/Users/md/Downloads/KlangKunstWorld/build/JUCE/tools/CMakeFiles/CMakeScratch/TryCompile-CUVdfX -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -no-opaque-pointers -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [clang -cc1 version 14.0.3 (clang-1403.0.22.14.1) default target arm64-apple-darwin22.6.0]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"]
@@ -1409,13 +1409,13 @@ events:
         ignore line: [ /Library/Developer/CommandLineTools/usr/include]
         ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking CXX executable cmTC_7e539]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7e539.dir/link.txt --verbose=1]
+        ignore line: [Linking CXX executable cmTC_c6b5f]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c6b5f.dir/link.txt --verbose=1]
         ignore line: [Apple clang version 14.0.3 (clang-1403.0.22.14.1)]
         ignore line: [Target: arm64-apple-darwin22.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_7e539 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 13.0.0 13.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_c6b5f -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
           arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1430,12 +1430,12 @@ events:
           arg [-syslibroot] ==> ignore
           arg [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_7e539] ==> ignore
+          arg [cmTC_c6b5f] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-search_paths_first] ==> ignore
           arg [-headerpad_max_install_names] ==> ignore
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_7e539.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_c6b5f.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lc++] ==> lib [c++]
           arg [-lSystem] ==> lib [System]
           arg [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/lib/darwin/libclang_rt.osx.a]
@@ -1497,7 +1497,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1528,7 +1528,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1588,7 +1588,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1619,7 +1619,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1679,7 +1679,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1710,7 +1710,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1770,7 +1770,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1801,7 +1801,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1861,7 +1861,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1892,7 +1892,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -1953,7 +1953,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -1984,7 +1984,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2045,7 +2045,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2076,7 +2076,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2136,7 +2136,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2167,7 +2167,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2227,7 +2227,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2258,7 +2258,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2318,7 +2318,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2349,7 +2349,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2409,7 +2409,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2440,7 +2440,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2500,7 +2500,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2531,7 +2531,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2591,7 +2591,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2622,7 +2622,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2682,7 +2682,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2713,7 +2713,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2773,7 +2773,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2804,7 +2804,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2864,7 +2864,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2895,7 +2895,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
@@ -2955,7 +2955,7 @@ events:
       - "/usr/sbin/"
       - "/sbin/"
       - "/opt/homebrew/bin/"
-      - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe/"
+      - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho/"
       - "/Users/md/.lmstudio/bin/"
       - "/Applications/Codex.app/Contents/Resources/"
       - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/"
@@ -2986,7 +2986,7 @@ events:
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
         - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Users/md/.codex/tmp/arg0/codex-arg0v5CLwe"
+        - "/Users/md/.codex/tmp/arg0/codex-arg0Hlp5ho"
         - "/Users/md/Library/Python/3.9/bin"
         - "/Users/md/.lmstudio/bin"
         - "/Applications/Codex.app/Contents/Resources"
